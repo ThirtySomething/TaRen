@@ -57,11 +57,11 @@ dem ```codecs``` Package verwenden. Auch das Package ```logging``` kann nicht
 so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist mit der ```basicConfig```
 nicht machbar bzw. vorgesehen. Es geht nur umständlich. Und beides, weder das
 mit den Dateien noch das mit dem Logging ist vernünftig erklärt. Zum Glück gibt
-[stackoverflow][stackoverflow], da findet man dann die richtigen Hinweise.
+es [stackoverflow][stackoverflow], da findet man dann die richtigen Hinweise.
 
 ## Hinweise
 
-Damit das mit [UTF-8][utf-8] auch korrekt funktioniert, muß die Umgebungsvariable
+Damit das mit [UTF-8][utf8] auch korrekt funktioniert, muß die Umgebungsvariable
 
 ```SHELL
 PYTHONIOENCODING="utf-8"
