@@ -25,11 +25,10 @@ SOFTWARE.
 '''
 
 import logging
-import fnmatch
 import os
-from bs4 import BeautifulSoup
-from episode import Episode
-from wikicache import WikiCache
+from os import path
+from episodelist import EpisodeList
+from downloadlist import DownloadList
 
 class TaRen:
     '''
@@ -44,7 +43,6 @@ class TaRen:
         self.extension = extension
         self.url = url
         self.cachetime = cachetime
-        self.episodes = []
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
         logging.debug('searchdir [%s]', '{}'.format(searchdir))
@@ -60,48 +58,51 @@ class TaRen:
         - Build internal list about episodes
         - Find affected downloads
         '''
-        websitecontent = self.read_website()
-        self.parse_website(websitecontent)
-        # files = self.collect_filenames()
-        # logging.debug('files [{}]'.format(files))
-        # logging.debug('content [{}]'.format(self.content))
+        episode_list = EpisodeList(self.pattern, self.url, self.cachetime)
+        episode_list.get_episodes()
 
-    def collect_filenames(self):
-        '''
-        Retrieve list of affected files
-        '''
-        searchpattern = '*{}*{}'.format(self.pattern, self.extension)
-        files = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
-        return files
+        download_list = DownloadList(self.searchdir, self.pattern, self.extension)
+        downloads = download_list.get_filenames()
 
-    def read_website(self):
-        '''
-        Retrieve website via cache
-        '''
-        cache = WikiCache(self.pattern, self.url, self.cachetime)
-        return cache.get_website_from_cache()
+        downloads_to_process = []
+        for current_download in downloads:
+            episode = episode_list.find_episode(current_download)
+            if episode.empty:
+                continue
+            downloads_to_process.append([current_download, episode])
+        logging.info('downloads_to_process %s', '{}'.format(len(downloads_to_process)))
 
-    def parse_website(self, websitecontent):
-        '''
-        Build internal list about episodes based on website content.
-        '''
-        websitedata = BeautifulSoup(websitecontent, 'html.parser')
-        table = websitedata.find('table')
-        rows = table.find_all('tr')
-        self.episodes = self.build_list_of_episodes(rows)
+        renamed = 0
+        skipped = 0
+        total = 0
+        deleted = 0
+        for current_task in downloads_to_process:
+            total = total + 1
+            new_fqn = os.path.join(self.searchdir, '\\', '{}{}'.format(current_task[1], self.extension))
+            old_fqn = os.path.join(self.searchdir, '\\', current_task[0])
+            if new_fqn == old_fqn:
+                logging.debug('old  [%s] and new [%s] filename are equal, skip', '{}'.format(old_fqn), '{}'.format(new_fqn))
+                skipped = skipped + 1
+                continue
+            if path.exists(new_fqn):
+                logging.info('file already exists [%s]', '{}'.format(new_fqn))
+                size_old = os.stat(old_fqn).st_size
+                size_new = os.stat(new_fqn).st_size
+                if size_old == size_new:
+                    logging.info('file size equal, delete new file [%s]', '{}'.format(new_fqn))
+                    os.remove(new_fqn)
+                    deleted = deleted + 1
+                if size_old > size_new:
+                    logging.info('new file smaller than old one, delete new file [%s]', '{}'.format(new_fqn))
+                    os.remove(new_fqn)
+                    deleted = deleted + 1
+                if size_old < size_new:
+                    logging.info('old file smaller than new one, delete old file [%s]', '{}'.format(old_fqn))
+                    os.remove(old_fqn)
+                    deleted = deleted + 1
+                    continue
 
-    def build_list_of_episodes(self, raw_data):
-        '''
-        Extract episodes from episode list
-        '''
-        episodes = []
-        for table_row in raw_data:
-            table_cells = table_row.find_all('td')
-            episode_data = [i.text for i in table_cells]
-            current_episode = Episode()
-            current_episode.parse(episode_data)
-            if not current_episode.empty:
-                episodes.append(current_episode)
-                logging.info('episode [%s]', '{}'.format(current_episode))
-        logging.info('total number of episodes [%s]', '{}'.format(len(episodes)))
-        return episodes
+            logging.debug('rename old [%s] to new [%s] filename', '{}'.format(old_fqn), '{}'.format(new_fqn))
+            os.rename(old_fqn, new_fqn)
+            renamed = renamed + 1
+        logging.info('file total [%s], skipped [%s], renamed [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(deleted))

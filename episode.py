@@ -32,6 +32,10 @@ class Episode:
     Object with episode information. Retrieve data from given data row, do some
     cleanup and represents the default episode name in __repr__ method.
     '''
+
+    # Invalid characters inside filenames
+    invalid_characters = ['"', '*', '<', '>', '?', '\\', '|', '/', ':']
+
     def __init__(self):
         '''
         Default is an empty episode for __repr__ method
@@ -46,8 +50,17 @@ class Episode:
         '''
         Default string representation of an episode
         '''
-        measstring = '{:04d} - {} - {} - {}'.format(self.episode_id, self.episode_broadcast, self.episode_name, self.episode_inspectors)
+        measstring = 'Tatort - {:04d} - {} - {} - {}'.format(self.episode_id, self.episode_broadcast, self.episode_name, self.episode_inspectors)
         return measstring
+
+    def _strip_invalid_characters(self):
+        '''
+        Remove characters which are invalid for filenames
+        '''
+        for current_invalid_character in Episode.invalid_characters:
+            self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, ' ').strip()
+            self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, ' ').strip()
+            self.episode_name = self.episode_name.replace(current_invalid_character, ' ').strip()
 
     def parse(self, data_row):
         '''
@@ -61,4 +74,12 @@ class Episode:
         self.episode_name = re.sub(r'\(Folge [0-9]+(.)+\)', '', data_row[1].replace('\n', '').strip()).strip()
         self.episode_inspectors = re.sub(r'\(Gastauftritt(.)+\)', '', data_row[4].replace('\n', '').strip()).strip()
         self.episode_broadcast = data_row[2].replace('\n', '').strip()
+        self._strip_invalid_characters()
         self.empty = False
+
+    def matches(self, filename):
+        '''
+        Check if episode matches the filename
+        '''
+        match = self.episode_name.lower() in filename.lower()
+        return match

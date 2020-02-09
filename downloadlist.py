@@ -25,26 +25,29 @@ SOFTWARE.
 '''
 
 import logging
-from taren import TaRen
+import fnmatch
+import os
 
-# Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
-LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(logging.INFO)
-LOGGER_HANDLER = logging.FileHandler('program.log', 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'))
-LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
-# Script to rename files downloaded with MediathekView to a specific format
-if __name__ == '__main__':
-    logging.debug('startup')
+class DownloadList:
+    '''
+    Build list of filenames
+    '''
+    def __init__(self, searchdir, pattern, extension):
+        self.searchdir = searchdir
+        self.pattern = pattern
+        self.extension = extension
+        if not self.extension.startswith('.'):
+            self.extension = '.{}'.format(self.extension)
+        logging.debug('searchdir [%s]', '{}'.format(searchdir))
+        logging.debug('pattern [%s]', '{}'.format(pattern))
+        logging.debug('extension [%s]', '{}'.format(extension))
 
-    # Initialize program with
-    # - Location of downloads
-    # - Search pattern
-    # - File extension
-    # - URL to list of episodes
-    # - Maximum cache age in days
-    DATA = TaRen('V:', 'Tatort', 'mp4', 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen', 1)
-
-    # Start magic process :D
-    DATA.rename_process()
+    def get_filenames(self):
+        '''
+        Retrieve list of affected downloads
+        '''
+        searchpattern = '*{}*{}'.format(self.pattern, self.extension)
+        files = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
+        logging.info('total number of downloads [%s]', '{}'.format(len(files)))
+        return files

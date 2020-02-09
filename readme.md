@@ -59,6 +59,16 @@ nicht machbar bzw. vorgesehen. Es geht nur umständlich. Und beides, weder das
 mit den Dateien noch das mit dem Logging ist vernünftig erklärt. Zum Glück gibt
 [stackoverflow][stackoverflow], da findet man dann die richtigen Hinweise.
 
+## Hinweise
+
+Damit das mit [UTF-8][utf-8] auch korrekt funktioniert, muß die Umgebungsvariable
+
+```SHELL
+PYTHONIOENCODING="utf-8"
+```
+
+gesetzt sein.
+
 ## Lizenz
 
 ******************************************************************************
