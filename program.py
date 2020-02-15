@@ -44,7 +44,7 @@ if __name__ == '__main__':
     # - File extension
     # - URL to list of episodes
     # - Maximum cache age in days
-    DATA = TaRen('V:', 'Tatort', 'mp4', 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen', 1)
+    DATA = TaRen('V:\\Tatort', 'Tatort', 'mp4', 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen', 1)
 
     # Start magic process :D
     DATA.rename_process()

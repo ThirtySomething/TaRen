@@ -31,7 +31,7 @@ import os
 from os import path
 import requests
 
-class WikiCache:
+class WebSiteCache:
     '''
     Simple file cache for websites
     '''

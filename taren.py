@@ -45,6 +45,8 @@ class TaRen:
         self.cachetime = cachetime
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
+        if not self.searchdir.endswith('\\'):
+            self.searchdir = '{}\\'.format(self.searchdir)
         logging.debug('searchdir [%s]', '{}'.format(searchdir))
         logging.debug('pattern [%s]', '{}'.format(pattern))
         logging.debug('extension [%s]', '{}'.format(extension))
@@ -70,6 +72,7 @@ class TaRen:
             if episode.empty:
                 continue
             downloads_to_process.append([current_download, episode])
+            logging.debug('added to process list: [%s] <> [%s]', '{}'.format(current_download), '{}'.format(episode))
         logging.info('downloads_to_process %s', '{}'.format(len(downloads_to_process)))
 
         renamed = 0
@@ -78,10 +81,10 @@ class TaRen:
         deleted = 0
         for current_task in downloads_to_process:
             total = total + 1
-            new_fqn = os.path.join(self.searchdir, '\\', '{}{}'.format(current_task[1], self.extension))
-            old_fqn = os.path.join(self.searchdir, '\\', current_task[0])
+            new_fqn = os.path.join(self.searchdir, '{}{}'.format(current_task[1], self.extension))
+            old_fqn = os.path.join(self.searchdir, current_task[0])
             if new_fqn == old_fqn:
-                logging.debug('old  [%s] and new [%s] filename are equal, skip', '{}'.format(old_fqn), '{}'.format(new_fqn))
+                logging.info('filenames identical, skip file [%s]', '{}'.format(old_fqn))
                 skipped = skipped + 1
                 continue
             if path.exists(new_fqn):
@@ -102,7 +105,7 @@ class TaRen:
                     deleted = deleted + 1
                     continue
 
-            logging.debug('rename old [%s] to new [%s] filename', '{}'.format(old_fqn), '{}'.format(new_fqn))
+            logging.info('rename old [%s] to new [%s] filename', '{}'.format(old_fqn), '{}'.format(new_fqn))
             os.rename(old_fqn, new_fqn)
             renamed = renamed + 1
         logging.info('file total [%s], skipped [%s], renamed [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(deleted))

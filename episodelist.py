@@ -27,7 +27,7 @@ SOFTWARE.
 import logging
 from bs4 import BeautifulSoup
 from episode import Episode
-from wikicache import WikiCache
+from websitecache import WebSiteCache
 
 class EpisodeList:
     '''
@@ -46,7 +46,7 @@ class EpisodeList:
         '''
         Retrieve website via cache
         '''
-        cache = WikiCache(self.pattern, self.url, self.cachetime)
+        cache = WebSiteCache(self.pattern, self.url, self.cachetime)
         return cache.get_website_from_cache()
 
     def _parse_website(self, websitecontent):

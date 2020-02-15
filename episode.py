@@ -81,5 +81,20 @@ class Episode:
         '''
         Check if episode matches the filename
         '''
-        match = self.episode_name.lower() in filename.lower()
-        return match
+        # Check leading episode number => download marked as special episode manually
+        filename_match = re.search(r'(^[0-9]{4} )', filename)
+        if filename_match:
+            filename_id = int(filename_match.group(1))
+            # logging.debug('match filename [%s] by id [%s|%s] = [%s]', '{}'.format(filename), '{}'.format(filename_id), '{}'.format(self.episode_id), '{}'.format(match))
+            return self.episode_id == filename_id
+
+        # Check episode prefix with number => alredy handled by TaRen
+        filename_match = re.search(r'^(Tatort - ([0-9]{4}) )', filename)
+        if filename_match:
+            filename_id = int(filename_match.group(2))
+            # logging.debug('match filename [%s] by id [%s|%s] = [%s]', '{}'.format(filename), '{}'.format(filename_id), '{}'.format(self.episode_id), '{}'.format(match))
+            return self.episode_id == filename_id
+
+        # Last check => Is episode name part of filename
+        # logging.debug('match filename [%s] by episode_name [%s] = [%s]', '{}'.format(filename), '{}'.format(self.episode_name), '{}'.format(match))
+        return self.episode_name.lower() in filename.lower()
