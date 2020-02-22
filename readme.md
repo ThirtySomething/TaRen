@@ -44,7 +44,7 @@ Downloads so markieren, dass sie gleich die richtige Folge haben. Sinnvoll ist
 das dann, wenn es Folgen mit gleichem Titel gibt, z. B. [Taxi nach Leipzig][tnlo]
 vs. [Taxi nach Leipzig][tnln].
 - Es wird geprüft, ob der Dateiname mit 'Tatort' und einer vierstelligen Zahl
-beginn. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies als
+beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies als
 Indiz dafür gewertet, daß es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
 Tatort Folge enthält.
