@@ -27,13 +27,14 @@ SOFTWARE.
 import logging
 import re
 
+
 class Episode:
     '''
     Object with episode information. Retrieve data from given data row, do some
     cleanup and represents the default episode name in __repr__ method.
     '''
 
-    # Invalid characters inside filenames
+    # Invalid characters inside filenames on Windows
     invalid_characters = ['"', '*', '<', '>', '?', '\\', '|', '/', ':']
 
     def __init__(self):
@@ -67,14 +68,19 @@ class Episode:
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         '''
         if len(data_row) == 0:
-            logging.error('invalid data row %s', '{}'.format(data_row))
             return
         logging.debug('data row %s', '{}'.format(data_row))
+        # Episode number is first element of row
         self.episode_id = int(data_row[0].replace('\n', '').strip())
+        # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r'\(Folge [0-9]+(.)+\)', '', data_row[1].replace('\n', '').strip()).strip()
+        # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
         self.episode_inspectors = re.sub(r'\(Gastauftritt(.)+\)', '', data_row[4].replace('\n', '').strip()).strip()
+        # Get name of broadcast station, 3rd element of row
         self.episode_broadcast = data_row[2].replace('\n', '').strip()
+        # Strip invalid characters
         self._strip_invalid_characters()
+        # Mark as not empty
         self.empty = False
 
     def matches(self, filename):

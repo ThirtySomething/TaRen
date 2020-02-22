@@ -24,8 +24,9 @@ SOFTWARE.
 ******************************************************************************
 '''
 
+import logging.config
 import logging
-from taren import TaRen
+from taren.taren import TaRen
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()

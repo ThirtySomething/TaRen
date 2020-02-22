@@ -33,6 +33,7 @@ class DownloadList:
     '''
     Build list of filenames
     '''
+
     def __init__(self, searchdir, pattern, extension):
         self.searchdir = searchdir
         self.pattern = pattern
@@ -47,7 +48,10 @@ class DownloadList:
         '''
         Retrieve list of affected downloads
         '''
+        # Create search pattern
         searchpattern = '*{}*{}'.format(self.pattern, self.extension)
+        # Apply search pattern on search
         files = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
+        # Log info about found files
         logging.info('total number of downloads [%s]', '{}'.format(len(files)))
         return files

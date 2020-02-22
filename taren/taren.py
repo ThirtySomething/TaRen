@@ -27,8 +27,9 @@ SOFTWARE.
 import logging
 import os
 from os import path
-from episodelist import EpisodeList
-from downloadlist import DownloadList
+from .episodelist import EpisodeList
+from .downloadlist import DownloadList
+
 
 class TaRen:
     '''
@@ -37,6 +38,7 @@ class TaRen:
     - Search for downloaded episodes
     - Perform renaming
     '''
+
     def __init__(self, searchdir, pattern, extension, url, cachetime):
         self.searchdir = searchdir
         self.pattern = pattern
