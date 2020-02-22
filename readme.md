@@ -15,15 +15,15 @@ und dergleichen mehr.
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster ```0000 - Sender - Titel - Kommissare.mp4``` entspricht. Also vierstellig die
-Nummer der Folge, dann der Titel des Tatorts und zum Schluss die ermittelnden
-Kommissare.
+dem Muster ```0000 - Sender - Titel - Kommissare.mp4``` entspricht. Also
+vierstellig die Nummer der Folge, dann der Titel des Tatorts und zum Schluss
+die ermittelnden Kommissare.
 
 ## Technisch
 
 Der Wikipedia Artikel wird geparst und die Tatortfolgen in eine interne
 Liste eingetragen. Dann werden auf der Festplatte alle ```*.mp4``` Dateien
-gesucht, in denen das Keyword ```Tatort``` vorkommen. In dem Dateinamen wird
+gesucht, in denen das Keyword ```Tatort``` vorkommt. In dem Dateinamen wird
 dann gesucht, ob dieser den Namen einer Tatortfolge enthält. In diesem Fall
 wird die Datei dann umbenannt. Gibt es diese Datei bereits, wird die Dateigröße
 verglichen - der Download mit der HD Auflösung ist größer und wird eher
@@ -31,6 +31,23 @@ behalten. Ist also der Tatort bereits in SD Auflösung vorhanden, und es wurde
 der gleiche Tatort in HD Auflösung ebenfalls heruntergeladen, dann wird die
 SD Version gelöscht und die HD Version behalten. Ansonsten wird der Download
 nicht umbenannt, sondern gelöscht.
+
+### Matching
+
+Da es ja Folgen gibt, die den gleichen Namen haben, wurde das Matching
+überarbeitet. Das passiert auf folgende Weise:
+
+- Es wird geprüft, ob der Dateiname mit einer vierstelligen Zahl und einem
+Leerzeichen beginnt. Diese vierstellige Zahl wird als eine Folgennummer verwendet.
+Gibt es also eine Folge, die diese Nummer hat, ist das der Match. Damit kann man
+Downloads so markieren, dass sie gleich die richtige Folge haben. Sinnvoll ist
+das dann, wenn es Folgen mit gleichem Titel gibt, z. B. [Taxi nach Leipzig][tnlo]
+vs. [Taxi nach Leipzig][tnln].
+- Es wird geprüft, ob der Dateiname mit 'Tatort' und einer vierstelligen Zahl
+beginn. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies als
+Indiz dafür gewertet, daß es sich hierbei um eine bestimmte Folge handelt.
+- Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
+Tatort Folge enthält.
 
 ## Zum Nachdenken
 
@@ -52,12 +69,13 @@ ist in [UTF-8][utf8]. Damit ich jedoch nicht bei jedem Test und Durchlauf die
 Webseite abfrage, habe ich einen Cache eingebaut. Das heißt, frühestens alle X
 Tage wird die Seite neu geladen, ansonsten aus dem Cache (sprich, einer Datei)
 geladen. Allerdings kann man in [Python][python] mit den Standard Funktionen
-keine [UTF-8][utf8] Dateien lesen und schreiben. Dazu muss man die Funktionen aus
-dem ```codecs``` Package verwenden. Auch das Package ```logging``` kann nicht
-so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist mit der ```basicConfig```
-nicht machbar bzw. vorgesehen. Es geht nur umständlich. Und beides, weder das
-mit den Dateien noch das mit dem Logging ist vernünftig erklärt. Zum Glück gibt
-es [stackoverflow][stackoverflow], da findet man dann die richtigen Hinweise.
+keine [UTF-8][utf8] Dateien lesen und schreiben. Dazu muss man die Funktionen
+aus dem ```codecs``` Package verwenden. Auch das Package ```logging``` kann
+nicht so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist mit der
+```basicConfig``` nicht machbar bzw. vorgesehen. Es geht nur umständlich. Und
+beides, weder das mit den Dateien noch das mit dem Logging ist vernünftig
+erklärt. Zum Glück gibt es [stackoverflow][stackoverflow], da findet man dann
+die richtigen Hinweise.
 
 ## Hinweise
 
@@ -103,3 +121,5 @@ See also attached file [`LICENSE`](./LICENSE "MIT License").
 [stackoverflow]: https://www.stackoverflow.com
 [tatortwiki]: https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen
 [utf8]: https://de.wikipedia.org/wiki/UTF-8
+[tnlo]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(1970)
+[tnln]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(2016)
