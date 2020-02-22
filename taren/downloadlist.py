@@ -52,6 +52,7 @@ class DownloadList:
         searchpattern = '*{}*{}'.format(self.pattern, self.extension)
         # Apply search pattern on search
         files = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
+        files.sort()
         # Log info about found files
         logging.info('total number of downloads [%s]', '{}'.format(len(files)))
         return files

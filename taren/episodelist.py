@@ -86,6 +86,7 @@ class EpisodeList:
                 episodes.append(current_episode)
                 logging.debug('episode [%s]', '{}'.format(current_episode))
         # Return list of episodes
+        episodes.sort()
         return episodes
 
     def get_episodes(self):

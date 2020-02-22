@@ -47,6 +47,14 @@ class Episode:
         self.episode_broadcast = ''
         self.empty = True
 
+    def __gt__(self, other):
+        '''
+        Used for sorting
+        '''
+        if isinstance(other, Episode):
+            return self.__repr__() > other.__repr__()
+        raise Exception("Cannot compare Episode to Not-A-Episode")
+
     def __repr__(self):
         '''
         Default string representation of an episode
