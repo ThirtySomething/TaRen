@@ -31,6 +31,7 @@ from taren.taren import TaRen
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
 LOGGER_SETUP.setLevel(logging.INFO)
+# LOGGER_SETUP.setLevel(logging.DEBUG)
 LOGGER_HANDLER = logging.FileHandler('program.log', 'w', 'utf-8')
 LOGGER_HANDLER.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)

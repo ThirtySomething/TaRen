@@ -76,7 +76,7 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells = table_row.find_all('td')
             # Get content of cells
-            episode_data = [i.text for i in table_cells]
+            episode_data = [i.text.replace('\n', '') for i in table_cells]
             # Create a new and empty episode
             current_episode = Episode()
             # Parse raw data into episode object

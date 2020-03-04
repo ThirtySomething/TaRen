@@ -79,13 +79,14 @@ class Episode:
             return
         logging.debug('data row %s', '{}'.format(data_row))
         # Episode number is first element of row
-        self.episode_id = int(data_row[0].replace('\n', '').strip())
-        # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
-        self.episode_name = re.sub(r'\(Folge [0-9]+(.)+\)', '', data_row[1].replace('\n', '').strip()).strip()
+        episode_id_raw = re.search(r'([0-9]+)', data_row[0])
+        self.episode_id = int(episode_id_raw.group(1))
+        # Episode name is second element of row, strip unwanted information like '(Folge 332 tr�gt den gleichen Titel)' using regexp
+        self.episode_name = re.sub(r'\(Folge [0-9]+(.)+\)', '', data_row[1].strip()).strip()
         # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
-        self.episode_inspectors = re.sub(r'\(Gastauftritt(.)+\)', '', data_row[4].replace('\n', '').strip()).strip()
+        self.episode_inspectors = re.sub(r'\(Gastauftritt(.)+\)', '', data_row[4].strip()).strip()
         # Get name of broadcast station, 3rd element of row
-        self.episode_broadcast = data_row[2].replace('\n', '').strip()
+        self.episode_broadcast = data_row[2].strip()
         # Strip invalid characters
         self._strip_invalid_characters()
         # Mark as not empty

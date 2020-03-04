@@ -85,6 +85,7 @@ class TaRen:
             total = total + 1
             new_fqn = os.path.join(self.searchdir, '{}{}'.format(current_task[1], self.extension))
             old_fqn = os.path.join(self.searchdir, current_task[0])
+
             if new_fqn == old_fqn:
                 logging.info('filenames identical, skip file [%s]', '{}'.format(old_fqn))
                 skipped = skipped + 1
