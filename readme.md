@@ -21,6 +21,15 @@ die ermittelnden Kommissare.
 
 ## Technisch
 
+### Voraussetzungten
+
+- Damit das Ganze funktioniert, wird [Python 3][python] benötigt - entwickelt
+und getestet wurde mit Python 3.8.1.
+- Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
+- [Logging][logging] wird ebenfalls benötigt.
+
+### Prozess
+
 Der Wikipedia Artikel wird geparst und die Tatortfolgen in eine interne
 Liste eingetragen. Dann werden auf der Festplatte alle ```*.mp4``` Dateien
 gesucht, in denen das Keyword ```Tatort``` vorkommt. In dem Dateinamen wird
@@ -115,11 +124,13 @@ SOFTWARE.
 
 See also attached file [`LICENSE`](./LICENSE "MIT License").
 
+[beautifulsoup]: https://www.crummy.com/software/BeautifulSoup/
+[logging]: https://docs.python.org/3/library/logging.html
 [mediathekview]: https://mediathekview.de/
 [python]: https://de.wikipedia.org/wiki/Python_(Programmiersprache)
 [regexp]: https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck
 [stackoverflow]: https://www.stackoverflow.com
 [tatortwiki]: https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen
-[utf8]: https://de.wikipedia.org/wiki/UTF-8
-[tnlo]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(1970)
 [tnln]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(2016)
+[tnlo]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(1970)
+[utf8]: https://de.wikipedia.org/wiki/UTF-8

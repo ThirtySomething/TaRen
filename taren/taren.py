@@ -87,28 +87,28 @@ class TaRen:
             old_fqn = os.path.join(self.searchdir, current_task[0])
 
             if new_fqn == old_fqn:
-                logging.info('filenames identical, skip file [%s]', '{}'.format(old_fqn))
+                logging.debug('filenames identical, skip file [%s]', '{}'.format(old_fqn))
                 skipped = skipped + 1
                 continue
             if path.exists(new_fqn):
-                logging.info('file already exists [%s]', '{}'.format(new_fqn))
+                logging.debug('file already exists [%s]', '{}'.format(new_fqn))
                 size_old = os.stat(old_fqn).st_size
                 size_new = os.stat(new_fqn).st_size
                 if size_old == size_new:
-                    logging.info('file size equal, delete new file [%s]', '{}'.format(new_fqn))
+                    logging.info('file size equal, delete file [%s]', '{}'.format(new_fqn))
                     os.remove(new_fqn)
                     deleted = deleted + 1
                 if size_old > size_new:
-                    logging.info('new file smaller than old one, delete new file [%s]', '{}'.format(new_fqn))
+                    logging.info('new file smaller than old one, delete file [%s]', '{}'.format(new_fqn))
                     os.remove(new_fqn)
                     deleted = deleted + 1
                 if size_old < size_new:
-                    logging.info('old file smaller than new one, delete old file [%s]', '{}'.format(old_fqn))
+                    logging.info('old file smaller than new one, delete file [%s]', '{}'.format(old_fqn))
                     os.remove(old_fqn)
                     deleted = deleted + 1
                     continue
 
-            logging.info('rename old [%s] to new [%s] filename', '{}'.format(old_fqn), '{}'.format(new_fqn))
+            logging.info('rename from [%s] to [%s] filename', '{}'.format(old_fqn), '{}'.format(new_fqn))
             os.rename(old_fqn, new_fqn)
             renamed = renamed + 1
-        logging.info('file total [%s], skipped [%s], renamed [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(deleted))
+        logging.info('files total [%s], skipped [%s], renamed [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(deleted))

@@ -49,9 +49,9 @@ class WebSiteCache:
         cacheage = 0
         if path.exists(self.cachename):
             today = datetime.datetime.today()
-            modified_date = datetime.datetime.fromtimestamp(
-                os.path.getmtime(self.cachename))
+            modified_date = datetime.datetime.fromtimestamp(os.path.getmtime(self.cachename))
             cacheage = (today - modified_date).days
+        logging.info('cache file [%s] aged (%s) days', '{}'.format(self.cachename), '{}'.format(cacheage))
         return cacheage
 
     def _write_to_cache(self):
