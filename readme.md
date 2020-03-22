@@ -21,7 +21,7 @@ die ermittelnden Kommissare.
 
 ## Technisch
 
-### Voraussetzungten
+### Voraussetzungen
 
 - Damit das Ganze funktioniert, wird [Python 3][python] benötigt - entwickelt
 und getestet wurde mit Python 3.8.1.
