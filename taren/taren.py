@@ -99,11 +99,11 @@ class TaRen:
                     os.remove(new_fqn)
                     deleted = deleted + 1
                 if size_old > size_new:
-                    logging.info('new file smaller than old one, delete file [%s]', '{}'.format(new_fqn))
+                    logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(new_fqn))
                     os.remove(new_fqn)
                     deleted = deleted + 1
                 if size_old < size_new:
-                    logging.info('old file smaller than new one, delete file [%s]', '{}'.format(old_fqn))
+                    logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(old_fqn))
                     os.remove(old_fqn)
                     deleted = deleted + 1
                     continue
