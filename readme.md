@@ -15,7 +15,7 @@ und dergleichen mehr.
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster ```0000 - Sender - Titel - Kommissare.mp4``` entspricht. Also
+dem Muster ```Tatort - 0000 - Sender - Titel - Kommissare.mp4``` entspricht. Also
 vierstellig die Nummer der Folge, dann der Titel des Tatorts und zum Schluss
 die ermittelnden Kommissare.
 
@@ -95,6 +95,12 @@ PYTHONIOENCODING="utf-8"
 ```
 
 gesetzt sein.
+
+## ToDos
+
+- ~~Verwendung einer INI Datei zur einfachen Konfiguration~~ Done
+- ~~Schreiben einer INI Datei mit Defaults~~ Done
+- Verbeserung des INI Handlings bei fehlenden Einträgen
 
 ## Lizenz
 

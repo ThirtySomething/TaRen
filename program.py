@@ -27,18 +27,24 @@ SOFTWARE.
 import logging.config
 import logging
 from taren.taren import TaRen
+from taren.tarenconfig import TarenConfig
+
+TAREN_CONFIG = TarenConfig()
+TAREN_CONFIG.init('program.ini')
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
 LOGGER_SETUP.setLevel(logging.INFO)
 # LOGGER_SETUP.setLevel(logging.DEBUG)
-LOGGER_HANDLER = logging.FileHandler('program.log', 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'))
+LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.getLogfile(), 'w', 'utf-8')
+LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.getLogstring()))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to rename files downloaded with MediathekView to a specific format
 if __name__ == '__main__':
     logging.debug('startup')
+
+    # logging.info('debugFlag is set to [%s]', '{}'.format(debugFlag))
 
     # Initialize program with
     # - Location of downloads
@@ -46,7 +52,13 @@ if __name__ == '__main__':
     # - File extension
     # - URL to list of episodes
     # - Maximum cache age in days
-    DATA = TaRen('V:\\Tatort', 'Tatort', 'mp4', 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen', 1)
+    DATA = TaRen(
+        TAREN_CONFIG.getDownloads(),
+        TAREN_CONFIG.getPattern(),
+        TAREN_CONFIG.getExtension(),
+        TAREN_CONFIG.getWiki(),
+        TAREN_CONFIG.getMaxcache()
+    )
 
     # Start magic process :D
     DATA.rename_process()

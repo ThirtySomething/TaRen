@@ -81,7 +81,7 @@ class Episode:
         # Episode number is first element of row
         episode_id_raw = re.search(r'([0-9]+)', data_row[0])
         self.episode_id = int(episode_id_raw.group(1))
-        # Episode name is second element of row, strip unwanted information like '(Folge 332 tr�gt den gleichen Titel)' using regexp
+        # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r'\(Folge [0-9]+(.)+\)', '', data_row[1].strip()).strip()
         # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
         self.episode_inspectors = re.sub(r'\(Gastauftritt(.)+\)', '', data_row[4].strip()).strip()
