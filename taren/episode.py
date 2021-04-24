@@ -41,11 +41,11 @@ class Episode:
         '''
         Default is an empty episode for __repr__ method
         '''
-        self.episode_id = 0
-        self.episode_name = ''
-        self.episode_inspectors = ''
-        self.episode_broadcast = ''
         self.empty = True
+        self.episode_broadcast = ''
+        self.episode_id = 0
+        self.episode_inspectors = ''
+        self.episode_name = ''
 
     def __gt__(self, other):
         '''

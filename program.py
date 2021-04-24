@@ -51,7 +51,9 @@ if __name__ == '__main__':
     # - Search pattern
     # - File extension
     # - URL to list of episodes
-    # - Maximum cache age in days
+    # - Maximum age in days of cache file
+    # - Trash folder
+    # - Days to keep downloads/episodes in trash folder
     DATA = TaRen(
         TAREN_CONFIG.getDownloads(),
         TAREN_CONFIG.getPattern(),

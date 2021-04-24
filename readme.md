@@ -1,6 +1,6 @@
 # TaRen
 
-TaRen steht für ```Ta```tort```Ren```anmer. Was soll denn das sein?
+TaRen steht für ```Ta```tort```Ren```amer. Was soll denn das sein?
 
 ## Motivation
 
@@ -15,9 +15,9 @@ und dergleichen mehr.
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster ```Tatort - 0000 - Sender - Titel - Kommissare.mp4``` entspricht. Also
-vierstellig die Nummer der Folge, dann der Titel des Tatorts und zum Schluss
-die ermittelnden Kommissare.
+dem Muster ```Tatort - 0000 - Sender - Titel - Kommissare.mp4``` entspricht.
+Also das Präfix Tatort, vierstellig die Nummer der Folge, der Sender, der Titel
+des Tatorts und zum Schluss die ermittelnden Kommissare.
 
 ## Technisch
 
@@ -38,8 +38,9 @@ wird die Datei dann umbenannt. Gibt es diese Datei bereits, wird die Dateigröß
 verglichen - der Download mit der HD Auflösung ist größer und wird eher
 behalten. Ist also der Tatort bereits in SD Auflösung vorhanden, und es wurde
 der gleiche Tatort in HD Auflösung ebenfalls heruntergeladen, dann wird die
-SD Version gelöscht und die HD Version behalten. Ansonsten wird der Download
-nicht umbenannt, sondern gelöscht.
+SD Version ~~gelöscht~~ in den Papierkorb von TaRen verschoben und die HD
+Version behalten. Ansonsten wird der Download nicht umbenannt, sondern
+~~gelöscht~~ in den Papierkorb von TaRen verschoben.
 
 ### Matching
 
@@ -47,14 +48,14 @@ Da es ja Folgen gibt, die den gleichen Namen haben, wurde das Matching
 überarbeitet. Das passiert auf folgende Weise:
 
 - Es wird geprüft, ob der Dateiname mit einer vierstelligen Zahl und einem
-Leerzeichen beginnt. Diese vierstellige Zahl wird als eine Folgennummer verwendet.
-Gibt es also eine Folge, die diese Nummer hat, ist das der Match. Damit kann man
-Downloads so markieren, dass sie gleich die richtige Folge haben. Sinnvoll ist
-das dann, wenn es Folgen mit gleichem Titel gibt, z. B. [Taxi nach Leipzig][tnlo]
-vs. [Taxi nach Leipzig][tnln].
-- Es wird geprüft, ob der Dateiname mit 'Tatort' und einer vierstelligen Zahl
-beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies als
-Indiz dafür gewertet, daß es sich hierbei um eine bestimmte Folge handelt.
+Leerzeichen beginnt. Diese vierstellige Zahl wird als eine Folgennummer
+verwendet. Gibt es also eine Folge, die diese Nummer hat, ist das der Match.
+Damit kann man Downloads so markieren, dass sie gleich die richtige Folge haben.
+Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
+[Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
+- Es wird geprüft, ob der Dateiname mit ```Tatort``` und einer vierstelligen
+Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
+als Indiz dafür gewertet, daß es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
 Tatort Folge enthält.
 
@@ -73,18 +74,35 @@ hierüber kann man nachdenken.
 ### UTF-8
 
 Tjoa, man solle es kaum glauben, aber im Jahr 2020 ist noch immer nicht alles
-[UTF-8][utf8], auch bei [Python][python] nicht. Der [Wikipedia][tatortwiki]-Artikel
-ist in [UTF-8][utf8]. Damit ich jedoch nicht bei jedem Test und Durchlauf die
-Webseite abfrage, habe ich einen Cache eingebaut. Das heißt, frühestens alle X
-Tage wird die Seite neu geladen, ansonsten aus dem Cache (sprich, einer Datei)
-geladen. Allerdings kann man in [Python][python] mit den Standard Funktionen
-keine [UTF-8][utf8] Dateien lesen und schreiben. Dazu muss man die Funktionen
-aus dem ```codecs``` Package verwenden. Auch das Package ```logging``` kann
-nicht so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist mit der
-```basicConfig``` nicht machbar bzw. vorgesehen. Es geht nur umständlich. Und
-beides, weder das mit den Dateien noch das mit dem Logging ist vernünftig
-erklärt. Zum Glück gibt es [stackoverflow][stackoverflow], da findet man dann
-die richtigen Hinweise.
+[UTF-8][utf8], auch bei [Python][python] nicht. Der [Wikipedia][tatortwiki]-
+Artikel ist in [UTF-8][utf8]. Damit ich jedoch nicht bei jedem Test und
+Durchlauf die Webseite abfrage, habe ich einen Cache eingebaut. Das heißt,
+frühestens alle X Tage wird die Seite neu geladen, ansonsten aus dem Cache
+(sprich, einer Datei) geladen. Allerdings kann man in [Python][python] mit den
+Standard Funktionen keine [UTF-8][utf8] Dateien lesen und schreiben. Dazu muss
+man die Funktionen aus dem ```codecs``` Package verwenden. Auch das Package
+```logging``` kann nicht so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist
+mit der ```basicConfig``` nicht machbar bzw. vorgesehen. Es geht nur
+umständlich. Und beides, weder das mit den Dateien noch das mit dem Logging ist
+vernünftig erklärt. Zum Glück gibt es [stackoverflow][stackoverflow], da findet
+man dann die richtigen Hinweise.
+
+### False-Positives
+
+Unter Umständen gibt es [False-Positives][fapo]. Das bedeudet, dass eine bereits
+vorhandene Episode gelöscht wird, da eine neue Episode mit besserer Qualität
+heruntergeladen und ermittelt wurde. Die normale Vorgehensweise wäre dann, die
+existierende Episode zu löschen und dann die neue Episode entsprechend
+umzubenennen. Unschön wird das ganze aber dann, wenn die Erkennung nicht gut
+genug war und es sich dabei um zwei verschiedene Episoden handelt - dann geht
+die eine davon ins digitale Nirwana und verschwindet aus der Sammlung. Um das
+zu verhindern, wurde ein ```Trash``` eingebaut. Die Dateien werden jetzt nicht
+sofort gelöscht, sondern erst einmal in den ```Trash``` verschoben. Erst nach
+```n``` Tagen im Trash werden sie dann tatsächlich gelöscht. Dabei wird mit dem
+verschieben in den ```Trash``` das Datum der ```*.mp4```-Datei auf den
+Löschzeitpunkt gesetzt. Dies ermöglicht beim Programmende zu prüfen, ob die
+Datei bereits die ```n``` Tage im ```Trash``` war und zu löschen ist, oder ob
+sie noch etwas länger dort liegen bleibt.
 
 ## Hinweise
 
@@ -100,7 +118,8 @@ gesetzt sein.
 
 - ~~Verwendung einer INI Datei zur einfachen Konfiguration~~ Done
 - ~~Schreiben einer INI Datei mit Defaults~~ Done
-- Verbeserung des INI Handlings bei fehlenden Einträgen
+- ~~Verbeserung des INI Handlings bei fehlenden Einträgen~~ Done
+- ~~Einbau eines ```Trash```~~ Done
 
 ## Lizenz
 
@@ -131,6 +150,7 @@ SOFTWARE.
 See also attached file [`LICENSE`](./LICENSE "MIT License").
 
 [beautifulsoup]: https://www.crummy.com/software/BeautifulSoup/
+[fapo]: https://en.wikipedia.org/wiki/False_positives_and_false_negatives
 [logging]: https://docs.python.org/3/library/logging.html
 [mediathekview]: https://mediathekview.de/
 [python]: https://de.wikipedia.org/wiki/Python_(Programmiersprache)

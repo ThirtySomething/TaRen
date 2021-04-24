@@ -38,6 +38,9 @@ class WebSiteCache:
     '''
 
     def __init__(self, cachename, websiteurl, cacheage):
+        '''
+        Default init of variables
+        '''
         self.cachename = '{}.html'.format(cachename)
         self.websiteurl = websiteurl
         self.cacheage = cacheage
@@ -46,6 +49,9 @@ class WebSiteCache:
         logging.debug('cacheage [%s]', '{}'.format(self.cacheage))
 
     def _get_age_in_days(self):
+        '''
+        Determine age in days of cached file
+        '''
         cacheage = 0
         if path.exists(self.cachename):
             today = datetime.datetime.today()
@@ -55,12 +61,18 @@ class WebSiteCache:
         return cacheage
 
     def _write_to_cache(self):
+        '''
+        Write downloaded content to cache file
+        '''
         websitecontent = requests.get(self.websiteurl).content
         with codecs.open(self.cachename, 'w', 'utf-8') as file:
             file.write(websitecontent.decode('utf-8'))
         logging.info('saved content to cache file [%s]', '{}'.format(self.cachename))
 
     def _read_from_cache(self):
+        '''
+        Read content from cached file
+        '''
         with codecs.open(self.cachename, 'r', 'utf-8') as file:
             websitecontent = file.read()
         logging.info('read content from cache file [%s]', '{}'.format(self.cachename))

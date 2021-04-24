@@ -35,9 +35,13 @@ class DownloadList:
     '''
 
     def __init__(self, searchdir, pattern, extension):
+        '''
+        Init of variables
+        '''
         self.searchdir = searchdir
         self.pattern = pattern
         self.extension = extension
+        # Ensure extenstion starts with a dot
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
         logging.debug('searchdir [%s]', '{}'.format(searchdir))

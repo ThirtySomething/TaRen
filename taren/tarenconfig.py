@@ -31,7 +31,7 @@ from os import path
 # https://docs.python.org/3/library/configparser.html#legacy-api-examples
 class TarenConfig:
     '''
-    Build list of filenames
+    Contains dynamic settings of TaRen
     '''
 
     s_taren = 'TaRen'
@@ -46,6 +46,9 @@ class TarenConfig:
     k_trashage = 'trashage'
 
     def __init__(self):
+        '''
+        Set default values for config
+        '''
         self.downloads = 'v:\\tatort'
         self.extension = 'mp4'
         self.logfile = 'program.log'
@@ -57,6 +60,9 @@ class TarenConfig:
         self.trashage = '3'
 
     def __read(self, iniFileName):
+        '''
+        Parse INI file and read values
+        '''
         config = configparser.RawConfigParser()
         config.read(iniFileName)
         self.downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads)
@@ -70,6 +76,9 @@ class TarenConfig:
         self.wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki)
 
     def __write(self, iniFileName):
+        '''
+        Write INI file with values
+        '''
         config = configparser.RawConfigParser()
         config[TarenConfig.s_taren] = {
             TarenConfig.k_downloads: self.downloads,
@@ -86,34 +95,64 @@ class TarenConfig:
             config.write(configfile)
 
     def init(self, iniFileName):
+        '''
+        Either read existing INI file or create new one with defaults
+        '''
         if path.exists(iniFileName):
             self.__read(iniFileName)
         else:
             self.__write(iniFileName)
 
     def getDownloads(self):
+        '''
+        Get path to episodes/downloads
+        '''
         return self.downloads
 
     def getExtension(self):
+        '''
+        Get extension of movies
+        '''
         return self.extension
 
     def getLogfile(self):
+        '''
+        Get name of logfile
+        '''
         return self.logfile
 
     def getLogstring(self):
+        '''
+        Get format of logstring
+        '''
         return self.logstring
 
     def getMaxcache(self):
+        '''
+        Get maximum age in days of cached WIKI article
+        '''
         return int(self.maxcache)
 
     def getPattern(self):
+        '''
+        Get search pattern to identify episodes/downloads
+        '''
         return self.pattern
 
     def getTrash(self):
+        '''
+        Get name of trash folder
+        '''
         return self.trash
 
     def getTrashage(self):
+        '''
+        Get maximum age in days of files in trash folder
+        '''
         return int(self.trashage)
 
     def getWiki(self):
+        '''
+        Get URL of Wiki article of all Tatort episodes
+        '''
         return self.wiki
