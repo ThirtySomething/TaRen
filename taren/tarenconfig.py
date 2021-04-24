@@ -42,6 +42,8 @@ class TarenConfig:
     k_maxcache = 'maxcache'
     k_pattern = 'pattern'
     k_wiki = 'wiki'
+    k_trash = 'trash'
+    k_trashage = 'trashage'
 
     def __init__(self):
         self.downloads = 'v:\\tatort'
@@ -51,6 +53,8 @@ class TarenConfig:
         self.maxcache = '1'
         self.pattern = 'Tatort'
         self.wiki = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
+        self.trash = 'trash'
+        self.trashage = '3'
 
     def __read(self, iniFileName):
         config = configparser.RawConfigParser()
@@ -61,6 +65,8 @@ class TarenConfig:
         self.logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring)
         self.maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache)
         self.pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern)
+        self.trash = config.get(TarenConfig.s_taren, TarenConfig.k_trash)
+        self.trashage = config.get(TarenConfig.s_taren, TarenConfig.k_trashage)
         self.wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki)
 
     def __write(self, iniFileName):
@@ -72,6 +78,8 @@ class TarenConfig:
             TarenConfig.k_logstring: self.logstring,
             TarenConfig.k_maxcache: self.maxcache,
             TarenConfig.k_pattern: self.pattern,
+            TarenConfig.k_trash: self.trash,
+            TarenConfig.k_trash: self.trashage,
             TarenConfig.k_wiki: self.wiki
         }
         with open(iniFileName, 'w') as configfile:
@@ -100,6 +108,12 @@ class TarenConfig:
 
     def getPattern(self):
         return self.pattern
+
+    def getTrash(self):
+        return self.trash
+
+    def getTrashage(self):
+        return int(self.trashage)
 
     def getWiki(self):
         return self.wiki

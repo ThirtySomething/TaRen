@@ -57,7 +57,9 @@ if __name__ == '__main__':
         TAREN_CONFIG.getPattern(),
         TAREN_CONFIG.getExtension(),
         TAREN_CONFIG.getWiki(),
-        TAREN_CONFIG.getMaxcache()
+        TAREN_CONFIG.getMaxcache(),
+        TAREN_CONFIG.getTrash(),
+        TAREN_CONFIG.getTrashage()
     )
 
     # Start magic process :D

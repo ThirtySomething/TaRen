@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 import os
+import time
 from os import path
 from .episodelist import EpisodeList
 from .downloadlist import DownloadList
@@ -39,12 +40,14 @@ class TaRen:
     - Perform renaming
     '''
 
-    def __init__(self, searchdir, pattern, extension, url, cachetime):
+    def __init__(self, searchdir, pattern, extension, url, cachetime, trash, trashage):
         self.searchdir = searchdir
         self.pattern = pattern
         self.extension = extension
         self.url = url
         self.cachetime = cachetime
+        self.trash = os.path.join(self.searchdir, trash)
+        self.trashage = trashage
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
         if not self.searchdir.endswith('\\'):
@@ -54,6 +57,36 @@ class TaRen:
         logging.debug('extension [%s]', '{}'.format(extension))
         logging.debug('url [%s]', '{}'.format(url))
         logging.debug('cachetime [%s]', '{}'.format(cachetime))
+        logging.debug('trash [%s]', '{}'.format(self.trash))
+        logging.debug('trashage [%s]', '{}'.format(self.trashage))
+
+    def trash_create(self):
+        if not os.path.exists(self.trash):
+            try:
+                os.mkdir(self.trash)
+                logging.debug('Directory [%s] created', '{}'.format(self.trash))
+            except OSError:
+                logging.error('Creation of the directory [%s] failed, abort', '{}'.format(self.trash))
+                return False
+        else:
+            logging.info('Directory [%s] alread exists', '{}'.format(self.trash))
+        return True
+
+    def trash_cleanup(self):
+        now = time.time()
+        logging.info('Delete files older than [%s] days from bin [%s]', '{}'.format(self.trashage), '{}'.format(self.trash))
+        for filename in os.listdir(self.trash):
+            if os.path.getmtime(os.path.join(self.trash, filename)) < now - self.trashage * 86400:
+                if os.path.isfile(os.path.join(self.trash, filename)):
+                    os.remove(os.path.join(self.trash, filename))
+                    logging.info('Delete file [%s]', '{}'.format(filename))
+
+    def trash_move(self, src, dst):
+        logging.debug('Move file [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
+        os.rename(src, dst)
+        now = time.time()
+        logging.debug('Set access/modified timestamp of [%s] to [%s]', '{}'.format(dst), '{}'.format(now))
+        os.utime(dst,(now, now))
 
     def rename_process(self):
         '''
@@ -67,6 +100,9 @@ class TaRen:
 
         download_list = DownloadList(self.searchdir, self.pattern, self.extension)
         downloads = download_list.get_filenames()
+
+        if not self.trash_create():
+            return False
 
         downloads_to_process = []
         for current_download in downloads:
@@ -96,15 +132,18 @@ class TaRen:
                 size_new = os.stat(new_fqn).st_size
                 if size_old == size_new:
                     logging.info('file size equal, delete file [%s]', '{}'.format(new_fqn))
-                    os.remove(new_fqn)
+                    dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
+                    self.trash_move(new_fqn, dst_fqn)
                     deleted = deleted + 1
                 if size_old > size_new:
                     logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(new_fqn))
-                    os.remove(new_fqn)
+                    dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
+                    self.trash_move(new_fqn, dst_fqn)
                     deleted = deleted + 1
                 if size_old < size_new:
                     logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(old_fqn))
-                    os.remove(old_fqn)
+                    dst_fqn = os.path.join(self.trash, current_task[0])
+                    self.trash_move(old_fqn, dst_fqn)
                     deleted = deleted + 1
                     continue
 
@@ -112,3 +151,4 @@ class TaRen:
             os.rename(old_fqn, new_fqn)
             renamed = renamed + 1
         logging.info('files total [%s], skipped [%s], renamed [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(deleted))
+        self.trash_cleanup()
