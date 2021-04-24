@@ -89,9 +89,7 @@ man dann die richtigen Hinweise.
 
 ### False-Positives
 
-Unter Umständen gibt es [False-Positives][fapo]. Das bedeudet, dass eine bereits
-vorhandene Episode gelöscht wird, da vermeintlich die gleiche Episode mit
-besserer Qualität heruntergeladen wurde. Die normale Vorgehensweise wäre dann,
+Unter Umständen gibt es [False-Positives][fapo]. Die normale Vorgehensweise ist,
 die existierende Episode zu löschen und dann die neue Episode entsprechend
 umzubenennen. Unschön wird das ganze aber dann, wenn die Erkennung nicht gut
 genug war und es sich dabei um zwei verschiedene Episoden handelt - dann geht
