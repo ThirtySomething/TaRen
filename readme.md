@@ -55,7 +55,7 @@ Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
 [Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
 - Es wird geprüft, ob der Dateiname mit ```Tatort``` und einer vierstelligen
 Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
-als Indiz dafür gewertet, daß es sich hierbei um eine bestimmte Folge handelt.
+als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
 Tatort Folge enthält.
 
@@ -73,7 +73,7 @@ hierüber kann man nachdenken.
 
 ### UTF-8
 
-Tjoa, man solle es kaum glauben, aber im Jahr 2020 ist noch immer nicht alles
+Tjoa, man sollte es kaum glauben, aber im Jahr 2020 ist noch immer nicht alles
 [UTF-8][utf8], auch bei [Python][python] nicht. Der [Wikipedia][tatortwiki]-
 Artikel ist in [UTF-8][utf8]. Damit ich jedoch nicht bei jedem Test und
 Durchlauf die Webseite abfrage, habe ich einen Cache eingebaut. Das heißt,
@@ -90,9 +90,9 @@ man dann die richtigen Hinweise.
 ### False-Positives
 
 Unter Umständen gibt es [False-Positives][fapo]. Das bedeudet, dass eine bereits
-vorhandene Episode gelöscht wird, da eine neue Episode mit besserer Qualität
-heruntergeladen und ermittelt wurde. Die normale Vorgehensweise wäre dann, die
-existierende Episode zu löschen und dann die neue Episode entsprechend
+vorhandene Episode gelöscht wird, da vermeintlich die gleiche Episode mit
+besserer Qualität heruntergeladen wurde. Die normale Vorgehensweise wäre dann,
+die existierende Episode zu löschen und dann die neue Episode entsprechend
 umzubenennen. Unschön wird das ganze aber dann, wenn die Erkennung nicht gut
 genug war und es sich dabei um zwei verschiedene Episoden handelt - dann geht
 die eine davon ins digitale Nirwana und verschwindet aus der Sammlung. Um das
