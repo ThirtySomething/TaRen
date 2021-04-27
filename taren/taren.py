@@ -136,7 +136,7 @@ class TaRen:
                 continue
             downloads_to_process.append([current_download, episode])
             logging.debug('added to process list: [%s] <> [%s]', '{}'.format(current_download), '{}'.format(episode))
-        logging.info('downloads_to_process %s', '{}'.format(len(downloads_to_process)))
+        logging.info('downloads_to_process [%s]', '{}'.format(len(downloads_to_process)))
 
         # Process downloads
         trash = 0
@@ -161,7 +161,7 @@ class TaRen:
 
                 if size_old == size_new:
                     # Episode and download are equal
-                    logging.info('file size equal, delete file [%s]', '{}'.format(new_fqn))
+                    logging.info('file size equal, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
                     dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
                     self._trash_move(new_fqn, dst_fqn)
@@ -169,7 +169,7 @@ class TaRen:
 
                 if size_old > size_new:
                     # Episode is greater than download
-                    logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(new_fqn))
+                    logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
                     dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
                     self._trash_move(new_fqn, dst_fqn)
@@ -177,7 +177,7 @@ class TaRen:
 
                 if size_old < size_new:
                     # Download is greater than episode
-                    logging.info('one file smaller than the other one, delete file [%s]', '{}'.format(old_fqn))
+                    logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(old_fqn))
                     # Move to trash
                     dst_fqn = os.path.join(self.trash, current_task[0])
                     self._trash_move(old_fqn, dst_fqn)
@@ -190,7 +190,7 @@ class TaRen:
             renamed = renamed + 1
 
         # Summary
-        logging.info('files total [%s], skipped [%s], renamed [%s], trash [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash))
+        logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash))
 
         # Cleanup trash
         self._trash_cleanup()
