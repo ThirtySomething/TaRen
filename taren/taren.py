@@ -75,13 +75,14 @@ class TaRen:
                 logging.error('Creation of the directory [%s] failed, abort', '{}'.format(self.trash))
                 return False
         else:
-            logging.info('Directory [%s] alread exists', '{}'.format(self.trash))
+            logging.debug('Directory [%s] alread exists', '{}'.format(self.trash))
         return True
 
     def _trash_cleanup(self):
         '''
         Delete files from trah older than configured age
         '''
+        deleted = 0
         # Calculate maximum age
         maxage = time.time() - self.trashage * 86400
         logging.info('Delete files older than [%s] days from trash [%s]', '{}'.format(self.trashage), '{}'.format(self.trash))
@@ -96,6 +97,8 @@ class TaRen:
                     # Perform deletion
                     os.remove(fname)
                     logging.info('Delete file [%s]', '{}'.format(filename))
+                    deleted = deleted + 1
+        return deleted
 
     def _trash_move(self, src, dst):
         '''
@@ -139,6 +142,7 @@ class TaRen:
         logging.info('downloads_to_process [%s]', '{}'.format(len(downloads_to_process)))
 
         # Process downloads
+        deleted = 0
         trash = 0
         renamed = 0
         skipped = 0
@@ -189,8 +193,8 @@ class TaRen:
             os.rename(old_fqn, new_fqn)
             renamed = renamed + 1
 
-        # Summary
-        logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash))
-
         # Cleanup trash
-        self._trash_cleanup()
+        deleted = self._trash_cleanup()
+
+        # Summary
+        logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s], deleted [%s}', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash), '{}'.format(deleted))
