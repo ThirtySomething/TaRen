@@ -197,4 +197,4 @@ class TaRen:
         deleted = self._trash_cleanup()
 
         # Summary
-        logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s], deleted [%s}', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash), '{}'.format(deleted))
+        logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash), '{}'.format(deleted))
