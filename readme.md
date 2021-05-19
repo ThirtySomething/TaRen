@@ -27,6 +27,7 @@ des Tatorts und zum Schluss die ermittelnden Kommissare.
 und getestet wurde mit Python 3.8.1.
 - Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
 - [Logging][logging] wird ebenfalls benötigt.
+- Das Packet [Requests][requests] ist ebenfalls notwendig.
 
 ### Prozess
 
@@ -153,6 +154,7 @@ See also attached file [`LICENSE`](./LICENSE "MIT License").
 [mediathekview]: https://mediathekview.de/
 [python]: https://de.wikipedia.org/wiki/Python_(Programmiersprache)
 [regexp]: https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck
+[requests]: https://docs.python-requests.org/en/master/
 [stackoverflow]: https://www.stackoverflow.com
 [tatortwiki]: https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen
 [tnln]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(2016)
