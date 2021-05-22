@@ -103,6 +103,13 @@ class Episode:
             # logging.debug('match filename [%s] by id [%s|%s] = [%s]', '{}'.format(filename), '{}'.format(filename_id), '{}'.format(self.episode_id), '{}'.format(match))
             return self.episode_id == filename_id
 
+        # Check for download of dailymotion
+        filename_match = re.search(r'(_E([0-9]{3,4})_)', filename)
+        if filename_match:
+            filename_id = int(filename_match.group(2))
+            # logging.debug('match filename [%s] by id [%s|%s] = [%s]', '{}'.format(filename), '{}'.format(filename_id), '{}'.format(self.episode_id), '{}'.format(match))
+            return self.episode_id == filename_id
+
         # Check episode prefix with number => alredy handled by TaRen
         filename_match = re.search(r'^(Tatort - ([0-9]{4}) )', filename)
         if filename_match:

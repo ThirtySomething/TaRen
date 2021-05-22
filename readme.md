@@ -54,6 +54,9 @@ verwendet. Gibt es also eine Folge, die diese Nummer hat, ist das der Match.
 Damit kann man Downloads so markieren, dass sie gleich die richtige Folge haben.
 Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
 [Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
+- Es wird geprüft, ob in dem Dateinamen ein ```_Exxx_``` enthalten ist. Das
+```xxx``` ist eine drei- oder vierstellige Zahl. Das wäre die Episodennummer
+von einem Download bei Dailymotion.
 - Es wird geprüft, ob der Dateiname mit ```Tatort``` und einer vierstelligen
 Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
 als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
