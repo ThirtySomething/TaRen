@@ -86,7 +86,7 @@ class WebSiteCache:
         '''
         if self._get_age_in_days() > self.cacheage:
             os.remove(self.cachename)
-            logging.info('deleted cache file [%s]', '{}'.format(self.cachename))
+            logging.info('maxage of [%s] days passed, deleted cache file [%s]', '{}'.format(self.cacheage), '{}'.format(self.cachename))
         if not path.exists(self.cachename):
             self._write_to_cache()
         content = self._read_from_cache()
