@@ -57,7 +57,7 @@ class WebSiteCache:
             today = datetime.datetime.today()
             modified_date = datetime.datetime.fromtimestamp(os.path.getmtime(self.cachename))
             cacheage = (today - modified_date).days
-        logging.info('cache file [%s] aged (%s) days', '{}'.format(self.cachename), '{}'.format(cacheage))
+        logging.info('cache file [%s] aged [%s] days, maxage [%s] days', '{}'.format(self.cachename), '{}'.format(cacheage) , '{}'.format(self.cacheage))
         return cacheage
 
     def _write_to_cache(self):
@@ -67,7 +67,7 @@ class WebSiteCache:
         websitecontent = requests.get(self.websiteurl).content
         with codecs.open(self.cachename, 'w', 'utf-8') as file:
             file.write(websitecontent.decode('utf-8'))
-        logging.info('saved content to cache file [%s]', '{}'.format(self.cachename))
+        logging.info('saved content of [%s] to cache file [%s]', '{}'.format(self.websiteurl), '{}'.format(self.cachename))
 
     def _read_from_cache(self):
         '''
@@ -86,7 +86,7 @@ class WebSiteCache:
         '''
         if self._get_age_in_days() > self.cacheage:
             os.remove(self.cachename)
-            logging.info('maxage of [%s] days passed, deleted cache file [%s]', '{}'.format(self.cacheage), '{}'.format(self.cachename))
+            logging.info('deleted cache file [%s]', '{}'.format(self.cachename))
         if not path.exists(self.cachename):
             self._write_to_cache()
         content = self._read_from_cache()
