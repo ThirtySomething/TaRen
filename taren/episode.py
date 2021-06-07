@@ -59,7 +59,7 @@ class Episode:
         '''
         Default string representation of an episode
         '''
-        measstring = 'Tatort - {:04d} - {} - {} - {}'.format(self.episode_id, self.episode_broadcast, self.episode_name, self.episode_inspectors)
+        measstring = 'Tatort - {:04d} - {} - {} - {}'.format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_broadcast)
         return measstring
 
     def _strip_invalid_characters(self):
