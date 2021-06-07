@@ -29,6 +29,12 @@ und getestet wurde mit Python 3.8.1.
 - [Logging][logging] wird ebenfalls benötigt.
 - Das Packet [Requests][requests] ist ebenfalls notwendig.
 
+```cmd
+pip install beautifulsoup4
+pip install logging
+pip install requests
+```
+
 ### Prozess
 
 Der Wikipedia Artikel wird geparst und die Tatortfolgen in eine interne
