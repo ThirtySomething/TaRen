@@ -100,6 +100,22 @@ class TaRen:
                     deleted = deleted + 1
         return deleted
 
+    def _trash_list(self):
+        '''
+        List all files from trah
+        '''
+        # Calculate maximum age
+        maxage = time.time() - self.trashage * 86400
+        logging.info('List files from trash [%s]', '{}'.format(self.trash))
+        # Loop over all in trash
+        for filename in os.listdir(self.trash):
+            # Build FQN
+            fname = os.path.join(self.trash, filename)
+            # Check only files
+            if os.path.isfile(fname):
+                # List file
+                logging.info('File [%s]', '{}'.format(filename))
+
     def _trash_move(self, src, dst):
         '''
         Move file to trash and modify file date to deletion timestamp
@@ -195,6 +211,9 @@ class TaRen:
 
         # Cleanup trash
         deleted = self._trash_cleanup()
+
+        # List trash
+        self._trash_list()
 
         # Summary
         logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash), '{}'.format(deleted))
