@@ -56,7 +56,7 @@ class TarenConfig:
         self.maxcache = '1'
         self.pattern = 'Tatort'
         self.wiki = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
-        self.trash = 'trash'
+        self.trash = '.trash'
         self.trashage = '3'
 
     def __read(self, iniFileName):
