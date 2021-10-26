@@ -88,7 +88,7 @@ class TarenConfig:
             TarenConfig.k_maxcache: self.maxcache,
             TarenConfig.k_pattern: self.pattern,
             TarenConfig.k_trash: self.trash,
-            TarenConfig.k_trash: self.trashage,
+            TarenConfig.k_trashage: self.trashage,
             TarenConfig.k_wiki: self.wiki
         }
         with open(iniFileName, 'w') as configfile:
