@@ -1,6 +1,6 @@
 # TaRen
 
-TaRen steht für ```Ta```tort```Ren```amer. Was soll denn das sein?
+TaRen steht für `Ta`tort`Ren`amer. Was soll denn das sein?
 
 ## Motivation
 
@@ -8,14 +8,14 @@ TaRen steht für ```Ta```tort```Ren```amer. Was soll denn das sein?
 ARD Mediathek herunter. Dabei haben diese Downloads dann teilweise sehr
 kryptische Dateinamen. Sicher, der Kontent ist immer ersichtlich. Aber es sind
 zusätzliche Informationen vorhanden, die mich eigentlich nicht interessieren.
-Da sind zum Beispiel die Film ID, verschiedene Präfixe wie ```Film & Serie```
+Da sind zum Beispiel die Film ID, verschiedene Präfixe wie `Film & Serie`
 und dergleichen mehr.
 
 ## Die Lösung
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster ```Tatort - 0000 - Sender - Titel - Kommissare.mp4``` entspricht.
+dem Muster `Tatort - 0000 - Sender - Titel - Kommissare.mp4` entspricht.
 Also das Präfix Tatort, vierstellig die Nummer der Folge, der Sender, der Titel
 des Tatorts und zum Schluss die ermittelnden Kommissare.
 
@@ -38,8 +38,8 @@ pip install requests
 ### Prozess
 
 Der Wikipedia Artikel wird geparst und die Tatortfolgen in eine interne
-Liste eingetragen. Dann werden auf der Festplatte alle ```*.mp4``` Dateien
-gesucht, in denen das Keyword ```Tatort``` vorkommt. In dem Dateinamen wird
+Liste eingetragen. Dann werden auf der Festplatte alle `*.mp4` Dateien
+gesucht, in denen das Keyword `Tatort` vorkommt. In dem Dateinamen wird
 dann gesucht, ob dieser den Namen einer Tatortfolge enthält. In diesem Fall
 wird die Datei dann umbenannt. Gibt es diese Datei bereits, wird die Dateigröße
 verglichen - der Download mit der HD Auflösung ist größer und wird eher
@@ -60,10 +60,10 @@ verwendet. Gibt es also eine Folge, die diese Nummer hat, ist das der Match.
 Damit kann man Downloads so markieren, dass sie gleich die richtige Folge haben.
 Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
 [Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
-- Es wird geprüft, ob in dem Dateinamen ein ```_Exxx_``` enthalten ist. Das
-```xxx``` ist eine drei- oder vierstellige Zahl. Das wäre die Episodennummer
+- Es wird geprüft, ob in dem Dateinamen ein `_Exxx_` enthalten ist. Das
+`xxx` ist eine drei- oder vierstellige Zahl. Das wäre die Episodennummer
 von einem Download bei Dailymotion.
-- Es wird geprüft, ob der Dateiname mit ```Tatort``` und einer vierstelligen
+- Es wird geprüft, ob der Dateiname mit `Tatort` und einer vierstelligen
 Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
 als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
@@ -72,11 +72,11 @@ Tatort Folge enthält.
 ## Zum Nachdenken
 
 - Über [Reguläre Ausdrücke][regexp] wird der Name der Folge bereinigt. Es steht
-dann kein ```(Folge XXXX hat den gleichen Titel)``` im Titel. Das kann
+dann kein `(Folge XXXX hat den gleichen Titel)` im Titel. Das kann
 offensichtlich zu Schwierigkeiten führen. Eventuell sollte man diese Bereinigung
 nochmal überdenken.
 - Ebenfalls über [Reguläre Ausdrücke][regexp] werden die Namen der Kommissare
-bearbeitet. Es steht dann kein ```(Gastauftritt XXX)``` bei den Kommisaren. Auch
+bearbeitet. Es steht dann kein `(Gastauftritt XXX)` bei den Kommisaren. Auch
 hierüber kann man nachdenken.
 
 ## Stolpersteine
@@ -90,9 +90,9 @@ Durchlauf die Webseite abfrage, habe ich einen Cache eingebaut. Das heißt,
 frühestens alle X Tage wird die Seite neu geladen, ansonsten aus dem Cache
 (sprich, einer Datei) geladen. Allerdings kann man in [Python][python] mit den
 Standard Funktionen keine [UTF-8][utf8] Dateien lesen und schreiben. Dazu muss
-man die Funktionen aus dem ```codecs``` Package verwenden. Auch das Package
-```logging``` kann nicht so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist
-mit der ```basicConfig``` nicht machbar bzw. vorgesehen. Es geht nur
+man die Funktionen aus dem `codecs` Package verwenden. Auch das Package
+`logging` kann nicht so ohne weiteres mit [UTF-8][utf8] umgehen. Das ist
+mit der `basicConfig` nicht machbar bzw. vorgesehen. Es geht nur
 umständlich. Und beides, weder das mit den Dateien noch das mit dem Logging ist
 vernünftig erklärt. Zum Glück gibt es [stackoverflow][stackoverflow], da findet
 man dann die richtigen Hinweise.
@@ -104,12 +104,12 @@ die existierende Episode zu löschen und dann die neue Episode entsprechend
 umzubenennen. Unschön wird das ganze aber dann, wenn die Erkennung nicht gut
 genug war und es sich dabei um zwei verschiedene Episoden handelt - dann geht
 die eine davon ins digitale Nirwana und verschwindet aus der Sammlung. Um das
-zu verhindern, wurde ein ```Trash``` eingebaut. Die Dateien werden jetzt nicht
-sofort gelöscht, sondern erst einmal in den ```Trash``` verschoben. Erst nach
-```n``` Tagen im Trash werden sie dann tatsächlich gelöscht. Dabei wird mit dem
-verschieben in den ```Trash``` das Datum der ```*.mp4```-Datei auf den
+zu verhindern, wurde ein `Trash` eingebaut. Die Dateien werden jetzt nicht
+sofort gelöscht, sondern erst einmal in den `Trash` verschoben. Erst nach
+`n` Tagen im Trash werden sie dann tatsächlich gelöscht. Dabei wird mit dem
+verschieben in den `Trash` das Datum der `*.mp4`-Datei auf den
 Löschzeitpunkt gesetzt. Dies ermöglicht beim Programmende zu prüfen, ob die
-Datei bereits die ```n``` Tage im ```Trash``` war und zu löschen ist, oder ob
+Datei bereits die `n` Tage im `Trash` war und zu löschen ist, oder ob
 sie noch etwas länger dort liegen bleibt.
 
 ## Hinweise
@@ -127,7 +127,9 @@ gesetzt sein.
 - ~~Verwendung einer INI Datei zur einfachen Konfiguration~~ Done
 - ~~Schreiben einer INI Datei mit Defaults~~ Done
 - ~~Verbeserung des INI Handlings bei fehlenden Einträgen~~ Done
-- ~~Einbau eines ```Trash```~~ Done
+- ~~Einbau eines `Trash`~~ Done
+- `Trash` als Klasse
+- Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
 ## Lizenz
 
