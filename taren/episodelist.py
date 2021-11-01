@@ -35,50 +35,50 @@ class EpisodeList:
     Extract from given website the episode list
     '''
 
-    def __init__(self, pattern, url, cachetime):
-        self.pattern = pattern
-        self.url = url
-        self.cachetime = cachetime
-        self.episodes = []
+    def __init__(self: object, pattern: str, url: str, cachetime: int) -> None:
+        self.pattern: str = pattern
+        self.url: str = url
+        self.cachetime: int = cachetime
+        self.episodes: list[Episode] = []
         logging.debug('pattern [%s]', '{}'.format(pattern))
         logging.debug('url [%s]', '{}'.format(url))
         logging.debug('cachetime [%s]', '{}'.format(cachetime))
 
-    def _read_website(self):
+    def _read_website(self: object) -> str:
         '''
         Retrieve website via cache
         '''
         # Get website content from cache handler
-        cache = WebSiteCache(self.pattern, self.url, self.cachetime)
+        cache: WebSiteCache = WebSiteCache(self.pattern, self.url, self.cachetime)
         return cache.get_website_from_cache()
 
-    def _parse_website(self, websitecontent):
+    def _parse_website(self: object, websitecontent: str) -> list[Episode]:
         '''
         Build internal list about episodes based on website content.
         '''
         # Parse website using BeautifulSoup
-        websitedata = BeautifulSoup(websitecontent, 'html.parser')
+        websitedata: BeautifulSoup = BeautifulSoup(websitecontent, 'html.parser')
         # Get table with episodes - there is only one tables
-        table = websitedata.find('table')
+        table: str = websitedata.find('table')
         # Get raw episode data from table data row
-        rows = table.find_all('tr')
+        rows: list[str] = table.find_all('tr')
         # Build list of episodes for all rows
-        episodes = self._build_list_of_episodes(rows)
+        episodes: list[Episode] = self._build_list_of_episodes(rows)
         return episodes
 
-    def _build_list_of_episodes(self, raw_data):
+    def _build_list_of_episodes(self: object, raw_data: str) -> list[Episode]:
         '''
         Extract episodes from episode list
         '''
-        episodes = []
+        episodes: list[Episode] = []
         # For each HTML table row aka raw episode data
         for table_row in raw_data:
             # Extract all columns as cell
-            table_cells = table_row.find_all('td')
+            table_cells: list[str] = table_row.find_all('td')
             # Get content of cells
-            episode_data = [i.text.replace('\n', '') for i in table_cells]
+            episode_data: list[str] = [i.text.replace('\n', '') for i in table_cells]
             # Create a new and empty episode
-            current_episode = Episode()
+            current_episode: Episode = Episode()
             # Parse raw data into episode object
             current_episode.parse(episode_data)
             # When episode was successfully parsed, add to list
@@ -89,22 +89,22 @@ class EpisodeList:
         episodes.sort()
         return episodes
 
-    def get_episodes(self):
+    def get_episodes(self: object) -> None:
         '''
         Read website and extract episodes, return them as list.
         '''
         # Get website content
-        websitecontent = self._read_website()
+        websitecontent: str = self._read_website()
         # Parse website
         self.episodes = self._parse_website(websitecontent)
         logging.info('total number of episodes [%s]', '{}'.format(len(self.episodes)))
 
-    def find_episode(self, filename):
+    def find_episode(self: object, filename: str) -> Episode:
         '''
         Find episode in list
         '''
         # Create empty episode
-        episode = Episode()
+        episode: Episode = Episode()
         # Loop over all episodes
         for current_episode in self.episodes:
             # Does filename match episode

@@ -29,57 +29,59 @@ import os.path
 from os import path
 
 # https://docs.python.org/3/library/configparser.html#legacy-api-examples
+
+
 class TarenConfig:
     '''
     Contains dynamic settings of TaRen
     '''
 
-    s_taren = 'TaRen'
-    k_downloads = 'downloads'
-    k_extension = 'extension'
-    k_logfile = 'logfile'
-    k_logstring = 'logstring'
-    k_maxcache = 'maxcache'
-    k_pattern = 'pattern'
-    k_wiki = 'wiki'
-    k_trash = 'trash'
-    k_trashage = 'trashage'
+    k_downloads: str = 'downloads'
+    k_extension: str = 'extension'
+    k_logfile: str = 'logfile'
+    k_logstring: str = 'logstring'
+    k_maxcache: str = 'maxcache'
+    k_pattern: str = 'pattern'
+    k_trash: str = 'trash'
+    k_trashage: str = 'trashage'
+    k_wiki: str = 'wiki'
+    s_taren: str = 'TaRen'
 
-    def __init__(self):
+    def __init__(self: object) -> None:
         '''
         Set default values for config
         '''
-        self.downloads = 'v:\\tatort'
-        self.extension = 'mp4'
-        self.logfile = 'program.log'
-        self.logstring = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'
-        self.maxcache = '1'
-        self.pattern = 'Tatort'
-        self.wiki = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
-        self.trash = '.trash'
-        self.trashage = '3'
+        self.downloads: str = 'v:\\tatort'
+        self.extension: str = 'mp4'
+        self.logfile: str = 'program.log'
+        self.logstring: str = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'
+        self.maxcache: str = '1'
+        self.pattern: str = 'Tatort'
+        self.trash: str = '.trash'
+        self.trashage: str = '3'
+        self.wiki: str = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
 
-    def __read(self, iniFileName):
+    def __read(self: object, iniFileName: str) -> None:
         '''
         Parse INI file and read values
         '''
-        config = configparser.RawConfigParser()
+        config: configparser.RawConfigParser = configparser.RawConfigParser()
         config.read(iniFileName)
-        self.downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads)
-        self.extension = config.get(TarenConfig.s_taren, TarenConfig.k_extension)
-        self.logfile = config.get(TarenConfig.s_taren, TarenConfig.k_logfile)
-        self.logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring)
-        self.maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache)
-        self.pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern)
-        self.trash = config.get(TarenConfig.s_taren, TarenConfig.k_trash)
-        self.trashage = config.get(TarenConfig.s_taren, TarenConfig.k_trashage)
-        self.wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki)
+        self.downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads, fallback=self.downloads)
+        self.extension = config.get(TarenConfig.s_taren, TarenConfig.k_extension, fallback=self.extension)
+        self.logfile = config.get(TarenConfig.s_taren, TarenConfig.k_logfile, fallback=self.logfile)
+        self.logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring, fallback=self.logstring)
+        self.maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache, fallback=self.maxcache)
+        self.pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern, fallback=self.pattern)
+        self.trash = config.get(TarenConfig.s_taren, TarenConfig.k_trash, fallback=self.trash)
+        self.trashage = config.get(TarenConfig.s_taren, TarenConfig.k_trashage, fallback=self.trashage)
+        self.wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki, fallback=self.wiki)
 
-    def __write(self, iniFileName):
+    def __write(self: object, iniFileName: str) -> None:
         '''
         Write INI file with values
         '''
-        config = configparser.RawConfigParser()
+        config: configparser.RawConfigParser = configparser.RawConfigParser()
         config[TarenConfig.s_taren] = {
             TarenConfig.k_downloads: self.downloads,
             TarenConfig.k_extension: self.extension,
@@ -94,7 +96,7 @@ class TarenConfig:
         with open(iniFileName, 'w') as configfile:
             config.write(configfile)
 
-    def init(self, iniFileName):
+    def init(self: object, iniFileName: str) -> str:
         '''
         Either read existing INI file or create new one with defaults
         '''
@@ -103,55 +105,55 @@ class TarenConfig:
         else:
             self.__write(iniFileName)
 
-    def getDownloads(self):
+    def getDownloads(self: object) -> str:
         '''
         Get path to episodes/downloads
         '''
         return self.downloads
 
-    def getExtension(self):
+    def getExtension(self: object) -> str:
         '''
         Get extension of movies
         '''
         return self.extension
 
-    def getLogfile(self):
+    def getLogfile(self: object) -> str:
         '''
         Get name of logfile
         '''
         return self.logfile
 
-    def getLogstring(self):
+    def getLogstring(self: object) -> str:
         '''
         Get format of logstring
         '''
         return self.logstring
 
-    def getMaxcache(self):
+    def getMaxcache(self: object) -> int:
         '''
         Get maximum age in days of cached WIKI article
         '''
         return int(self.maxcache)
 
-    def getPattern(self):
+    def getPattern(self: object) -> str:
         '''
         Get search pattern to identify episodes/downloads
         '''
         return self.pattern
 
-    def getTrash(self):
+    def getTrash(self: object) -> str:
         '''
         Get name of trash folder
         '''
         return self.trash
 
-    def getTrashage(self):
+    def getTrashage(self: object) -> int:
         '''
         Get maximum age in days of files in trash folder
         '''
         return int(self.trashage)
 
-    def getWiki(self):
+    def getWiki(self: object) -> str:
         '''
         Get URL of Wiki article of all Tatort episodes
         '''

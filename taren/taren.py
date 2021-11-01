@@ -40,14 +40,14 @@ class TaRen:
     - Perform renaming
     '''
 
-    def __init__(self, searchdir, pattern, extension, url, cachetime, trash, trashage):
-        self.searchdir = searchdir
-        self.pattern = pattern
-        self.extension = extension
-        self.url = url
-        self.cachetime = cachetime
-        self.trash = os.path.join(self.searchdir, trash)
-        self.trashage = trashage
+    def __init__(self: object, searchdir: str, pattern: str, extension: str, url: str, cachetime: int, trash: str, trashage: int) -> None:
+        self.searchdir: str = searchdir
+        self.pattern: str = pattern
+        self.extension: str = extension
+        self.url: str = url
+        self.cachetime: int = cachetime
+        self.trash: str = os.path.join(self.searchdir, trash)
+        self.trashage: int = trashage
         # Ensure extension starts with a dot
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
@@ -62,7 +62,7 @@ class TaRen:
         logging.debug('trash [%s]', '{}'.format(self.trash))
         logging.debug('trashage [%s]', '{}'.format(self.trashage))
 
-    def _trash_create(self):
+    def _trash_create(self: object) -> bool:
         '''
         Ensure existence of the trash folder
         '''
@@ -78,18 +78,18 @@ class TaRen:
             logging.debug('Directory [%s] alread exists', '{}'.format(self.trash))
         return True
 
-    def _trash_cleanup(self):
+    def _trash_cleanup(self: object) -> int:
         '''
         Delete files from trah older than configured age
         '''
-        deleted = 0
+        deleted: int = 0
         # Calculate maximum age
-        maxage = time.time() - self.trashage * 86400
+        maxage: int = time.time() - self.trashage * 86400
         logging.info('Delete files older than [%s] days from trash [%s]', '{}'.format(self.trashage), '{}'.format(self.trash))
         # Loop over all in trash
         for filename in os.listdir(self.trash):
             # Build FQN
-            fname = os.path.join(self.trash, filename)
+            fname: str = os.path.join(self.trash, filename)
             # Check only files
             if os.path.isfile(fname):
                 # Check age of file
@@ -100,23 +100,21 @@ class TaRen:
                     deleted = deleted + 1
         return deleted
 
-    def _trash_list(self):
+    def _trash_list(self: object) -> None:
         '''
         List all files from trah
         '''
-        # Calculate maximum age
-        maxage = time.time() - self.trashage * 86400
         logging.info('List files from trash [%s]', '{}'.format(self.trash))
         # Loop over all in trash
         for filename in os.listdir(self.trash):
             # Build FQN
-            fname = os.path.join(self.trash, filename)
+            fname: str = os.path.join(self.trash, filename)
             # Check only files
             if os.path.isfile(fname):
                 # List file
                 logging.info('File [%s]', '{}'.format(filename))
 
-    def _trash_move(self, src, dst):
+    def _trash_move(self: object, src: str, dst: str) -> None:
         '''
         Move file to trash and modify file date to deletion timestamp
         '''
@@ -124,11 +122,11 @@ class TaRen:
         logging.debug('Move file [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
         os.rename(src, dst)
         # Modify timestamp
-        now = time.time()
+        now: float = time.time()
         logging.debug('Set access/modified timestamp of [%s] to [%s]', '{}'.format(dst), '{}'.format(now))
         os.utime(dst, (now, now))
 
-    def rename_process(self):
+    def rename_process(self: object) -> None:
         '''
         Controls the complete process:
         - Get website content about the episodes
@@ -136,19 +134,19 @@ class TaRen:
         - Find affected downloads
         '''
         # Get list of episodes
-        episode_list = EpisodeList(self.pattern, self.url, self.cachetime)
+        episode_list: EpisodeList = EpisodeList(self.pattern, self.url, self.cachetime)
         episode_list.get_episodes()
 
         # Get list of downloads
-        download_list = DownloadList(self.searchdir, self.pattern, self.extension)
-        downloads = download_list.get_filenames()
+        download_list: DownloadList = DownloadList(self.searchdir, self.pattern, self.extension)
+        downloads: list[str] = download_list.get_filenames()
 
         # Check for trash
         if not self._trash_create():
             return False
 
         # Create list of downloads to process
-        downloads_to_process = []
+        downloads_to_process: list[str] = []
         for current_download in downloads:
             episode = episode_list.find_episode(current_download)
             if episode.empty:
@@ -158,15 +156,15 @@ class TaRen:
         logging.info('downloads_to_process [%s]', '{}'.format(len(downloads_to_process)))
 
         # Process downloads
-        deleted = 0
-        trash = 0
-        renamed = 0
-        skipped = 0
-        total = 0
+        deleted: int = 0
+        trash: int = 0
+        renamed: int = 0
+        skipped: int = 0
+        total: int = 0
         for current_task in downloads_to_process:
             total = total + 1
-            new_fqn = os.path.join(self.searchdir, '{}{}'.format(current_task[1], self.extension))
-            old_fqn = os.path.join(self.searchdir, current_task[0])
+            new_fqn: str = os.path.join(self.searchdir, '{}{}'.format(current_task[1], self.extension))
+            old_fqn: str = os.path.join(self.searchdir, current_task[0])
 
             if new_fqn == old_fqn:
                 # Already processed episode
@@ -176,14 +174,14 @@ class TaRen:
             if path.exists(new_fqn):
                 # New episode already exists
                 logging.debug('file already exists [%s]', '{}'.format(new_fqn))
-                size_old = os.stat(old_fqn).st_size
-                size_new = os.stat(new_fqn).st_size
+                size_old: int = os.stat(old_fqn).st_size
+                size_new: int = os.stat(new_fqn).st_size
 
                 if size_old == size_new:
                     # Episode and download are equal
                     logging.info('file size equal, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
-                    dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
+                    dst_fqn: str = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
                     self._trash_move(new_fqn, dst_fqn)
                     trash = trash + 1
 
@@ -191,7 +189,7 @@ class TaRen:
                     # Episode is greater than download
                     logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
-                    dst_fqn = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
+                    dst_fqn: str = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
                     self._trash_move(new_fqn, dst_fqn)
                     trash = trash + 1
 
@@ -199,7 +197,7 @@ class TaRen:
                     # Download is greater than episode
                     logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(old_fqn))
                     # Move to trash
-                    dst_fqn = os.path.join(self.trash, current_task[0])
+                    dst_fqn: str = os.path.join(self.trash, current_task[0])
                     self._trash_move(old_fqn, dst_fqn)
                     trash = trash + 1
                     continue

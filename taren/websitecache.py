@@ -37,48 +37,48 @@ class WebSiteCache:
     Simple file cache for websites
     '''
 
-    def __init__(self, cachename, websiteurl, cacheage):
+    def __init__(self: object, cachename: str, websiteurl: str, cacheage: int) -> None:
         '''
         Default init of variables
         '''
-        self.cachename = '{}.html'.format(cachename)
-        self.websiteurl = websiteurl
-        self.cacheage = cacheage
+        self.cachename: str = '{}.html'.format(cachename)
+        self.websiteurl: str = websiteurl
+        self.cacheage: int = cacheage
         logging.debug('cache file [%s]', '{}'.format(self.cachename))
         logging.debug('websiteurl [%s]', '{}'.format(self.websiteurl))
         logging.debug('cacheage [%s]', '{}'.format(self.cacheage))
 
-    def _get_age_in_days(self):
+    def _get_age_in_days(self: object) -> int:
         '''
         Determine age in days of cached file
         '''
-        cacheage = 0
+        cacheage: int = 0
         if path.exists(self.cachename):
-            today = datetime.datetime.today()
-            modified_date = datetime.datetime.fromtimestamp(os.path.getmtime(self.cachename))
+            today: datetime = datetime.datetime.today()
+            modified_date: datetime = datetime.datetime.fromtimestamp(os.path.getmtime(self.cachename))
             cacheage = (today - modified_date).days
-        logging.info('cache file [%s] aged [%s] days, maxage [%s] days', '{}'.format(self.cachename), '{}'.format(cacheage) , '{}'.format(self.cacheage))
+        logging.info('cache file [%s] aged [%s] days, maxage [%s] days', '{}'.format(self.cachename), '{}'.format(cacheage), '{}'.format(self.cacheage))
         return cacheage
 
-    def _write_to_cache(self):
+    def _write_to_cache(self: object) -> None:
         '''
         Write downloaded content to cache file
         '''
-        websitecontent = requests.get(self.websiteurl).content
+        websitecontent: bytes = requests.get(self.websiteurl).content
         with codecs.open(self.cachename, 'w', 'utf-8') as file:
             file.write(websitecontent.decode('utf-8'))
         logging.info('saved content of [%s] to cache file [%s]', '{}'.format(self.websiteurl), '{}'.format(self.cachename))
 
-    def _read_from_cache(self):
+    def _read_from_cache(self: object) -> str:
         '''
         Read content from cached file
         '''
         with codecs.open(self.cachename, 'r', 'utf-8') as file:
-            websitecontent = file.read()
+            websitecontent: str = file.read()
         logging.info('read content from cache file [%s]', '{}'.format(self.cachename))
         return websitecontent
 
-    def get_website_from_cache(self):
+    def get_website_from_cache(self: object) -> str:
         '''
         First check cache file, if creation age is greater than given limit, then remove
         cache file. If cache file does not exist, retrieve website content and save to
@@ -89,5 +89,5 @@ class WebSiteCache:
             logging.info('deleted cache file [%s]', '{}'.format(self.cachename))
         if not path.exists(self.cachename):
             self._write_to_cache()
-        content = self._read_from_cache()
+        content: str = self._read_from_cache()
         return content

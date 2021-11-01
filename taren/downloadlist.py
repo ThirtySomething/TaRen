@@ -34,13 +34,13 @@ class DownloadList:
     Build list of filenames
     '''
 
-    def __init__(self, searchdir, pattern, extension):
+    def __init__(self: object, searchdir: str, pattern: str, extension: str) -> None:
         '''
         Init of variables
         '''
-        self.searchdir = searchdir
-        self.pattern = pattern
-        self.extension = extension
+        self.searchdir: str = searchdir
+        self.pattern: str = pattern
+        self.extension: str = extension
         # Ensure extenstion starts with a dot
         if not self.extension.startswith('.'):
             self.extension = '.{}'.format(self.extension)
@@ -48,14 +48,14 @@ class DownloadList:
         logging.debug('pattern [%s]', '{}'.format(pattern))
         logging.debug('extension [%s]', '{}'.format(extension))
 
-    def get_filenames(self):
+    def get_filenames(self: object) -> list[str]:
         '''
         Retrieve list of affected downloads
         '''
         # Create search pattern
-        searchpattern = '*{}*{}'.format(self.pattern, self.extension)
+        searchpattern: str = '*{}*{}'.format(self.pattern, self.extension)
         # Apply search pattern on search
-        files = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
+        files: list[str] = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
         files.sort()
         # Log info about found files
         logging.info('total number of downloads [%s]', '{}'.format(len(files)))
