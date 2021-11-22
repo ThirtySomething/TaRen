@@ -26,7 +26,6 @@ SOFTWARE.
 
 import configparser
 import os.path
-from os import path
 
 # https://docs.python.org/3/library/configparser.html#legacy-api-examples
 
@@ -47,114 +46,199 @@ class TarenConfig:
     k_wiki: str = 'wiki'
     s_taren: str = 'TaRen'
 
-    def __init__(self: object) -> None:
+    def __init__(self: object, iniFileName: str = 'program.ini') -> None:
         '''
         Set default values for config
         '''
-        self.downloads: str = 'v:\\tatort'
-        self.extension: str = 'mp4'
-        self.logfile: str = 'program.log'
-        self.logstring: str = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'
-        self.maxcache: str = '1'
-        self.pattern: str = 'Tatort'
-        self.trash: str = '.trash'
-        self.trashage: str = '3'
-        self.wiki: str = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
+        self._downloads: str = 'v:\\tatort'
+        self._extension: str = 'mp4'
+        self._logfile: str = 'program.log'
+        self._logstring: str = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'
+        self._maxcache: str = '1'
+        self._pattern: str = 'Tatort'
+        self._trash: str = '.trash'
+        self._trashage: str = '3'
+        self._wiki: str = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
+        self.iniFileName: str = iniFileName
 
-    def __read(self: object, iniFileName: str) -> None:
+    def __read(self: object) -> None:
         '''
         Parse INI file and read values
         '''
         config: configparser.RawConfigParser = configparser.RawConfigParser()
-        config.read(iniFileName)
-        self.downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads, fallback=self.downloads)
-        self.extension = config.get(TarenConfig.s_taren, TarenConfig.k_extension, fallback=self.extension)
-        self.logfile = config.get(TarenConfig.s_taren, TarenConfig.k_logfile, fallback=self.logfile)
-        self.logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring, fallback=self.logstring)
-        self.maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache, fallback=self.maxcache)
-        self.pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern, fallback=self.pattern)
-        self.trash = config.get(TarenConfig.s_taren, TarenConfig.k_trash, fallback=self.trash)
-        self.trashage = config.get(TarenConfig.s_taren, TarenConfig.k_trashage, fallback=self.trashage)
-        self.wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki, fallback=self.wiki)
+        config.read(self.iniFileName)
+        self._downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads, fallback=self._downloads)
+        self._extension = config.get(TarenConfig.s_taren, TarenConfig.k_extension, fallback=self._extension)
+        self._logfile = config.get(TarenConfig.s_taren, TarenConfig.k_logfile, fallback=self._logfile)
+        self._logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring, fallback=self._logstring)
+        self._maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache, fallback=self._maxcache)
+        self._pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern, fallback=self._pattern)
+        self._trash = config.get(TarenConfig.s_taren, TarenConfig.k_trash, fallback=self._trash)
+        self._trashage = config.get(TarenConfig.s_taren, TarenConfig.k_trashage, fallback=self._trashage)
+        self._wiki = config.get(TarenConfig.s_taren, TarenConfig.k_wiki, fallback=self._wiki)
 
-    def __write(self: object, iniFileName: str) -> None:
+    def __write(self: object) -> None:
         '''
         Write INI file with values
         '''
         config: configparser.RawConfigParser = configparser.RawConfigParser()
         config[TarenConfig.s_taren] = {
-            TarenConfig.k_downloads: self.downloads,
-            TarenConfig.k_extension: self.extension,
-            TarenConfig.k_logfile: self.logfile,
-            TarenConfig.k_logstring: self.logstring,
-            TarenConfig.k_maxcache: self.maxcache,
-            TarenConfig.k_pattern: self.pattern,
-            TarenConfig.k_trash: self.trash,
-            TarenConfig.k_trashage: self.trashage,
-            TarenConfig.k_wiki: self.wiki
+            TarenConfig.k_downloads: self._downloads,
+            TarenConfig.k_extension: self._extension,
+            TarenConfig.k_logfile: self._logfile,
+            TarenConfig.k_logstring: self._logstring,
+            TarenConfig.k_maxcache: self._maxcache,
+            TarenConfig.k_pattern: self._pattern,
+            TarenConfig.k_trash: self._trash,
+            TarenConfig.k_trashage: self._trashage,
+            TarenConfig.k_wiki: self._wiki
         }
-        with open(iniFileName, 'w') as configfile:
+        with open(self.iniFileName, 'w') as configfile:
             config.write(configfile)
 
-    def init(self: object, iniFileName: str) -> str:
+    def init(self: object) -> str:
         '''
         Either read existing INI file or create new one with defaults
         '''
-        if path.exists(iniFileName):
-            self.__read(iniFileName)
+        if os.path.exists(self.iniFileName):
+            self.__read()
         else:
-            self.__write(iniFileName)
+            self.__write()
 
-    def getDownloads(self: object) -> str:
+    @property
+    def downloads(self: object) -> str:
         '''
-        Get path to episodes/downloads
+        Get path of downloads
         '''
-        return self.downloads
+        return self._downloads
 
-    def getExtension(self: object) -> str:
+    @downloads.setter
+    def downloads(self: object, value: str) -> None:
+        '''
+        Set path of downloads
+        '''
+        self._downloads = value
+
+    @property
+    def extension(self: object) -> str:
         '''
         Get extension of movies
         '''
-        return self.extension
+        return self._extension
 
-    def getLogfile(self: object) -> str:
+    @extension.setter
+    def extension(self: object, value: str) -> None:
+        '''
+        Set extension of movies
+        '''
+        self._extension = value
+
+    @property
+    def logfile(self: object) -> str:
         '''
         Get name of logfile
         '''
-        return self.logfile
+        return self._logfile
 
-    def getLogstring(self: object) -> str:
+    @logfile.setter
+    def logfile(self: object, value: str) -> None:
+        '''
+        Get name of logfile
+        '''
+        self._logfile = value
+
+    @property
+    def logstring(self: object) -> str:
         '''
         Get format of logstring
         '''
-        return self.logstring
+        return self._logstring
 
-    def getMaxcache(self: object) -> int:
+    @logstring.setter
+    def logstring(self: object, value: str) -> None:
+        '''
+        Set format of logstring
+        '''
+        self._logstring = value
+
+    @property
+    def maxcache(self: object) -> int:
         '''
         Get maximum age in days of cached WIKI article
         '''
-        return int(self.maxcache)
+        return int(self._maxcache)
 
-    def getPattern(self: object) -> str:
+    @maxcache.setter
+    def maxcache(self: object, value: int) -> None:
+        '''
+        Set maximum age in days of cached WIKI article
+        '''
+        self._maxcache = value
+
+    @property
+    def pattern(self: object) -> str:
         '''
         Get search pattern to identify episodes/downloads
         '''
-        return self.pattern
+        return self._pattern
 
-    def getTrash(self: object) -> str:
+    @pattern.setter
+    def pattern(self: object, value: str) -> None:
+        '''
+        Set search pattern to identify episodes/downloads
+        '''
+        self._pattern = value
+
+    @property
+    def trash(self: object) -> str:
         '''
         Get name of trash folder
         '''
-        return self.trash
+        return self._trash
 
-    def getTrashage(self: object) -> int:
+    @trash.setter
+    def trash(self: object, value: str) -> str:
+        '''
+        Set name of trash folder
+        '''
+        self._trash = value
+
+    @property
+    def trashage(self: object) -> int:
         '''
         Get maximum age in days of files in trash folder
         '''
-        return int(self.trashage)
+        return int(self._trashage)
 
-    def getWiki(self: object) -> str:
+    @trashage.setter
+    def trashage(self: object, value: int) -> None:
+        '''
+        Set maximum age in days of files in trash folder
+        '''
+        self._trashage = value
+
+    @property
+    def wiki(self: object) -> str:
         '''
         Get URL of Wiki article of all Tatort episodes
         '''
-        return self.wiki
+        return self._wiki
+
+    @wiki.setter
+    def wiki(self: object, value: str) -> None:
+        '''
+        Set URL of Wiki article of all Tatort episodes
+        '''
+        self._wiki = value
+
+    def configurationLoad(self: object) -> None:
+        '''
+        Load configuration from file
+        '''
+        self.__read()
+
+    def configurationSave(self: object) -> None:
+        '''
+        Save configuration from file
+        '''
+        self.__write()

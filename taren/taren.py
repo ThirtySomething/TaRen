@@ -27,7 +27,6 @@ SOFTWARE.
 import logging
 import os
 import time
-from os import path
 from .episodelist import EpisodeList
 from .downloadlist import DownloadList
 
@@ -133,6 +132,11 @@ class TaRen:
         - Build internal list about episodes
         - Find affected downloads
         '''
+        # Check path of downloads
+        if not os.path.exists(self.searchdir):
+            logging.error('Path [%s] does not exist or not found, abort', '{}'.format(self.searchdir))
+            return
+
         # Get list of episodes
         episode_list: EpisodeList = EpisodeList(self.pattern, self.url, self.cachetime)
         episode_list.get_episodes()
@@ -171,7 +175,7 @@ class TaRen:
                 logging.debug('filenames identical, skip file [%s]', '{}'.format(old_fqn))
                 skipped = skipped + 1
                 continue
-            if path.exists(new_fqn):
+            if os.path.exists(new_fqn):
                 # New episode already exists
                 logging.debug('file already exists [%s]', '{}'.format(new_fqn))
                 size_old: int = os.stat(old_fqn).st_size

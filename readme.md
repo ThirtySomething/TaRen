@@ -27,12 +27,14 @@ des Tatorts und zum Schluss die ermittelnden Kommissare.
 und getestet wurde mit Python 3.8.1.
 - Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
 - [Logging][logging] wird ebenfalls benötigt.
-- Das Packet [Requests][requests] ist ebenfalls notwendig.
+- Das Paket [Requests][requests] ist ebenfalls notwendig.
+- Für die UI wird [PySimpleGui][pysimplegui] benötigt.
 
 ```cmd
 pip install beautifulsoup4
 pip install logging
 pip install requests
+pip install pysimplegui
 ```
 
 ### Prozess
@@ -68,6 +70,28 @@ Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
 als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
 Tatort Folge enthält.
+
+### Oberfläche
+
+An dem Bedinkonzept gibt es noch Verbesserungspotential.
+
+#### Standardansicht
+
+Zum Beispiel das Layout hier.
+
+![Startup][gui01]
+
+#### Einstellungen
+
+Hier könnten die Eingabefelder etwas breiter sein.
+
+![Settings][gui02]
+
+#### Prozess erfolgreich
+
+Und Umlaute sind auch ein Thema.
+
+![Done][gui03]
 
 ## Zum Nachdenken
 
@@ -128,6 +152,7 @@ gesetzt sein.
 - ~~Schreiben einer INI Datei mit Defaults~~ Done
 - ~~Verbeserung des INI Handlings bei fehlenden Einträgen~~ Done
 - ~~Einbau eines `Trash`~~ Done
+- ~~Eine GUI für das Programm~~ Done
 - `Trash` als Klasse
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
@@ -161,8 +186,12 @@ See also attached file [`LICENSE`](./LICENSE "MIT License").
 
 [beautifulsoup]: https://www.crummy.com/software/BeautifulSoup/
 [fapo]: https://en.wikipedia.org/wiki/False_positives_and_false_negatives
+[gui01]: ./images/Taren_GUI.png "Startup"
+[gui02]: ./images/Taren_GUI_Config.png "Settings"
+[gui03]: ./images/Taren_GUI_Done.png "Process done"
 [logging]: https://docs.python.org/3/library/logging.html
 [mediathekview]: https://mediathekview.de/
+[pysimplegui]: https://pysimplegui.readthedocs.io/en/latest/
 [python]: https://de.wikipedia.org/wiki/Python_(Programmiersprache)
 [regexp]: https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck
 [requests]: https://docs.python-requests.org/en/master/
