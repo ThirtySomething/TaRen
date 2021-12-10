@@ -30,7 +30,17 @@ und getestet wurde mit Python 3.8.1.
 - Das Paket [Requests][requests] ist ebenfalls notwendig.
 - Für die UI wird [PySimpleGui][pysimplegui] benötigt.
 
-```cmd
+```batch
+# Create virtual environment for TaRen
+python -m venv envtaren
+
+# Enable the environment
+call ./envtaren/Scripts/activate.bat
+
+# Install all required packages at once
+pip install -r packages.lst
+
+# For manual installation
 pip install beautifulsoup4
 pip install logging
 pip install requests
