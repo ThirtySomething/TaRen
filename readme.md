@@ -42,7 +42,6 @@ pip install -r packages.lst
 
 # For manual installation
 pip install beautifulsoup4
-pip install logging
 pip install requests
 pip install pysimplegui
 ```
