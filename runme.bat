@@ -34,8 +34,12 @@ if not exist "%PATH_ENVIRONMENT%" (
         call ./%ENV_NAME%/Scripts/activate.bat
     )
     @REM Install required modules
-    echo.Install required modules [%ENV_NAME%]
-    pip install -r %REQ_NAME%
+    if exist "%REQ_NAME%" (
+        echo.Install required modules [%ENV_NAME%]
+        pip install -r %REQ_NAME%
+    ) else (
+        echo.List of required modules [%ENV_NAME%] not found
+    )
 )
 @REM ***************************************************************************
 @REM * Activate environment if not already done
@@ -50,6 +54,9 @@ if ""=="%VIRTUAL_ENV%" (
 if ""=="%SCRIPT%" (
     set "SCRIPT=%DEF_SCRIPT%"
 )
+@REM ***************************************************************************
+@REM * Execute script
+@REM ***************************************************************************
 echo.Execute script [%SCRIPT%]
 python %SCRIPT%
-@REM endlocal
+endlocal
