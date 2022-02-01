@@ -38,24 +38,24 @@ class DownloadList:
         '''
         Init of variables
         '''
-        self.searchdir: str = searchdir
-        self.pattern: str = pattern
-        self.extension: str = extension
+        self._searchdir: str = searchdir
+        self._pattern: str = pattern
+        self._extension: str = extension
         # Ensure extenstion starts with a dot
-        if not self.extension.startswith('.'):
-            self.extension = '.{}'.format(self.extension)
-        logging.debug('searchdir [%s]', '{}'.format(searchdir))
-        logging.debug('pattern [%s]', '{}'.format(pattern))
-        logging.debug('extension [%s]', '{}'.format(extension))
+        if not self._extension.startswith('.'):
+            self._extension = '.{}'.format(self._extension)
+        logging.debug('searchdir [%s]', '{}'.format(self._searchdir))
+        logging.debug('pattern [%s]', '{}'.format(self._pattern))
+        logging.debug('extension [%s]', '{}'.format(self._extension))
 
     def get_filenames(self: object) -> list[str]:
         '''
         Retrieve list of affected downloads
         '''
         # Create search pattern
-        searchpattern: str = '*{}*{}'.format(self.pattern, self.extension)
+        searchpattern: str = '*{}*{}'.format(self._pattern, self._extension)
         # Apply search pattern on search
-        files: list[str] = fnmatch.filter(os.listdir(self.searchdir), searchpattern)
+        files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()
         # Log info about found files
         logging.info('total number of downloads [%s]', '{}'.format(len(files)))

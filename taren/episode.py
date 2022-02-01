@@ -36,7 +36,7 @@ class Episode:
     '''
 
     # Invalid characters inside filenames on Windows
-    invalid_characters: list[str] = ['"', '*', '<', '>', '?', '\\', '|', '/', ':']
+    _invalid_characters: list[str] = ['"', '*', '<', '>', '?', '\\', '|', '/', ':']
 
     def __init__(self: object) -> None:
         '''
@@ -67,7 +67,7 @@ class Episode:
         '''
         Remove characters which are invalid for filenames
         '''
-        for current_invalid_character in Episode.invalid_characters:
+        for current_invalid_character in Episode._invalid_characters:
             self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, ' ').strip()
             self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, ' ').strip()
             self.episode_name = self.episode_name.replace(current_invalid_character, ' ').strip()

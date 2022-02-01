@@ -26,9 +26,10 @@ SOFTWARE.
 
 import logging
 import os
-import time
-from .episodelist import EpisodeList
-from .downloadlist import DownloadList
+
+from taren.downloadlist import DownloadList
+from taren.episodelist import EpisodeList
+from taren.trash import Trash
 
 
 class TaRen:
@@ -40,90 +41,37 @@ class TaRen:
     '''
 
     def __init__(self: object, searchdir: str, pattern: str, extension: str, url: str, cachetime: int, trash: str, trashage: int) -> None:
-        self.searchdir: str = searchdir
-        self.pattern: str = pattern
-        self.extension: str = extension
-        self.url: str = url
-        self.cachetime: int = cachetime
-        self.trash: str = os.path.join(self.searchdir, trash)
-        self.trashage: int = trashage
-        # Ensure extension starts with a dot
-        if not self.extension.startswith('.'):
-            self.extension = '.{}'.format(self.extension)
-        # Ensure searchdir ends with trailing slash
-        if not self.searchdir.endswith('\\'):
-            self.searchdir = '{}\\'.format(self.searchdir)
+        self._searchdir: str = self._sanitize_path(searchdir)
+        self._pattern: str = pattern
+        self._extension: str = self._sanitize_extension(extension)
+        self._url: str = url
+        self._cachetime: int = cachetime
+        self._trash: str = os.path.join(self._searchdir, trash)
+        self._trashage: int = trashage
+        self._trash_new: Trash = Trash(searchdir, trash, self._trashage)
         logging.debug('searchdir [%s]', '{}'.format(searchdir))
         logging.debug('pattern [%s]', '{}'.format(pattern))
         logging.debug('extension [%s]', '{}'.format(extension))
         logging.debug('url [%s]', '{}'.format(url))
         logging.debug('cachetime [%s]', '{}'.format(cachetime))
-        logging.debug('trash [%s]', '{}'.format(self.trash))
-        logging.debug('trashage [%s]', '{}'.format(self.trashage))
+        logging.debug('trash [%s]', '{}'.format(self._trash))
+        logging.debug('trashage [%s]', '{}'.format(self._trashage))
 
-    def _trash_create(self: object) -> bool:
+    def _sanitize_path(self: object, path: str) -> str:
         '''
-        Ensure existence of the trash folder
+        Ensure searchdir ends with trailing slash
         '''
-        if not os.path.exists(self.trash):
-            try:
-                # Create missing folder
-                os.mkdir(self.trash)
-                logging.debug('Directory [%s] created', '{}'.format(self.trash))
-            except OSError:
-                logging.error('Creation of the directory [%s] failed, abort', '{}'.format(self.trash))
-                return False
-        else:
-            logging.debug('Directory [%s] alread exists', '{}'.format(self.trash))
-        return True
+        if not path.endswith('\\'):
+            path = '{}\\'.format(path)
+        return path
 
-    def _trash_cleanup(self: object) -> int:
+    def _sanitize_extension(self: object, extension: str) -> str:
         '''
-        Delete files from trah older than configured age
+        Ensure extension starts with a dot
         '''
-        deleted: int = 0
-        # Calculate maximum age
-        maxage: int = time.time() - self.trashage * 86400
-        logging.info('Delete files older than [%s] days from trash [%s]', '{}'.format(self.trashage), '{}'.format(self.trash))
-        # Loop over all in trash
-        for filename in os.listdir(self.trash):
-            # Build FQN
-            fname: str = os.path.join(self.trash, filename)
-            # Check only files
-            if os.path.isfile(fname):
-                # Check age of file
-                if os.path.getmtime(fname) < maxage:
-                    # Perform deletion
-                    os.remove(fname)
-                    logging.info('Delete file [%s]', '{}'.format(filename))
-                    deleted = deleted + 1
-        return deleted
-
-    def _trash_list(self: object) -> None:
-        '''
-        List all files from trah
-        '''
-        logging.info('List files from trash [%s]', '{}'.format(self.trash))
-        # Loop over all in trash
-        for filename in os.listdir(self.trash):
-            # Build FQN
-            fname: str = os.path.join(self.trash, filename)
-            # Check only files
-            if os.path.isfile(fname):
-                # List file
-                logging.info('File [%s]', '{}'.format(filename))
-
-    def _trash_move(self: object, src: str, dst: str) -> None:
-        '''
-        Move file to trash and modify file date to deletion timestamp
-        '''
-        # Move file to trash
-        logging.debug('Move file [%s] to [%s]', '{}'.format(src), '{}'.format(dst))
-        os.rename(src, dst)
-        # Modify timestamp
-        now: float = time.time()
-        logging.debug('Set access/modified timestamp of [%s] to [%s]', '{}'.format(dst), '{}'.format(now))
-        os.utime(dst, (now, now))
+        if not extension.startswith('.'):
+            extension = '.{}'.format(extension)
+        return extension
 
     def rename_process(self: object) -> None:
         '''
@@ -133,20 +81,20 @@ class TaRen:
         - Find affected downloads
         '''
         # Check path of downloads
-        if not os.path.exists(self.searchdir):
-            logging.error('Path [%s] does not exist or not found, abort', '{}'.format(self.searchdir))
+        if not os.path.exists(self._searchdir):
+            logging.error('Path [%s] does not exist or not found, abort', '{}'.format(self._searchdir))
             return
 
         # Get list of episodes
-        episode_list: EpisodeList = EpisodeList(self.pattern, self.url, self.cachetime)
+        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime)
         episode_list.get_episodes()
 
         # Get list of downloads
-        download_list: DownloadList = DownloadList(self.searchdir, self.pattern, self.extension)
+        download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
         downloads: list[str] = download_list.get_filenames()
 
         # Check for trash
-        if not self._trash_create():
+        if not self._trash_new.init():
             return False
 
         # Create list of downloads to process
@@ -167,8 +115,8 @@ class TaRen:
         total: int = 0
         for current_task in downloads_to_process:
             total = total + 1
-            new_fqn: str = os.path.join(self.searchdir, '{}{}'.format(current_task[1], self.extension))
-            old_fqn: str = os.path.join(self.searchdir, current_task[0])
+            new_fqn: str = os.path.join(self._searchdir, '{}{}'.format(current_task[1], self._extension))
+            old_fqn: str = os.path.join(self._searchdir, current_task[0])
 
             if new_fqn == old_fqn:
                 # Already processed episode
@@ -185,24 +133,21 @@ class TaRen:
                     # Episode and download are equal
                     logging.info('file size equal, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
-                    dst_fqn: str = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
-                    self._trash_move(new_fqn, dst_fqn)
+                    self._trash_new.move(new_fqn)
                     trash = trash + 1
 
                 if size_old > size_new:
                     # Episode is greater than download
                     logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(new_fqn))
                     # Move to trash
-                    dst_fqn: str = os.path.join(self.trash, '{}{}'.format(current_task[1], self.extension))
-                    self._trash_move(new_fqn, dst_fqn)
+                    self._trash_new.move(new_fqn)
                     trash = trash + 1
 
                 if size_old < size_new:
                     # Download is greater than episode
                     logging.info('one file smaller than the other one, move file [%s] to trash', '{}'.format(old_fqn))
                     # Move to trash
-                    dst_fqn: str = os.path.join(self.trash, current_task[0])
-                    self._trash_move(old_fqn, dst_fqn)
+                    self._trash_new.move(old_fqn)
                     trash = trash + 1
                     continue
 
@@ -212,10 +157,10 @@ class TaRen:
             renamed = renamed + 1
 
         # Cleanup trash
-        deleted = self._trash_cleanup()
+        deleted = self._trash_new.cleanup()
 
         # List trash
-        self._trash_list()
+        self._trash_new.list()
 
         # Summary
         logging.info('summary: files total [%s], skipped [%s], renamed [%s], trash [%s], deleted [%s]', '{}'.format(total), '{}'.format(skipped), '{}'.format(renamed), '{}'.format(trash), '{}'.format(deleted))

@@ -34,8 +34,7 @@ TAREN_CONFIG.init()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(logging.INFO)
-# LOGGER_SETUP.setLevel(logging.DEBUG)
+LOGGER_SETUP.setLevel(TAREN_CONFIG.loglevel)
 LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logfile, 'w', 'utf-8')
 LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logstring))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)

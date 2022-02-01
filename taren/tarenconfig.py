@@ -27,8 +27,6 @@ SOFTWARE.
 import configparser
 import os.path
 
-# https://docs.python.org/3/library/configparser.html#legacy-api-examples
-
 
 class TarenConfig:
     '''
@@ -38,6 +36,7 @@ class TarenConfig:
     k_downloads: str = 'downloads'
     k_extension: str = 'extension'
     k_logfile: str = 'logfile'
+    k_loglevel: str = 'loglevel'
     k_logstring: str = 'logstring'
     k_maxcache: str = 'maxcache'
     k_pattern: str = 'pattern'
@@ -53,23 +52,25 @@ class TarenConfig:
         self._downloads: str = 'v:\\tatort'
         self._extension: str = 'mp4'
         self._logfile: str = 'program.log'
+        self._loglevel: str = 'info'
         self._logstring: str = '%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s'
         self._maxcache: str = '1'
         self._pattern: str = 'Tatort'
         self._trash: str = '.trash'
         self._trashage: str = '3'
         self._wiki: str = 'https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen'
-        self.iniFileName: str = iniFileName
+        self._iniFileName: str = iniFileName
 
     def __read(self: object) -> None:
         '''
         Parse INI file and read values
         '''
         config: configparser.RawConfigParser = configparser.RawConfigParser()
-        config.read(self.iniFileName)
+        config.read(self._iniFileName)
         self._downloads = config.get(TarenConfig.s_taren, TarenConfig.k_downloads, fallback=self._downloads)
         self._extension = config.get(TarenConfig.s_taren, TarenConfig.k_extension, fallback=self._extension)
         self._logfile = config.get(TarenConfig.s_taren, TarenConfig.k_logfile, fallback=self._logfile)
+        self._loglevel = config.get(TarenConfig.s_taren, TarenConfig.k_loglevel, fallback=self._loglevel)
         self._logstring = config.get(TarenConfig.s_taren, TarenConfig.k_logstring, fallback=self._logstring)
         self._maxcache = config.get(TarenConfig.s_taren, TarenConfig.k_maxcache, fallback=self._maxcache)
         self._pattern = config.get(TarenConfig.s_taren, TarenConfig.k_pattern, fallback=self._pattern)
@@ -86,6 +87,7 @@ class TarenConfig:
             TarenConfig.k_downloads: self._downloads,
             TarenConfig.k_extension: self._extension,
             TarenConfig.k_logfile: self._logfile,
+            TarenConfig.k_loglevel: self._loglevel,
             TarenConfig.k_logstring: self._logstring,
             TarenConfig.k_maxcache: self._maxcache,
             TarenConfig.k_pattern: self._pattern,
@@ -93,17 +95,16 @@ class TarenConfig:
             TarenConfig.k_trashage: self._trashage,
             TarenConfig.k_wiki: self._wiki
         }
-        with open(self.iniFileName, 'w') as configfile:
+        with open(self._iniFileName, 'w') as configfile:
             config.write(configfile)
 
     def init(self: object) -> str:
         '''
         Either read existing INI file or create new one with defaults
         '''
-        if os.path.exists(self.iniFileName):
+        if os.path.exists(self._iniFileName):
             self.__read()
-        else:
-            self.__write()
+        self.__write()
 
     @property
     def downloads(self: object) -> str:
@@ -139,6 +140,13 @@ class TarenConfig:
         Get name of logfile
         '''
         return self._logfile
+
+    @property
+    def loglevel(self: object) -> str:
+        '''
+        Get loglevel, either DEBUG or INFO
+        '''
+        return self._loglevel.upper()
 
     @logfile.setter
     def logfile(self: object, value: str) -> None:

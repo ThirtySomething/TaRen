@@ -25,9 +25,11 @@ SOFTWARE.
 '''
 
 import logging
+
 from bs4 import BeautifulSoup
-from .episode import Episode
-from .websitecache import WebSiteCache
+
+from taren.episode import Episode
+from taren.websitecache import WebSiteCache
 
 
 class EpisodeList:
@@ -36,10 +38,10 @@ class EpisodeList:
     '''
 
     def __init__(self: object, pattern: str, url: str, cachetime: int) -> None:
-        self.pattern: str = pattern
-        self.url: str = url
-        self.cachetime: int = cachetime
-        self.episodes: list[Episode] = []
+        self._pattern: str = pattern
+        self._url: str = url
+        self._cachetime: int = cachetime
+        self._episodes: list[Episode] = []
         logging.debug('pattern [%s]', '{}'.format(pattern))
         logging.debug('url [%s]', '{}'.format(url))
         logging.debug('cachetime [%s]', '{}'.format(cachetime))
@@ -49,7 +51,7 @@ class EpisodeList:
         Retrieve website via cache
         '''
         # Get website content from cache handler
-        cache: WebSiteCache = WebSiteCache(self.pattern, self.url, self.cachetime)
+        cache: WebSiteCache = WebSiteCache(self._pattern, self._url, self._cachetime)
         return cache.get_website_from_cache()
 
     def _parse_website(self: object, websitecontent: str) -> list[Episode]:
@@ -96,8 +98,8 @@ class EpisodeList:
         # Get website content
         websitecontent: str = self._read_website()
         # Parse website
-        self.episodes = self._parse_website(websitecontent)
-        logging.info('total number of episodes [%s]', '{}'.format(len(self.episodes)))
+        self._episodes = self._parse_website(websitecontent)
+        logging.info('total number of episodes [%s]', '{}'.format(len(self._episodes)))
 
     def find_episode(self: object, filename: str) -> Episode:
         '''
@@ -106,7 +108,7 @@ class EpisodeList:
         # Create empty episode
         episode: Episode = Episode()
         # Loop over all episodes
-        for current_episode in self.episodes:
+        for current_episode in self._episodes:
             # Does filename match episode
             if current_episode.matches(filename):
                 # Memorize episode and abort loop

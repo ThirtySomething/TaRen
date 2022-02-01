@@ -32,18 +32,13 @@ und getestet wurde mit Python 3.8.1.
 
 ```batch
 # Create virtual environment for TaRen
-python -m venv envtaren
+python -m venv venv
 
 # Enable the environment
-call ./envtaren/Scripts/activate.bat
+call ./venv/Scripts/activate.bat
 
-# Install all required packages at once
-pip install -r packages.lst
-
-# For manual installation
-pip install beautifulsoup4
-pip install requests
-pip install pysimplegui
+# Install required packages
+pip install -r requirements.txt
 ```
 
 ### Prozess
@@ -162,7 +157,7 @@ gesetzt sein.
 - ~~Verbeserung des INI Handlings bei fehlenden Einträgen~~ Done
 - ~~Einbau eines `Trash`~~ Done
 - ~~Eine GUI für das Programm~~ Done
-- `Trash` als Klasse
+- ~~`Trash` als Klasse~~
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
 ## Lizenz
