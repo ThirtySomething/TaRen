@@ -24,6 +24,7 @@ SOFTWARE.
 ******************************************************************************
 '''
 
+import fnmatch
 import logging
 import ntpath
 import os
@@ -105,8 +106,28 @@ class Trash:
         '''
         Move file to trash and modify file date to deletion timestamp
         '''
-        unusedPath, filename = ntpath.split(file)
-        dst: str = os.path.join(self._trashfolder, filename)
+
+        # Extract plain filename and extension from source file
+        filenameWithPath, fileExtension = os.path.splitext(file)
+        filenameRaw: str = os.path.basename(filenameWithPath)
+
+        logging.debug('File [%s] splittet into [%s] and [%s]', '{}'.format(file), '{}'.format(filenameRaw), '{}'.format(fileExtension))
+
+        # Build search mask for variants
+        searchmask: str = filenameRaw + '*' + fileExtension
+        logging.debug('Searchmask [%s]', '{}'.format(searchmask))
+
+        # Search for existing variants
+        dst: str = ''
+        dstVariants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
+        if (0 == len(dstVariants)):
+            dst = os.path.join(self._trashfolder, (filenameRaw + fileExtension))
+        else:
+            dst = os.path.join(self._trashfolder, (filenameRaw + '_' + str(len(dstVariants)) + fileExtension))
+
+        # Build destination name
+        dst: str = os.path.join(self._trashfolder, dst)
+
         # Move file to trash
         logging.debug('Move file [%s] to [%s]', '{}'.format(file), '{}'.format(dst))
         os.rename(file, dst)
