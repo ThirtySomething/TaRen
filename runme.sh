@@ -33,13 +33,14 @@ if [[ ! -d "${PATH_ENVIRONMENT}" ]]; then
 
     # Activate environment
     if [[ -z "${VIRTUAL_ENV}" ]]; then
-        echo "Activate environment [${ENV_NAME}]"
-        source ${PATH_ENVIRONMENT}/bin/activate
+        echo "Initial activation of environment [${ENV_NAME}]"
+        source "${PATH_ENVIRONMENT}/bin/activate"
     fi
 
     # Install required modules
     if [[ -f "${REQ_NAME}" ]]; then
-        echo "Install required modules from [${REQ_NAME}]"
+        echo "Install required modules from [${REQ_NAME}] to [${ENV_NAME}]"
+        cat ${REQ_NAME}
         pip install -r ${REQ_NAME}
     else
         echo "List of required modules [${REQ_NAME}] not found"
@@ -51,7 +52,7 @@ fi
 ################################################################################
 if [[ -z "${VIRTUAL_ENV}" ]]; then
     echo "Activate environment [${ENV_NAME}]"
-    source ${PATH_ENVIRONMENT}/bin/activate
+    source "${PATH_ENVIRONMENT}/bin/activate"
 fi
 
 ################################################################################
@@ -64,5 +65,9 @@ fi
 ################################################################################
 # Execute script
 ################################################################################
-echo "Execute script [${SCRIPT}]"
-python ${SCRIPT}
+if [[ -f ${SCRIPT} ]]; then
+    echo "Execute script [${SCRIPT}]"
+    python ${SCRIPT}
+else
+    echo "Script [${SCRIPT}] not found :-("
+fi

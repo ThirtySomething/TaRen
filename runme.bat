@@ -30,15 +30,16 @@ if not exist "%PATH_ENVIRONMENT%" (
     python -m venv %ENV_NAME%
     @REM Activate environment
     if ""=="%VIRTUAL_ENV%" (
-        echo.Activate environment [%ENV_NAME%]
+        echo.Initial activation of environment [%ENV_NAME%]
         call ./%ENV_NAME%/Scripts/activate.bat
     )
     @REM Install required modules
     if exist "%REQ_NAME%" (
-        echo.Install required modules [%ENV_NAME%]
+        echo.Install required modules in [%REQ_NAME%] to [%ENV_NAME%]
+        type %REQ_NAME%
         pip install -r %REQ_NAME%
     ) else (
-        echo.List of required modules [%ENV_NAME%] not found
+        echo.List of required modules [%REQ_NAME%] not found
     )
 )
 @REM ***************************************************************************
@@ -57,6 +58,10 @@ if ""=="%SCRIPT%" (
 @REM ***************************************************************************
 @REM * Execute script
 @REM ***************************************************************************
-echo.Execute script [%SCRIPT%]
-python %SCRIPT%
+if exist "%SCRIPT%" (
+    echo.Execute script [%SCRIPT%]
+    python %SCRIPT%
+) else (
+    echo.Script [%SCRIPT%] not found :-()
+)
 endlocal
