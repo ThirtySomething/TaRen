@@ -24,26 +24,29 @@ SOFTWARE.
 ******************************************************************************
 '''
 
-import logging.config
-import logging
-from taren.taren import TaRen
-import PySimpleGUI as sg
 import json
+import logging
+import logging.config
+from datetime import date
+
+import PySimpleGUI as sg
+
+from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
 
 confvisible = False
 width_Label = 20
 width_Field = 50
 
-TAREN_CONFIG = TarenConfig('program.ini')
-TAREN_CONFIG.init()
+TAREN_CONFIG = TarenConfig('program.json')
+TAREN_CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(logging.INFO)
+LOGGER_SETUP.setLevel(TAREN_CONFIG.logging_loglevel.upper())
 # LOGGER_SETUP.setLevel(logging.DEBUG)
-LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logfile, 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logstring))
+LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logging_logfile, 'w', 'utf-8')
+LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logging_logstring))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 
@@ -60,29 +63,29 @@ def collapse(layout, key, visible):
 
 
 def tarenConfigLoad():
-    TAREN_CONFIG.configurationLoad()
-    window.find_element('-downloads-').Update(TAREN_CONFIG.downloads)
-    window.find_element('-extension-').Update(TAREN_CONFIG.extension)
-    window.find_element('-logfile-').Update(TAREN_CONFIG.logfile)
-    window.find_element('-logstring-').Update(TAREN_CONFIG.logstring)
-    window.find_element('-maxcache-').Update(TAREN_CONFIG.maxcache)
-    window.find_element('-pattern-').Update(TAREN_CONFIG.pattern)
-    window.find_element('-trash-').Update(TAREN_CONFIG.trash)
-    window.find_element('-trashage-').Update(TAREN_CONFIG.trashage)
-    window.find_element('-wiki-').Update(TAREN_CONFIG.wiki)
+    TAREN_CONFIG.load()
+    window.find_element('-downloads-').Update(TAREN_CONFIG.taren_downloads)
+    window.find_element('-extension-').Update(TAREN_CONFIG.taren_extension)
+    window.find_element('-logfile-').Update(TAREN_CONFIG.logging_logfile)
+    window.find_element('-logstring-').Update(TAREN_CONFIG.logging_logstring)
+    window.find_element('-maxcache-').Update(TAREN_CONFIG.taren_maxcache)
+    window.find_element('-pattern-').Update(TAREN_CONFIG.taren_pattern)
+    window.find_element('-trash-').Update(TAREN_CONFIG.taren_trash)
+    window.find_element('-trashage-').Update(TAREN_CONFIG.taren_trashage)
+    window.find_element('-wiki-').Update(TAREN_CONFIG.taren_wiki)
 
 
 def tarenConfigSave(values):
-    TAREN_CONFIG.downloads = values['-downloads-']
-    TAREN_CONFIG.extension = values['-extension-']
-    TAREN_CONFIG.logfile = values['-logfile-']
-    TAREN_CONFIG.logstring = values['-logstring-']
-    TAREN_CONFIG.maxcache = int(values['-maxcache-'])
-    TAREN_CONFIG.pattern = values['-pattern-']
-    TAREN_CONFIG.trash = values['-trash-']
-    TAREN_CONFIG.trashage = int(values['-trashage-'])
-    TAREN_CONFIG.wiki = values['-wiki-']
-    TAREN_CONFIG.configurationSave()
+    TAREN_CONFIG.taren_downloads = values['-downloads-']
+    TAREN_CONFIG.taren_extension = values['-extension-']
+    TAREN_CONFIG.logging_logfile = values['-logfile-']
+    TAREN_CONFIG.logging_logstring = values['-logstring-']
+    TAREN_CONFIG.taren_maxcache = int(values['-maxcache-'])
+    TAREN_CONFIG.taren_pattern = values['-pattern-']
+    TAREN_CONFIG.taren_trash = values['-trash-']
+    TAREN_CONFIG.taren_trashage = int(values['-trashage-'])
+    TAREN_CONFIG.taren_wiki = values['-wiki-']
+    TAREN_CONFIG.save()
     tarenConfigToggle(True)
 
 
@@ -107,20 +110,20 @@ def tarenProcess():
     # - Trash folder
     # - Days to keep downloads/episodes in trash folder
     DATA = TaRen(
-        TAREN_CONFIG.downloads,
-        TAREN_CONFIG.pattern,
-        TAREN_CONFIG.extension,
-        TAREN_CONFIG.wiki,
-        TAREN_CONFIG.maxcache,
-        TAREN_CONFIG.trash,
-        TAREN_CONFIG.trashage
+        TAREN_CONFIG.taren_downloads,
+        TAREN_CONFIG.taren_pattern,
+        TAREN_CONFIG.taren_extension,
+        TAREN_CONFIG.taren_wiki,
+        int(TAREN_CONFIG.taren_maxcache),
+        TAREN_CONFIG.taren_trash,
+        int(TAREN_CONFIG.taren_trashage)
     )
 
     # Start magic process :D
     DATA.rename_process()
 
     # Display logfile
-    with open(TAREN_CONFIG.logfile, 'r') as protocolfile:
+    with open(TAREN_CONFIG.logging_logfile, 'r') as protocolfile:
         processprotocol = protocolfile.readlines()
         for messageline in processprotocol:
             window.find_element('-result-').Update(messageline, append=True)
@@ -148,7 +151,7 @@ def_conf = [[sg.T('Download Verzeichnis', size=(width_Label, 1)), sg.I(key='-dow
 
 
 def_about = [[sg.T('TaRen GUI')],
-             [sg.T('(C) 2021 by ThirtySomething')],
+             [sg.T(('(C) 2021-' + '{}'.format(date.today().year) + ' by ThirtySomething'))],
              [sg.T('https://github.com/ThirtySomething/TaRen')],
              [sg.Push(), sg.Button('OK')]
              ]

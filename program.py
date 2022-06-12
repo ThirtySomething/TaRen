@@ -29,14 +29,14 @@ import logging
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
 
-TAREN_CONFIG = TarenConfig('program.ini')
-TAREN_CONFIG.init()
+TAREN_CONFIG = TarenConfig('program.json')
+TAREN_CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(TAREN_CONFIG.loglevel)
-LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logfile, 'w', 'utf-8')
-LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logstring))
+LOGGER_SETUP.setLevel(TAREN_CONFIG.logging_loglevel.upper())
+LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logging_logfile, 'w', 'utf-8')
+LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logging_logstring))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to rename files downloaded with MediathekView to a specific format
@@ -54,13 +54,13 @@ if __name__ == '__main__':
     # - Trash folder
     # - Days to keep downloads/episodes in trash folder
     DATA = TaRen(
-        TAREN_CONFIG.downloads,
-        TAREN_CONFIG.pattern,
-        TAREN_CONFIG.extension,
-        TAREN_CONFIG.wiki,
-        TAREN_CONFIG.maxcache,
-        TAREN_CONFIG.trash,
-        TAREN_CONFIG.trashage
+        TAREN_CONFIG.taren_downloads,
+        TAREN_CONFIG.taren_pattern,
+        TAREN_CONFIG.taren_extension,
+        TAREN_CONFIG.taren_wiki,
+        int(TAREN_CONFIG.taren_maxcache),
+        TAREN_CONFIG.taren_trash,
+        int(TAREN_CONFIG.taren_trashage)
     )
 
     # Start magic process :D
