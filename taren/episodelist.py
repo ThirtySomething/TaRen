@@ -1,4 +1,4 @@
-'''
+"""
 ******************************************************************************
 Copyright 2020 ThirtySomething
 ******************************************************************************
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-'''
+"""
 
 import logging
 
@@ -33,52 +33,32 @@ from taren.websitecache import WebSiteCache
 
 
 class EpisodeList:
-    '''
+    """
     Extract from given website the episode list
-    '''
+    """
 
+    ############################################################################
     def __init__(self: object, pattern: str, url: str, cachetime: int) -> None:
         self._pattern: str = pattern
         self._url: str = url
         self._cachetime: int = cachetime
         self._episodes: list[Episode] = []
-        logging.debug('pattern [%s]', '{}'.format(pattern))
-        logging.debug('url [%s]', '{}'.format(url))
-        logging.debug('cachetime [%s]', '{}'.format(cachetime))
+        logging.debug("pattern [{}]".format(pattern))
+        logging.debug("url [{}]".format(url))
+        logging.debug("cachetime [{}]".format(cachetime))
 
-    def _read_website(self: object) -> str:
-        '''
-        Retrieve website via cache
-        '''
-        # Get website content from cache handler
-        cache: WebSiteCache = WebSiteCache(self._pattern, self._url, self._cachetime)
-        return cache.get_website_from_cache()
-
-    def _parse_website(self: object, websitecontent: str) -> list[Episode]:
-        '''
-        Build internal list about episodes based on website content.
-        '''
-        # Parse website using BeautifulSoup
-        websitedata: BeautifulSoup = BeautifulSoup(websitecontent, 'html.parser')
-        # Get table with episodes - there is only one tables
-        table: str = websitedata.find('table')
-        # Get raw episode data from table data row
-        rows: list[str] = table.find_all('tr')
-        # Build list of episodes for all rows
-        episodes: list[Episode] = self._build_list_of_episodes(rows)
-        return episodes
-
+    ############################################################################
     def _build_list_of_episodes(self: object, raw_data: str) -> list[Episode]:
-        '''
+        """
         Extract episodes from episode list
-        '''
+        """
         episodes: list[Episode] = []
         # For each HTML table row aka raw episode data
         for table_row in raw_data:
             # Extract all columns as cell
-            table_cells: list[str] = table_row.find_all('td')
+            table_cells: list[str] = table_row.find_all("td")
             # Get content of cells
-            episode_data: list[str] = [i.text.replace('\n', '') for i in table_cells]
+            episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
             # Create a new and empty episode
             current_episode: Episode = Episode()
             # Parse raw data into episode object
@@ -86,25 +66,40 @@ class EpisodeList:
             # When episode was successfully parsed, add to list
             if not current_episode.empty:
                 episodes.append(current_episode)
-                logging.debug('episode [%s]', '{}'.format(current_episode))
+                logging.debug("episode [{}]".format(current_episode))
         # Return list of episodes
         episodes.sort()
         return episodes
 
-    def get_episodes(self: object) -> None:
-        '''
-        Read website and extract episodes, return them as list.
-        '''
-        # Get website content
-        websitecontent: str = self._read_website()
-        # Parse website
-        self._episodes = self._parse_website(websitecontent)
-        logging.info('total number of episodes [%s]', '{}'.format(len(self._episodes)))
+    ############################################################################
+    def _parse_website(self: object, websitecontent: str) -> list[Episode]:
+        """
+        Build internal list about episodes based on website content.
+        """
+        # Parse website using BeautifulSoup
+        websitedata: BeautifulSoup = BeautifulSoup(websitecontent, "html.parser")
+        # Get table with episodes - there is only one tables
+        table: str = websitedata.find("table")
+        # Get raw episode data from table data row
+        rows: list[str] = table.find_all("tr")
+        # Build list of episodes for all rows
+        episodes: list[Episode] = self._build_list_of_episodes(rows)
+        return episodes
 
+    ############################################################################
+    def _read_website(self: object) -> str:
+        """
+        Retrieve website via cache
+        """
+        # Get website content from cache handler
+        cache: WebSiteCache = WebSiteCache(self._pattern, self._url, self._cachetime)
+        return cache.get_website_from_cache()
+
+    ############################################################################
     def find_episode(self: object, filename: str) -> Episode:
-        '''
+        """
         Find episode in list
-        '''
+        """
         # Create empty episode
         episode: Episode = Episode()
         # Loop over all episodes
@@ -117,9 +112,24 @@ class EpisodeList:
 
         # Check episode for logging data
         if episode.empty:
-            logging.info('no match for filename [%s]', '{}'.format(filename))
+            logging.info("no match for filename [{}]".format(filename))
         else:
-            logging.debug('filename [%s] matches episode_name [%s]', '{}'.format(filename), '{}'.format(episode.episode_name))
+            logging.debug("filename [{}] matches episode_name [{}]".format(filename, episode.episode_name))
 
         # Return either empty episode or found episode
         return episode
+
+    ############################################################################
+    def get_episode_count(self: object) -> int:
+        return len(self._episodes)
+
+    ############################################################################
+    def get_episodes(self: object) -> None:
+        """
+        Read website and extract episodes, return them as list.
+        """
+        # Get website content
+        websitecontent: str = self._read_website()
+        # Parse website
+        self._episodes = self._parse_website(websitecontent)
+        logging.info("total number of episodes [{}]".format(len(self._episodes)))

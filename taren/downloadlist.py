@@ -1,4 +1,4 @@
-'''
+"""
 ******************************************************************************
 Copyright 2020 ThirtySomething
 ******************************************************************************
@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-'''
+"""
 
 import logging
 import fnmatch
@@ -30,33 +30,35 @@ import os
 
 
 class DownloadList:
-    '''
+    """
     Build list of filenames
-    '''
+    """
 
+    ############################################################################
     def __init__(self: object, searchdir: str, pattern: str, extension: str) -> None:
-        '''
+        """
         Init of variables
-        '''
+        """
         self._searchdir: str = searchdir
         self._pattern: str = pattern
         self._extension: str = extension
         # Ensure extenstion starts with a dot
-        if not self._extension.startswith('.'):
-            self._extension = '.{}'.format(self._extension)
-        logging.debug('searchdir [%s]', '{}'.format(self._searchdir))
-        logging.debug('pattern [%s]', '{}'.format(self._pattern))
-        logging.debug('extension [%s]', '{}'.format(self._extension))
+        if not self._extension.startswith("."):
+            self._extension = ".{}".format(self._extension)
+        logging.debug("searchdir [{}]".format(self._searchdir))
+        logging.debug("pattern [{}]".format(self._pattern))
+        logging.debug("extension [{}]".format(self._extension))
 
+    ############################################################################
     def get_filenames(self: object) -> list[str]:
-        '''
+        """
         Retrieve list of affected downloads
-        '''
+        """
         # Create search pattern
-        searchpattern: str = '*{}*{}'.format(self._pattern, self._extension)
+        searchpattern: str = "*{}*{}".format(self._pattern, self._extension)
         # Apply search pattern on search
         files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()
         # Log info about found files
-        logging.info('total number of downloads [%s]', '{}'.format(len(files)))
+        logging.info("total number of downloads [{}]".format(len(files)))
         return files

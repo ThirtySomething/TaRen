@@ -24,28 +24,32 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import os
-import sys
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../vendor/MDO/MDO/"))
-
-from MDO import MDO
-
-
-class TarenConfig(MDO):
+class Stats:
     """
-    Contains dynamic settings of TaRen
+    Statistic object, contains counter for
+    - Episodes total
+    - Episodes owned
+    - Downloads deleted
+    - Downloads in trash
     """
 
     ############################################################################
-    def setup(self: object) -> bool:
-        self.add("logging", "logfile", "program.log")
-        self.add("logging", "loglevel", "info")
-        self.add("logging", "logstring", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s")
-        self.add("taren", "downloads", "v:\\tatort")
-        self.add("taren", "extension", "mp4")
-        self.add("taren", "maxcache", "1")
-        self.add("taren", "pattern", "Tatort")
-        self.add("taren", "trash", ".trash")
-        self.add("taren", "trashage", "3")
-        self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
+    def __init__(self: object) -> None:
+        self.downloads_deleted: int = 0
+        self.downloads_moved: int = 0
+        self.downloads_renamed: int = 0
+        self.downloads_total: int = 0
+        self.downloads_trash: int = 0
+        self.episodes_owned: int = 0
+        self.episodes_total: int = 0
+
+    ############################################################################
+    def __repr__(self):
+        """Get dictionary as string"""
+        return self.__str__()
+
+    ############################################################################
+    def __str__(self):
+        """Get dictionary as string"""
+        return "ET [{}], EO [{}], DD[{}], DM [{}], DR [{}], DT [{}], DT [{}]".format(self.episodes_total, self.episodes_owned, self.downloads_deleted, self.downloads_moved, self.downloads_renamed, self.downloads_total, self.downloads_trash)
