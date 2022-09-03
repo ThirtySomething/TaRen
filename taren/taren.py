@@ -48,7 +48,6 @@ class TaRen:
         self._extension: str = self._sanitize_extension(extension)
         self._url: str = url
         self._cachetime: int = cachetime
-        self._trash: str = os.path.join(self._searchdir, trash)
         self._trashage: int = trashage
         self._trash: Trash = Trash(searchdir, trash, self._trashage)
         logging.debug("searchdir [{}]".format(searchdir))
@@ -56,7 +55,6 @@ class TaRen:
         logging.debug("extension [{}]".format(extension))
         logging.debug("url [{}]".format(url))
         logging.debug("cachetime [{}]".format(cachetime))
-        logging.debug("trash [{}]".format(self._trash))
         logging.debug("trashage [{}]".format(self._trashage))
 
     ############################################################################
@@ -114,7 +112,7 @@ class TaRen:
             if episode.empty:
                 continue
             downloads_to_process.append([current_download, episode])
-            logging.debug("added to process list: [{}] <> [{}]".format(current_download, episode))
+            logging.debug("added dowload to process list: [{}]".format(current_download))
         logging.info("downloads_to_process [{}]".format(len(downloads_to_process)))
 
         # Process downloads

@@ -41,15 +41,15 @@ class Stats:
         self.downloads_renamed: int = 0
         self.downloads_total: int = 0
         self.downloads_trash: int = 0
+        self.episodes_downloaded: int = 0
         self.episodes_owned: int = 0
-        self.episodes_total: int = 0
 
     ############################################################################
     def __repr__(self):
-        """Get dictionary as string"""
+        """Represent statistics as string"""
         return self.__str__()
 
     ############################################################################
     def __str__(self):
-        """Get dictionary as string"""
+        """Represent statistics as string"""
         return "ET [{}], EO [{}], DD[{}], DM [{}], DR [{}], DT [{}], DT [{}]".format(self.episodes_total, self.episodes_owned, self.downloads_deleted, self.downloads_moved, self.downloads_renamed, self.downloads_total, self.downloads_trash)

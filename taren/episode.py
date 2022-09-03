@@ -85,25 +85,21 @@ class Episode:
         filename_match: Match[str] = re.search(r"(^[0-9]{4} )", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(1))
-            # logging.debug("match filename [{}] by id [{}|{}] = [{}]".format(filename, filename_id, self.episode_id, filename_match))
             return self.episode_id == filename_id
 
         # Check for download of dailymotion
         filename_match: Match[str] = re.search(r"(_E([0-9]{3,4})_)", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(2))
-            # logging.debug("match filename [{}] by id [{}|{}] = [{}]".format(filename, filename_id, self.episode_id, filename_match))
             return self.episode_id == filename_id
 
         # Check episode prefix with number => alredy handled by TaRen
         filename_match: Match[str] = re.search(r"^(Tatort - ([0-9]{4}) )", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(2))
-            # logging.debug("match filename [{}] by id [{}|{}] = [{}]".format(filename, filename_id, self.episode_id, filename_match))
             return self.episode_id == filename_id
 
         # Last check => Is episode name part of filename
-        # logging.debug("match filename [{}] by episode_name [{}] = [{}]".format(filename, self.episode_name, filename_match))
         return self.episode_name.lower() in filename.lower()
 
     ############################################################################
