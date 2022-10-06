@@ -52,6 +52,6 @@ class Stats:
     ############################################################################
     def __str__(self):
         """Represent statistics as string"""
-        return "ET [{}], EO [{}/{:3.2f}%], DD[{}], DM [{}], DR [{}], DT [{}], DT [{}]".format(
+        return "\n episodes total [{}],\n episodes owned [{}/{:3.2f}%],\n downloads deleted [{}],\n downloads moved [{}],\n downloads renamed [{}],\n downloads total [{}],\n downloads trash [{}]".format(
             self.episodes_total, self.episodes_owned, (100 / self.episodes_total * self.episodes_owned), self.downloads_deleted, self.downloads_moved, self.downloads_renamed, self.downloads_total, self.downloads_trash
         )
