@@ -48,6 +48,7 @@ class Episode:
         self.episode_id: int = 0
         self.episode_inspectors: str = ""
         self.episode_name: str = ""
+        self.episode_sequence: str = ""
 
     ############################################################################
     def __gt__(self: object, other: object) -> bool:
@@ -63,7 +64,7 @@ class Episode:
         """
         Default string representation of an episode
         """
-        measstring: str = "Tatort - {:04d} - {} - {} - {}".format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_broadcast)
+        measstring: str = "Tatort - {:04d} - {} - {} - {} - {}".format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_sequence, self.episode_broadcast)
         return measstring
 
     ############################################################################
@@ -75,6 +76,7 @@ class Episode:
             self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, " ").strip()
             self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, " ").strip()
             self.episode_name = self.episode_name.replace(current_invalid_character, " ").strip()
+            self.episode_sequence = self.episode_sequence.replace(current_invalid_character, "-").strip()
 
     ############################################################################
     def matches(self: object, filename: str) -> bool:
@@ -119,6 +121,8 @@ class Episode:
         self.episode_inspectors = re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
         # Get name of broadcast station, 3rd element of row
         self.episode_broadcast = data_row[2].strip()
+        # Get sequence number of detective team, strip alternative numbering
+        self.episode_sequence = re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
         # Strip invalid characters
         self._strip_invalid_characters()
         # Mark as not empty

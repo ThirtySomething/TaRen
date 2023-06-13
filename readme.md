@@ -15,16 +15,17 @@ und dergleichen mehr.
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster `Tatort - 0000 - Sender - Titel - Kommissare.mp4` entspricht.
-Also das Präfix Tatort, vierstellig die Nummer der Folge, der Sender, der Titel
-des Tatorts und zum Schluss die ermittelnden Kommissare.
+dem Muster `Tatort - 0000 - Titel - Kommissare - 000 - Sender.mp4` entspricht.
+Also das Präfix Tatort, vierstellig die Nummer der Folge, der Titel des Tatorts,
+die ermittelnden Kommissare, die Fallnummer für die Kommissare und zum Schluß
+der Sender.
 
 ## Technisch
 
 ### Voraussetzungen
 
 - Damit das Ganze funktioniert, wird [Python 3][python] benötigt - entwickelt
-und getestet wurde mit Python 3.8.1.
+  und getestet wurde mit Python 3.8.1.
 - Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
 - [Logging][logging] wird ebenfalls benötigt.
 - Das Paket [Requests][requests] ist ebenfalls notwendig.
@@ -61,19 +62,19 @@ Da es ja Folgen gibt, die den gleichen Namen haben, wurde das Matching
 überarbeitet. Das passiert auf folgende Weise:
 
 - Es wird geprüft, ob der Dateiname mit einer vierstelligen Zahl und einem
-Leerzeichen beginnt. Diese vierstellige Zahl wird als eine Folgennummer
-verwendet. Gibt es also eine Folge, die diese Nummer hat, ist das der Match.
-Damit kann man Downloads so markieren, dass sie gleich die richtige Folge haben.
-Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
-[Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
+  Leerzeichen beginnt. Diese vierstellige Zahl wird als eine Folgennummer
+  verwendet. Gibt es also eine Folge, die diese Nummer hat, ist das der Match.
+  Damit kann man Downloads so markieren, dass sie gleich die richtige Folge haben.
+  Sinnvoll ist das dann, wenn es Folgen mit gleichem Titel gibt, z. B.
+  [Taxi nach Leipzig][tnlo] vs. [Taxi nach Leipzig][tnln].
 - Es wird geprüft, ob in dem Dateinamen ein `_Exxx_` enthalten ist. Das
-`xxx` ist eine drei- oder vierstellige Zahl. Das wäre die Episodennummer
-von einem Download bei Dailymotion.
+  `xxx` ist eine drei- oder vierstellige Zahl. Das wäre die Episodennummer
+  von einem Download bei Dailymotion.
 - Es wird geprüft, ob der Dateiname mit `Tatort` und einer vierstelligen
-Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
-als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
+  Zahl beginnt. Wenn die vierstellige Zahl die Folge einer Nummer ist, wird dies
+  als Indiz dafür gewertet, dass es sich hierbei um eine bestimmte Folge handelt.
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
-Tatort Folge enthält.
+  Tatort Folge enthält.
 
 ### Oberfläche
 
@@ -100,12 +101,12 @@ Und Umlaute sind auch ein Thema.
 ## Zum Nachdenken
 
 - Über [Reguläre Ausdrücke][regexp] wird der Name der Folge bereinigt. Es steht
-dann kein `(Folge XXXX hat den gleichen Titel)` im Titel. Das kann
-offensichtlich zu Schwierigkeiten führen. Eventuell sollte man diese Bereinigung
-nochmal überdenken.
+  dann kein `(Folge XXXX hat den gleichen Titel)` im Titel. Das kann
+  offensichtlich zu Schwierigkeiten führen. Eventuell sollte man diese Bereinigung
+  nochmal überdenken.
 - Ebenfalls über [Reguläre Ausdrücke][regexp] werden die Namen der Kommissare
-bearbeitet. Es steht dann kein `(Gastauftritt XXX)` bei den Kommisaren. Auch
-hierüber kann man nachdenken.
+  bearbeitet. Es steht dann kein `(Gastauftritt XXX)` bei den Kommisaren. Auch
+  hierüber kann man nachdenken.
 
 ## Stolpersteine
 
@@ -158,13 +159,17 @@ gesetzt sein.
 - ~~Einbau eines `Trash`~~ Done
 - ~~Eine GUI für das Programm~~ Done
 - ~~`Trash` als Klasse~~
+- ~~Aufnahme der Fallnummer in den Dateinamen~~ Done
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
 ## Lizenz
 
-******************************************************************************
+---
+
 Copyright 2020 ThirtySomething
-******************************************************************************
+
+---
+
 This file is part of TaRen.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -184,7 +189,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-******************************************************************************
+
+---
 
 See also attached file [`LICENSE`](./LICENSE "MIT License").
 
