@@ -26,8 +26,10 @@ SOFTWARE.
 
 import logging.config
 import logging
+
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
+from taren.grouping import Grouping
 
 TAREN_CONFIG = TarenConfig("program.json")
 TAREN_CONFIG.save()
@@ -43,7 +45,7 @@ LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 if __name__ == "__main__":
     logging.debug("startup")
 
-    # logging.info("Loglevel is set to [{}]".format(TAREN_CONFIG.logging_loglevel.upper()))
+    logging.info("Loglevel is set to [{}]".format(TAREN_CONFIG.logging_loglevel.upper()))
 
     # Initialize program with
     # - Location of downloads
@@ -57,3 +59,7 @@ if __name__ == "__main__":
 
     # Start magic process :D
     DATA.rename_process()
+
+    # Create page with grouped information
+    GROUPING: Grouping = Grouping(TAREN_CONFIG)
+    GROUPING.process()

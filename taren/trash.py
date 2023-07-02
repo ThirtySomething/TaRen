@@ -29,6 +29,8 @@ import logging
 import os
 import time
 
+from taren.helper import Helper
+
 
 class Trash:
     """
@@ -77,17 +79,7 @@ class Trash:
         """
         Ensure existence of the trash folder
         """
-        if not os.path.exists(self._trashfolder):
-            try:
-                # Create missing folder
-                os.mkdir(self._trashfolder)
-                logging.debug("Directory [{}] created".format(self._trashfolder))
-            except OSError:
-                logging.error("Creation of the directory [{}] failed, abort".format(self._trashfolder))
-                return False
-        else:
-            logging.debug("Directory [{}] alread exists".format(self._trashfolder))
-        return True
+        return Helper.ensureDirectory(self._trashfolder)
 
     ############################################################################
     def list(self: object) -> int:

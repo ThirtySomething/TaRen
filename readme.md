@@ -106,7 +106,8 @@ Und Umlaute sind auch ein Thema.
   nochmal überdenken.
 - Ebenfalls über [Reguläre Ausdrücke][regexp] werden die Namen der Kommissare
   bearbeitet. Es steht dann kein `(Gastauftritt XXX)` bei den Kommisaren. Auch
-  hierüber kann man nachdenken.
+  hierüber kann man nachdenken. **NEU:** Es werden lediglich die Klammern und
+  das Wort `Gastauftritt` entfernt.
 
 ## Stolpersteine
 
@@ -160,6 +161,11 @@ gesetzt sein.
 - ~~Eine GUI für das Programm~~ Done
 - ~~`Trash` als Klasse~~
 - ~~Aufnahme der Fallnummer in den Dateinamen~~ Done
+- ~~Erstellen einer HTML-Datei mit Links zu den Folgen.~~ Done
+- HTML-Seite überarbeiten: Tabelle mit odd/even
+- Ermittlerteams über scraping von [dieser][tatort_teams] Seite
+- Jahr zur Episode
+- Link zur Episode
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
 ## Lizenz
@@ -206,6 +212,7 @@ See also attached file [`LICENSE`](./LICENSE "MIT License").
 [regexp]: https://de.wikipedia.org/wiki/Regul%C3%A4rer_Ausdruck
 [requests]: https://docs.python-requests.org/en/master/
 [stackoverflow]: https://www.stackoverflow.com
+[tatort_teams]: https://de.wikipedia.org/wiki/Liste_der_Tatort-Ermittler
 [tatortwiki]: https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen
 [tnln]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(2016)
 [tnlo]: https://de.wikipedia.org/wiki/Tatort:_Taxi_nach_Leipzig_(1970)

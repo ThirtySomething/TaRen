@@ -49,6 +49,7 @@ class Episode:
         self.episode_inspectors: str = ""
         self.episode_name: str = ""
         self.episode_sequence: str = ""
+        self.episode_url: str = ""
 
     ############################################################################
     def __gt__(self: object, other: object) -> bool:
@@ -83,6 +84,10 @@ class Episode:
         """
         Check if episode matches the filename
         """
+        # Filename is equal to episode string representation
+        if str(self) == filename:
+            return True
+
         # Check leading episode number => download marked as special episode manually
         filename_match: Match[str] = re.search(r"(^[0-9]{4} )", filename)
         if filename_match:
@@ -117,8 +122,11 @@ class Episode:
         self.episode_id = int(episode_id_raw.group(1))
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
-        # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
-        self.episode_inspectors = re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
+        # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt XXX)' using regexp but keep all anmes of comissioners
+        episode_inspectors_raw: Match[str] = re.search(r"([a-zA-zäöüÄÖÜß, ]+)(\s+)?(\(Gastauftritt\s([a-zA-zäöüÄÖÜß, ]+){1}\))?", data_row[4])
+        self.episode_inspectors = episode_inspectors_raw.group(1)
+        if episode_inspectors_raw.group(4):
+            self.episode_inspectors = "{}, {}".format(episode_inspectors_raw.group(1), episode_inspectors_raw.group(4))
         # Get name of broadcast station, 3rd element of row
         self.episode_broadcast = data_row[2].strip()
         # Get sequence number of detective team, strip alternative numbering
