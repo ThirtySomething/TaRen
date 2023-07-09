@@ -77,7 +77,7 @@ class TarenConfig(MDO):
                     "Dresden - Ehrlicher": ["Ehrlicher", "Kain"],
                     "Dresden - Gorniak": ["Gorniak", "Schnabel", "Sieland", "Winkler"],
                     "Duisburg - Schimanski": ["Schimanski", "Thanner"],
-                    "Düsseldorf - Flemming": ["Ballauf", "Flemming", "Koch"],
+                    "Düsseldorf - Flemming": ["Flemming", "Koch"],
                     "Erfurt - Funck": ["Funck", "Grewel", "Schaffert"],
                     "Essen - Haferkamp": ["Haferkamp"],
                     "Essen - Kreutzer": ["Kreutzer"],

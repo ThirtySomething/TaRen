@@ -162,9 +162,9 @@ gesetzt sein.
 - ~~`Trash` als Klasse~~
 - ~~Aufnahme der Fallnummer in den Dateinamen~~ Done
 - ~~Erstellen einer HTML-Datei mit Links zu den Folgen.~~ Done
+- ~~Jahr zur Episode~~
 - HTML-Seite überarbeiten: Tabelle mit odd/even
 - Ermittlerteams über scraping von [dieser][tatort_teams] Seite
-- Jahr zur Episode
 - Link zur Episode
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 

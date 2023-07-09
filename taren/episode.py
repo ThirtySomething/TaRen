@@ -50,6 +50,7 @@ class Episode:
         self.episode_name: str = ""
         self.episode_sequence: str = ""
         self.episode_url: str = ""
+        self.episode_year: int = 0
 
     ############################################################################
     def __gt__(self: object, other: object) -> bool:
@@ -120,6 +121,9 @@ class Episode:
         # Episode number is first element of row
         episode_id_raw: Match[str] = re.search(r"([0-9]+)", data_row[0])
         self.episode_id = int(episode_id_raw.group(1))
+        # Year of episode
+        episode_year_raw: Match[str] = re.search(r"([0-9]{4})", data_row[3])
+        self.episode_year = int(episode_year_raw.group(1))
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
         # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt XXX)' using regexp but keep all anmes of comissioners
