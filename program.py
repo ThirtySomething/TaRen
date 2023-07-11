@@ -50,16 +50,28 @@ if __name__ == "__main__":
     # Initialize program with
     # - Location of downloads
     # - Search pattern
+    # - Filename of teamlist cache
     # - File extension
     # - URL to list of episodes
+    # - URL to list of teams
     # - Maximum age in days of cache file
     # - Trash folder
     # - Days to keep downloads/episodes in trash folder
-    DATA = TaRen(TAREN_CONFIG.taren_downloads, TAREN_CONFIG.taren_pattern, TAREN_CONFIG.taren_extension, TAREN_CONFIG.taren_wiki, int(TAREN_CONFIG.taren_maxcache), TAREN_CONFIG.taren_trash, int(TAREN_CONFIG.taren_trashage))
+    DATA = TaRen(
+        TAREN_CONFIG.taren_downloads,
+        TAREN_CONFIG.taren_pattern,
+        TAREN_CONFIG.taren_teamlist,
+        TAREN_CONFIG.taren_extension,
+        TAREN_CONFIG.taren_wiki,
+        TAREN_CONFIG.taren_wiki_team,
+        int(TAREN_CONFIG.taren_maxcache),
+        TAREN_CONFIG.taren_trash,
+        int(TAREN_CONFIG.taren_trashage),
+    )
 
     # Start magic process :D
     DATA.rename_process()
 
     # Create page with grouped information
-    GROUPING: Grouping = Grouping(TAREN_CONFIG)
-    GROUPING.process()
+    # GROUPING: Grouping = Grouping(TAREN_CONFIG)
+    # GROUPING.process()

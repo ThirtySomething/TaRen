@@ -151,6 +151,8 @@ class TarenConfig(MDO):
         )
         self.add("taren", "maxcache", "1")
         self.add("taren", "pattern", "Tatort")
+        self.add("taren", "teamlist", "Teams")
         self.add("taren", "trash", ".trash")
         self.add("taren", "trashage", "3")
         self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
+        self.add("taren", "wiki_team", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Ermittler")

@@ -31,6 +31,7 @@ from taren.downloadlist import DownloadList
 from taren.episodelist import EpisodeList
 from taren.trash import Trash
 from taren.stats import Stats
+from taren.teamlist import TeamList
 
 
 class TaRen:
@@ -42,11 +43,13 @@ class TaRen:
     """
 
     ############################################################################
-    def __init__(self: object, searchdir: str, pattern: str, extension: str, url: str, cachetime: int, trash: str, trashage: int) -> None:
+    def __init__(self: object, searchdir: str, pattern: str, teamlist: str, extension: str, url: str, team_url: str, cachetime: int, trash: str, trashage: int) -> None:
         self._searchdir: str = self._sanitize_path(searchdir)
         self._pattern: str = pattern
+        self._teamlist: str = teamlist
         self._extension: str = self._sanitize_extension(extension)
         self._url: str = url
+        self._url_team: str = team_url
         self._cachetime: int = cachetime
         self._trashage: int = trashage
         self._trash: Trash = Trash(searchdir, trash, self._trashage)
@@ -83,6 +86,13 @@ class TaRen:
         - Build internal list about episodes
         - Find affected downloads
         """
+
+        # Get list of episodes
+        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime)
+        team_list.get_teams()
+
+        return
+
         # Check path of downloads
         if not os.path.exists(self._searchdir):
             logging.error("Path [{}] does not exist or not found, abort".format(self._searchdir))

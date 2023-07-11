@@ -106,4 +106,9 @@ class Grouping:
             logging.info("Grouping feature not active")
             return
 
+        if not os.path.isdir(self.config.taren_downloads):
+            logging.error("Path [{}] does not exist or not found, abort".format(self.config.taren_downloads))
+            # Fail fast - directory does not exist
+            return
+
         self._handleGroups()
