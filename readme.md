@@ -15,7 +15,7 @@ und dergleichen mehr.
 
 TaRen holt sich den Artikel über die Tatortfolgen aus der [Wikipedia][tatortwiki]
 und bennent die Dateien vernünftig um. Vernünftig heißt, dass der Download dann
-dem Muster `Tatort - 0000 - Titel - Kommissare - 000 - Sender.mp4` entspricht.
+dem Muster `Tatort - 0000 - Titel - Kommissar(e) - 000 - Sender.mp4` entspricht.
 Also das Präfix Tatort, vierstellig die Nummer der Folge, der Titel des Tatorts,
 die ermittelnden Kommissare, die Fallnummer für die Kommissare und zum Schluß
 der Sender.
@@ -163,9 +163,10 @@ gesetzt sein.
 - ~~Aufnahme der Fallnummer in den Dateinamen~~ Done
 - ~~Erstellen einer HTML-Datei mit Links zu den Folgen.~~ Done
 - ~~Jahr zur Episode~~
+- ~~Ermittlerteams über scraping von [dieser][tatort_teams] Seite~~ Done
+- HTML-Seite erstellen aus den heruntergeladenen Episoden, gruppiert nach Team
 - HTML-Seite überarbeiten: Tabelle mit odd/even
-- Ermittlerteams über scraping von [dieser][tatort_teams] Seite
-- Link zur Episode
+- Link zur Episode auf Wikipedia einfügen, sofern vorhanden
 - Berücksichtigung eines Ordners mit bereits angeschauten Folgen
 
 ## Lizenz

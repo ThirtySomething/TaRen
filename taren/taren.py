@@ -101,12 +101,12 @@ class TaRen:
         # Object to handle statistics
         statistics: Stats = Stats()
 
-        # Get list of episodes
+        # Get list of episodes from web page
         episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
 
-        # Get list of downloads
+        # Get list of downloads from filesystem
         download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
         downloads: list[str] = download_list.get_filenames()
         statistics.downloads_total = len(downloads)
@@ -126,9 +126,9 @@ class TaRen:
         logging.info("downloads_to_process [{}]".format(len(downloads_to_process)))
 
         # Process downloads
-        for current_task in downloads_to_process:
-            new_fqn: str = os.path.join(self._searchdir, "{}{}".format(current_task[1], self._extension))
-            old_fqn: str = os.path.join(self._searchdir, current_task[0])
+        for current_download in downloads_to_process:
+            new_fqn: str = os.path.join(self._searchdir, "{}{}".format(current_download[1], self._extension))
+            old_fqn: str = os.path.join(self._searchdir, current_download[0])
 
             if new_fqn == old_fqn:
                 # Already processed episode

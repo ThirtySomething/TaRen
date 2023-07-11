@@ -67,7 +67,7 @@ class TeamList:
             # When team was successfully parsed, add to list
             if not current_team.empty:
                 teams.append(current_team)
-                logging.debug("team [{}]".format(current_team))
+                # logging.debug("team [{}]".format(current_team))
         # Return list of teams
         teams.sort()
         return teams
@@ -133,4 +133,6 @@ class TeamList:
         websitecontent: str = self._read_website()
         # Parse website
         self._teams = self._parse_website(websitecontent)
+        # for curteam in self._teams:
+        #     logging.debug("{}".format(curteam))
         logging.info("total number of teams [{}]".format(len(self._teams)))
