@@ -66,7 +66,7 @@ class Episode:
         """
         Default string representation of an episode
         """
-        measstring: str = "Tatort - {:04d} - {} - {} - {} - {}".format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_sequence, self.episode_broadcast)
+        measstring: str = "Tatort - {:04d} - {} - {} - {} - {} - {}".format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_sequence, self.episode_broadcast, self.episode_year)
         return measstring
 
     ############################################################################
@@ -117,7 +117,7 @@ class Episode:
         """
         if len(data_row) == 0:
             return
-        logging.debug("data row {}".format(data_row))
+        # logging.debug("data row {}".format(data_row))
         # Episode number is first element of row
         episode_id_raw: Match[str] = re.search(r"([0-9]+)", data_row[0])
         self.episode_id = int(episode_id_raw.group(1))
@@ -127,10 +127,12 @@ class Episode:
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
         # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt XXX)' using regexp but keep all anmes of comissioners
-        episode_inspectors_raw: Match[str] = re.search(r"([a-zA-zäöüÄÖÜß, ]+)(\s+)?(\(Gastauftritt\s([a-zA-zäöüÄÖÜß, ]+){1}\))?", data_row[4])
-        self.episode_inspectors = episode_inspectors_raw.group(1)
-        if episode_inspectors_raw.group(4):
-            self.episode_inspectors = "{}, {}".format(episode_inspectors_raw.group(1), episode_inspectors_raw.group(4))
+        # episode_inspectors_raw: Match[str] = re.search(r"([a-zA-zäöüÄÖÜß, ]+)(\s+)?(\(Gastauftritt\s([a-zA-zäöüÄÖÜß, ]+){1}\))?", data_row[4])
+        # self.episode_inspectors = episode_inspectors_raw.group(1)
+        # if episode_inspectors_raw.group(4):
+        #     self.episode_inspectors = "{}, {}".format(episode_inspectors_raw.group(1), episode_inspectors_raw.group(4))
+        # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
+        self.episode_inspectors = re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
         # Get name of broadcast station, 3rd element of row
         self.episode_broadcast = data_row[2].strip()
         # Get sequence number of detective team, strip alternative numbering

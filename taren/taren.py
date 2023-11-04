@@ -28,10 +28,13 @@ import logging
 import os
 
 from taren.downloadlist import DownloadList
+from taren.episode import Episode
 from taren.episodelist import EpisodeList
-from taren.trash import Trash
+from taren.grouping import Grouping
 from taren.stats import Stats
+from taren.tarenconfig import TarenConfig
 from taren.teamlist import TeamList
+from taren.trash import Trash
 
 
 class TaRen:
@@ -43,22 +46,24 @@ class TaRen:
     """
 
     ############################################################################
-    def __init__(self: object, searchdir: str, pattern: str, teamlist: str, extension: str, url: str, team_url: str, cachetime: int, trash: str, trashage: int) -> None:
-        self._searchdir: str = self._sanitize_path(searchdir)
-        self._pattern: str = pattern
-        self._teamlist: str = teamlist
-        self._extension: str = self._sanitize_extension(extension)
-        self._url: str = url
-        self._url_team: str = team_url
-        self._cachetime: int = cachetime
-        self._trashage: int = trashage
-        self._trash: Trash = Trash(searchdir, trash, self._trashage)
-        logging.debug("searchdir [{}]".format(searchdir))
-        logging.debug("pattern [{}]".format(pattern))
-        logging.debug("extension [{}]".format(extension))
-        logging.debug("url [{}]".format(url))
-        logging.debug("cachetime [{}]".format(cachetime))
-        logging.debug("trashage [{}]".format(self._trashage))
+    def __init__(self: object, config: TarenConfig) -> None:
+        self._config: TarenConfig = config
+        self._searchdir: str = self._sanitize_path(self._config.taren_downloads)
+        self._pattern: str = self._config.taren_pattern
+        self._teamlist: str = self._config.taren_teamlist
+        self._extension: str = self._sanitize_extension(self._config.taren_extension)
+        self._url: str = self._config.taren_wiki
+        self._url_team: str = self._config.taren_wiki_team
+        self._cachetime: int = int(self._config.taren_maxcache)
+        self._trashage: int = int(self._config.taren_trashage)
+        self._trash: Trash = Trash(self._config.taren_downloads, self._config.taren_trash, self._trashage)
+        logging.debug("self._searchdir [{}]".format(self._searchdir))
+        logging.debug("self._pattern [{}]".format(self._pattern))
+        logging.debug("self._extension [{}]".format(self._extension))
+        logging.debug("self._url [{}]".format(self._url))
+        logging.debug("self._url_team [{}]".format(self._url_team))
+        logging.debug("self._cachetime [{}]".format(self._cachetime))
+        logging.debug("self._trashage [{}]".format(self._trashage))
 
     ############################################################################
     def _sanitize_extension(self: object, extension: str) -> str:
@@ -87,12 +92,6 @@ class TaRen:
         - Find affected downloads
         """
 
-        # Get list of episodes
-        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime)
-        team_list.get_teams()
-
-        return
-
         # Check path of downloads
         if not os.path.exists(self._searchdir):
             logging.error("Path [{}] does not exist or not found, abort".format(self._searchdir))
@@ -118,11 +117,11 @@ class TaRen:
         # Create list of downloads to process
         downloads_to_process: list[str] = []
         for current_download in downloads:
-            episode = episode_list.find_episode(current_download)
+            episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
                 continue
             downloads_to_process.append([current_download, episode])
-            logging.debug("added dowload to process list: [{}]".format(current_download))
+            # logging.debug("added dowload to process list: [{}]".format(current_download))
         logging.info("downloads_to_process [{}]".format(len(downloads_to_process)))
 
         # Process downloads
@@ -132,13 +131,13 @@ class TaRen:
 
             if new_fqn == old_fqn:
                 # Already processed episode
-                logging.debug("filenames identical, skip file [{}]".format(old_fqn))
+                # logging.debug("filenames identical, skip file [{}]".format(old_fqn))
                 statistics.episodes_owned += 1
                 continue
 
             if os.path.exists(new_fqn):
                 # New episode already exists
-                logging.debug("file already exists [{}]".format(new_fqn))
+                # logging.debug("file already exists [{}]".format(new_fqn))
                 size_old: int = os.stat(old_fqn).st_size
                 size_new: int = os.stat(new_fqn).st_size
 
@@ -168,6 +167,23 @@ class TaRen:
             logging.info("rename from [{}] to [{}] filename".format(old_fqn, new_fqn))
             os.rename(old_fqn, new_fqn)
             statistics.downloads_renamed += 1
+
+        # Get list of episodes
+        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime)
+        team_list.get_teams()
+
+        # Get list of episodes from web page
+        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime)
+        episode_list.get_episodes()
+        statistics.episodes_total = episode_list.get_episode_count()
+
+        # Get list of downloads from filesystem
+        download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
+        downloads: list[str] = download_list.get_filenames()
+
+        # Create HTML file with list of episodes
+        grouping: Grouping = Grouping(self._config, team_list, episode_list, downloads)
+        # grouping.process()
 
         # Cleanup trash
         statistics.downloads_deleted = self._trash.cleanup()

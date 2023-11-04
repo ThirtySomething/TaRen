@@ -26,8 +26,9 @@ SOFTWARE.
 
 import logging
 import re
-from typing import Match
 from datetime import date
+from typing import Match
+
 from taren.episode import Episode
 
 
@@ -103,14 +104,13 @@ class Team:
             return False
 
         # Check for at least one inspector of team is in episode
-        inspectorMatch: bool = False
+        inspectorMatch: int = 0
         inspectorCheck: str = episode.episode_inspectors.lower()
         for inspector in self.team_inspectors:
             if not -1 == inspectorCheck.find(inspector.lower()):
-                inspectorMatch = True
-                break
+                inspectorMatch = inspectorMatch + 1
 
-        return inspectorMatch
+        return len(self.team_inspectors) == inspectorMatch
 
     ############################################################################
     def parse(self: object, data_row: list[str]):

@@ -24,12 +24,16 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import fnmatch
 import logging
 import os
 
+from taren.downloadlist import DownloadList
+from taren.episode import Episode
+from taren.episodelist import EpisodeList
 from taren.helper import Helper
 from taren.tarenconfig import TarenConfig
+from taren.team import Team
+from taren.teamlist import TeamList
 
 
 class Grouping:
@@ -38,15 +42,11 @@ class Grouping:
     """
 
     ############################################################################
-    def __init__(self: object, config: TarenConfig) -> None:
-        self.config: TarenConfig = config
-        try:
-            self.groupingConfig = self.config.taren_grouping
-            if not self.groupingConfig["active"]:
-                raise
-            self.active: bool = True
-        except:
-            self.active: bool = False
+    def __init__(self: object, config: TarenConfig, teams: TeamList, episodes: EpisodeList, downloads: list[str]) -> None:
+        self._config: TarenConfig = config
+        self._teams: TeamList = teams
+        self._episodes: EpisodeList = episodes
+        self._downloads: DownloadList = downloads
 
     ############################################################################
     def _buildDocument(self: object, outputFile: str, documentData: dict) -> None:
@@ -59,56 +59,25 @@ class Grouping:
             for group in documentData:
                 groupfile.write("   <h2>{}</h2>\n".format(group))
                 for episode in documentData[group]:
-                    episodepath: str = os.path.join(self.config.taren_downloads, episode)
+                    episodepath: str = os.path.join(self._config.taren_downloads, episode)
                     groupfile.write('   <a href="file:///{}">{}</a><br>\n'.format(episodepath, episode))
                 groupfile.write("   <p>")
             groupfile.write("</body>\n")
             groupfile.write("</html>\n")
 
     ############################################################################
-    def _getEpisodes(self: object, inspectors: list[str]) -> list[str]:
-        episodes: list[str] = []
-        for inspector in inspectors:
-            logging.debug("Search episodes for inspector [{}]".format(inspector))
-            searchpattern: str = "*{}*".format(inspector)
-            files: list[str] = fnmatch.filter(os.listdir(self.config.taren_downloads), searchpattern)
-            for file in files:
-                if file not in episodes:
-                    episodes.append(file)
-        # Sort episode list
-        episodes.sort()
-        return episodes
-
-    ############################################################################
-    def _handleGroup(self: object, groupname: str, inspectors: list[str]) -> list[str]:
-        inspectors.sort()
-        logging.debug("Groupname [{}], inspectors(s) [{}]".format(groupname, inspectors))
-        episodes: list[str] = self._getEpisodes(inspectors)
-        return episodes
-
-    ############################################################################
-    def _handleGroups(self: object) -> None:
-        documentData: dict = {}
-        for key in self.groupingConfig["groups"]:
-            episodes = self._handleGroup(key, self.groupingConfig["groups"][key])
-            if 0 < len(episodes):
-                documentData[key] = episodes
-        documentData = dict(sorted(documentData.items()))
-        self._buildDocument(self.groupingConfig["output"], documentData)
-
-    ############################################################################
-    def _prepareDirectory(self: object, dirname: str) -> bool:
-        return Helper.ensureDirectory(dirname)
-
-    ############################################################################
     def process(self: object) -> None:
-        if not self.active:
-            logging.info("Grouping feature not active")
-            return
+        for currentDownload in self._downloads:
+            logging.debug("-" * 80)
+            episode: Episode = self._episodes.find_episode(currentDownload)
+            if episode.empty:
+                logging.error("No episode found for [{}]".format(currentDownload))
+                continue
+            team: Team = self._teams.find_team(episode)
+            if team.empty:
+                logging.error("No team found for [{}]".format(episode))
+                continue
 
-        if not os.path.isdir(self.config.taren_downloads):
-            logging.error("Path [{}] does not exist or not found, abort".format(self.config.taren_downloads))
-            # Fail fast - directory does not exist
-            return
-
-        self._handleGroups()
+            logging.debug("Team [{}]".format(team))
+            logging.debug("Episode [{}]".format(episode))
+            logging.debug("Download [{}]".format(currentDownload))

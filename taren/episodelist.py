@@ -66,7 +66,7 @@ class EpisodeList:
             # When episode was successfully parsed, add to list
             if not current_episode.empty:
                 episodes.append(current_episode)
-                logging.debug("episode [{}]".format(current_episode))
+                # logging.debug("episode [{}]".format(current_episode))
         # Return list of episodes
         episodes.sort()
         return episodes
@@ -111,10 +111,10 @@ class EpisodeList:
                 break
 
         # Check episode for logging data
-        if episode.empty:
-            logging.info("no match for filename [{}]".format(filename))
-        else:
-            logging.debug("filename [{}] matches episode_name [{}]".format(filename, episode.episode_name))
+        # if episode.empty:
+        #     logging.info("no match for filename [{}]".format(filename))
+        # else:
+        #     logging.debug("filename [{}] matches episode_name [{}]".format(filename, episode.episode_name))
 
         # Return either empty episode or found episode
         return episode
