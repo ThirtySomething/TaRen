@@ -22,6 +22,15 @@ DEF_SCRIPT="program.py"
 PATH_BASE=$(dirname "$0")
 # Set FQN of environment
 PATH_ENVIRONMENT="${PATH_BASE}/${ENV_NAME}"
+# Determine python interpreter
+PY_INTERPRETER=python
+if ! command -v "${PY_INTERPRETER}" &>/dev/null; then
+    PY_INTERPRETER=python3
+fi
+if ! command -v "${PY_INTERPRETER}" &>/dev/null; then
+    echo "Cannot find a Python interpreter, abort"
+    exit 0
+fi
 
 ################################################################################
 # Check environment for existence
@@ -29,18 +38,17 @@ PATH_ENVIRONMENT="${PATH_BASE}/${ENV_NAME}"
 if [[ ! -d "${PATH_ENVIRONMENT}" ]]; then
     # Create environment
     echo "Create missing environment [${ENV_NAME}]"
-    python -m venv ${ENV_NAME}
+    ${PY_INTERPRETER} -m venv ${ENV_NAME}
 
     # Activate environment
     if [[ -z "${VIRTUAL_ENV}" ]]; then
-        echo "Initial activation of environment [${ENV_NAME}]"
-        source "${PATH_ENVIRONMENT}/bin/activate"
+        echo "Activate environment [${ENV_NAME}]"
+        source ${PATH_ENVIRONMENT}/bin/activate
     fi
 
     # Install required modules
     if [[ -f "${REQ_NAME}" ]]; then
-        echo "Install required modules from [${REQ_NAME}] to [${ENV_NAME}]"
-        cat ${REQ_NAME}
+        echo "Install required modules from [${REQ_NAME}]"
         pip install -r ${REQ_NAME}
     else
         echo "List of required modules [${REQ_NAME}] not found"
@@ -52,7 +60,7 @@ fi
 ################################################################################
 if [[ -z "${VIRTUAL_ENV}" ]]; then
     echo "Activate environment [${ENV_NAME}]"
-    source "${PATH_ENVIRONMENT}/bin/activate"
+    source ${PATH_ENVIRONMENT}/bin/activate
 fi
 
 ################################################################################
@@ -65,9 +73,5 @@ fi
 ################################################################################
 # Execute script
 ################################################################################
-if [[ -f ${SCRIPT} ]]; then
-    echo "Execute script [${SCRIPT}]"
-    python ${SCRIPT}
-else
-    echo "Script [${SCRIPT}] not found :-("
-fi
+echo "Execute script [${SCRIPT}]"
+${PY_INTERPRETER} ${SCRIPT}
