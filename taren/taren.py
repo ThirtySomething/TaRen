@@ -48,15 +48,16 @@ class TaRen:
     ############################################################################
     def __init__(self: object, config: TarenConfig) -> None:
         self._config: TarenConfig = config
-        self._searchdir: str = self._sanitize_path(self._config.taren_downloads)
-        self._pattern: str = self._config.taren_pattern
-        self._teamlist: str = self._config.taren_teamlist
-        self._extension: str = self._sanitize_extension(self._config.taren_extension)
-        self._url: str = self._config.taren_wiki
-        self._url_team: str = self._config.taren_wiki_team
-        self._cachetime: int = int(self._config.taren_maxcache)
-        self._trashage: int = int(self._config.taren_trashage)
-        self._trash: Trash = Trash(self._config.taren_downloads, self._config.taren_trash, self._trashage)
+        self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
+        self._pattern: str = self._config.value_get("taren", "pattern")
+        self._teamlist: str = self._config.value_get("taren", "teamlist")
+        self._extension: str = self._sanitize_extension(self._config.value_get("taren", "extension"))
+        self._url: str = self._config.value_get("taren", "wiki")
+        self._url_team: str = self._config.value_get("taren", "wiki_team")
+        self._cachetime: int = int(self._config.value_get("taren", "maxcache"))
+        self._trashage: int = int(self._config.value_get("taren", "trashage"))
+        self._trash: Trash = Trash(self._config.value_get("taren", "downloads"), self._config.value_get("taren", "trash"), self._trashage)
+        logging.debug("self._config [{}]".format(self._config))
         logging.debug("self._searchdir [{}]".format(self._searchdir))
         logging.debug("self._pattern [{}]".format(self._pattern))
         logging.debug("self._extension [{}]".format(self._extension))

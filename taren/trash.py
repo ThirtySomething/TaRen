@@ -69,7 +69,7 @@ class Trash:
                 # Check age of file
                 if os.path.getmtime(fname) < maxage:
                     # Perform deletion
-                    os.remove(fname)
+                    Helper.delete_file(fname)
                     logging.info("Delete file [{}]".format(filename))
                     deleted = deleted + 1
         return deleted

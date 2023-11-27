@@ -26,9 +26,6 @@ SOFTWARE.
 
 import logging
 import os
-import fnmatch
-
-from taren.tarenconfig import TarenConfig
 
 
 class Helper:
@@ -45,3 +42,8 @@ class Helper:
         else:
             logging.debug("Directory [{}] alread exists".format(dirname))
         return os.path.exists(dirname)
+
+    ############################################################################
+    @staticmethod
+    def delete_file(filename: str) -> bool:
+        os.remove(filename)

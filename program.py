@@ -36,16 +36,17 @@ TAREN_CONFIG.save()
 
 # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
 LOGGER_SETUP = logging.getLogger()
-LOGGER_SETUP.setLevel(TAREN_CONFIG.logging_loglevel.upper())
-LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.logging_logfile, "w", "utf-8")
-LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.logging_logstring))
+loglevel: str = TAREN_CONFIG.value_get("logging", "loglevel").upper()
+LOGGER_SETUP.setLevel(loglevel)
+LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.value_get("logging", "logfile"), "w", "utf-8")
+LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.value_get("logging", "logstring")))
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to rename files downloaded with MediathekView to a specific format
 if __name__ == "__main__":
     logging.debug("startup")
 
-    logging.info("Loglevel is set to [{}]".format(TAREN_CONFIG.logging_loglevel.upper()))
+    logging.info("Loglevel is set to [{}]".format(loglevel))
 
     # Initialize program with complete config
     # - Location of downloads

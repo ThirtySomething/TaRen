@@ -31,6 +31,8 @@ import os
 
 import requests
 
+from taren.helper import Helper
+
 
 class WebSiteCache:
     """
@@ -90,7 +92,7 @@ class WebSiteCache:
         cache file. Retrieve content from cache file. Return content.
         """
         if self._get_age_in_days() > self._cacheage:
-            os.remove(self._cachename)
+            Helper.delete_file(self._cachename)
             logging.info("deleted cache file [{}]".format(self._cachename))
         if not os.path.exists(self._cachename):
             self._write_to_cache()
