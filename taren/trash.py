@@ -28,7 +28,7 @@ import fnmatch
 import logging
 import os
 import time
-
+from pathlib import Path
 from taren.helper import Helper
 
 
@@ -38,24 +38,30 @@ class Trash:
     """
 
     ############################################################################
-    def __init__(self: object, basedir: str, trash: str, trashage: int) -> None:
+    def __init__(self: object, basedir: str, trash: str, trashage: int, trashignore: str) -> None:
         """
         Default init of variables
         """
         self._basedir: str = basedir
         self._trash: str = trash
         self._trashage: int = trashage
+        self._trashignore: str = trashignore
         self._trashfolder: str = os.path.join(self._basedir, self._trash)
+        self._trashignorefile: str = os.path.join(self._trashfolder, self._trashignore)
         logging.debug("basedir [{}]".format(self._basedir))
         logging.debug("trash [{}]".format(self._trash))
-        logging.debug("trashfolder [{}]".format(self._trashfolder))
         logging.debug("trashage [{}]".format(self._trashage))
+        logging.debug("trashfolder [{}]".format(self._trashfolder))
+        logging.debug("trashignore [{}]".format(self._trashignorefile))
 
     ############################################################################
     def cleanup(self: object) -> int:
         """
         Delete files from trah older than configured age
         """
+        # Delete ignore file for media server
+        if os.path.exists(self._trashignorefile):
+            Helper.delete_file(self._trashignorefile)
         deleted: int = 0
         # Calculate maximum age
         maxage: int = time.time() - self._trashage * 86400
@@ -72,6 +78,8 @@ class Trash:
                     Helper.delete_file(fname)
                     logging.info("Delete file [{}]".format(filename))
                     deleted = deleted + 1
+        # Create ignore file for media server
+        Path(self._trashignorefile).touch()
         return deleted
 
     ############################################################################
@@ -94,6 +102,9 @@ class Trash:
             fname: str = os.path.join(self._trashfolder, filename)
             # Check only files
             if os.path.isfile(fname):
+                # Ignore marker for media servers
+                if fname == self._trashignorefile:
+                    continue
                 # List file
                 logging.info("File [{}]".format(filename))
                 filesintrash += 1

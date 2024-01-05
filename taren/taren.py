@@ -56,7 +56,9 @@ class TaRen:
         self._url_team: str = self._config.value_get("taren", "wiki_team")
         self._cachetime: int = int(self._config.value_get("taren", "maxcache"))
         self._trashage: int = int(self._config.value_get("taren", "trashage"))
-        self._trash: Trash = Trash(self._config.value_get("taren", "downloads"), self._config.value_get("taren", "trash"), self._trashage)
+        self._trash: Trash = Trash(
+            self._config.value_get("taren", "downloads"), self._config.value_get("taren", "trash"), self._trashage, self._config.value_get("taren", "trashignore")
+        )
         logging.debug("self._config [{}]".format(self._config))
         logging.debug("self._searchdir [{}]".format(self._searchdir))
         logging.debug("self._pattern [{}]".format(self._pattern))
