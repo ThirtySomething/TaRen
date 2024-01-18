@@ -28,6 +28,7 @@ import fnmatch
 import logging
 import os
 import time
+import datetime
 from pathlib import Path
 from taren.helper import Helper
 
@@ -95,6 +96,7 @@ class Trash:
         List all files from trah
         """
         logging.info("List files from trash [{}]".format(self._trashfolder))
+        today: datetime = datetime.datetime.today()
         filesintrash: int = 0
         # Loop over all in trash
         for filename in os.listdir(self._trashfolder):
@@ -106,7 +108,9 @@ class Trash:
                 if fname == self._trashignorefile:
                     continue
                 # List file
-                logging.info("File [{}]".format(filename))
+                file_mod_time: datetime = datetime.datetime.fromtimestamp(os.path.getmtime(fname))
+                age: datetime = today - file_mod_time
+                logging.info("File [{}|{:02d}]".format(filename, age.days))
                 filesintrash += 1
         return filesintrash
 
