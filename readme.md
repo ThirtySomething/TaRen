@@ -75,28 +75,6 @@ Da es ja Folgen gibt, die den gleichen Namen haben, wurde das Matching
 - Erst zum Schluß wird geprüft, ob der Dateiname des Downloads den Namen einer
   Tatort Folge enthält.
 
-### Oberfläche
-
-An dem Bedinkonzept gibt es noch Verbesserungspotential.
-
-#### Standardansicht
-
-Zum Beispiel das Layout hier.
-
-![Startup][gui01]
-
-#### Einstellungen
-
-Hier könnten die Eingabefelder etwas breiter sein.
-
-![Settings][gui02]
-
-#### Prozess erfolgreich
-
-Und Umlaute sind auch ein Thema.
-
-![Done][gui03]
-
 ## Zum Nachdenken
 
 - Über [Reguläre Ausdrücke][regexp] wird der Name der Folge bereinigt. Es steht
@@ -170,11 +148,8 @@ gesetzt sein.
 
 ## Lizenz
 
----
-
+```
 Copyright 2020 ThirtySomething
-
----
 
 This file is part of TaRen.
 
@@ -195,8 +170,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
+```
 
 See also attached file [`LICENSE`](./LICENSE "MIT License").
 
