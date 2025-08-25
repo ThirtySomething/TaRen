@@ -44,7 +44,7 @@ class TarenConfig(MDO):
         self.add("logging", "logstring", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s")
         self.add("taren", "downloads", "v:\\tatort")
         self.add("taren", "extension", "mp4")
-        self.add("taren", "maxcache", "1")
+        self.add("taren", "maxcache", "6")
         self.add("taren", "pattern", "Tatort")
         self.add("taren", "playlist", "v:\\tatort\\Tatort.html")
         self.add("taren", "teamlist", "Teams")
@@ -53,3 +53,4 @@ class TarenConfig(MDO):
         self.add("taren", "trashignore", ".ignore")
         self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
         self.add("taren", "wiki_team", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Ermittler")
+        self.add("taren", "wiki_useragent", "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0")

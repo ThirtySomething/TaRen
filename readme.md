@@ -29,7 +29,6 @@ der Sender.
 - Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
 - [Logging][logging] wird ebenfalls benötigt.
 - Das Paket [Requests][requests] ist ebenfalls notwendig.
-- Für die UI wird [PySimpleGui][pysimplegui] benötigt.
 
 ```batch
 # Create virtual environment for TaRen

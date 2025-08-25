@@ -39,14 +39,16 @@ class TeamList:
     """
 
     ############################################################################
-    def __init__(self: object, listname: str, url: str, cachetime: int) -> None:
+    def __init__(self: object, listname: str, url: str, cachetime: int, useragent: str) -> None:
         self._listname: str = listname
         self._url: str = url
         self._cachetime: int = cachetime
+        self._useragent: str = useragent
         self._teams: list[Team] = []
         logging.debug("listname [{}]".format(listname))
         logging.debug("url [{}]".format(url))
         logging.debug("cachetime [{}]".format(cachetime))
+        logging.debug("useragent [{}]".format(useragent))
 
     ############################################################################
     def _build_list_of_teams(self: object, raw_data: str) -> list[Team]:
@@ -93,7 +95,7 @@ class TeamList:
         Retrieve website via cache
         """
         # Get website content from cache handler
-        cache: WebSiteCache = WebSiteCache(self._listname, self._url, self._cachetime)
+        cache: WebSiteCache = WebSiteCache(self._listname, self._url, self._cachetime, self._useragent)
         return cache.get_website_from_cache()
 
     ############################################################################

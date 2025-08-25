@@ -104,7 +104,8 @@ class TaRen:
         statistics: Stats = Stats()
 
         # Get list of episodes from web page
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime)
+        ua: str = self._config.value_get("taren", "wiki_useragent")
+        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
 
@@ -172,11 +173,11 @@ class TaRen:
             statistics.downloads_renamed += 1
 
         # Get list of episodes
-        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime)
+        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime, ua)
         team_list.get_teams()
 
         # Get list of episodes from web page
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime)
+        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
 

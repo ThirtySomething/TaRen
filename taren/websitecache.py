@@ -40,16 +40,18 @@ class WebSiteCache:
     """
 
     ############################################################################
-    def __init__(self: object, cachename: str, websiteurl: str, cacheage: int) -> None:
+    def __init__(self: object, cachename: str, websiteurl: str, cacheage: int, useragent: str) -> None:
         """
         Default init of variables
         """
         self._cacheage: int = cacheage
         self._cachename: str = "{}.html".format(cachename)
         self._websiteurl: str = websiteurl
+        self._useragent: str = useragent
         logging.debug("cache file [{}]".format(self._cachename))
         logging.debug("cacheage [{}]".format(self._cacheage))
         logging.debug("websiteurl [{}]".format(self._websiteurl))
+        logging.debug("useragent [{}]".format(self._useragent))
 
     ############################################################################
     def _get_age_in_days(self: object) -> int:
@@ -79,7 +81,8 @@ class WebSiteCache:
         """
         Write downloaded content to cache file
         """
-        websitecontent: bytes = requests.get(self._websiteurl).content
+        headers = {"User-Agent": self._useragent}
+        websitecontent: bytes = requests.get(self._websiteurl, headers=headers).content
         with codecs.open(self._cachename, "w", "utf-8") as file:
             file.write(websitecontent.decode("utf-8"))
         logging.info("saved content of [{}] to cache file [{}]".format(self._websiteurl, self._cachename))
