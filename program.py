@@ -26,6 +26,8 @@ SOFTWARE.
 
 import logging.config
 import logging
+import platform
+import sys
 
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
@@ -46,7 +48,10 @@ LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 if __name__ == "__main__":
     logging.debug("startup")
 
-    logging.info("Loglevel is set to [{}]".format(loglevel))
+    logging.info("Running TaRen with the following settings:")
+    logging.info(TAREN_CONFIG)
+    logging.info("Operating system: [%s]", platform.uname())
+    logging.info("Python version: [%s]", sys.version)
 
     # Initialize program with complete config
     # - Location of downloads
