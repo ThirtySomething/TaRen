@@ -34,7 +34,9 @@ def _load_mdo_class() -> type:
     try:
         return import_module("MDO").MDO
     except ModuleNotFoundError:
-        vendor_mdo_path: Path = Path(__file__).resolve().parent.parent / "vendor" / "MDO" / "MDO"
+        vendor_mdo_path: Path = (
+            Path(__file__).resolve().parent.parent / "vendor" / "MDO" / "MDO"
+        )
         vendor_mdo_path_str: str = str(vendor_mdo_path)
         if vendor_mdo_path.exists() and vendor_mdo_path_str not in sys.path:
             sys.path.insert(0, vendor_mdo_path_str)
@@ -53,7 +55,11 @@ class TarenConfig(MDO):
     def setup(self) -> bool:
         self.add("logging", "logfile", "program.log")
         self.add("logging", "loglevel", "info")
-        self.add("logging", "logstring", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s")
+        self.add(
+            "logging",
+            "logstring",
+            "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s",
+        )
         self.add("taren", "downloads", "v:\\tatort")
         self.add("taren", "extension", "mp4")
         self.add("taren", "maxcache", "6")
@@ -61,6 +67,12 @@ class TarenConfig(MDO):
         self.add("taren", "trash", ".trash")
         self.add("taren", "trashage", "3")
         self.add("taren", "trashignore", ".ignore")
-        self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
-        self.add("taren", "wiki_useragent", "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0")
+        self.add(
+            "taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen"
+        )
+        self.add(
+            "taren",
+            "wiki_useragent",
+            "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0",
+        )
         return True

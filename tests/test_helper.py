@@ -25,7 +25,10 @@ class TestHelper(unittest.TestCase):
             self.assertFalse(existing.exists())
 
     def test_ensure_directory_failure_and_wrapper(self) -> None:
-        with patch("taren.helper.os.path.exists", return_value=False), patch("taren.helper.os.makedirs", side_effect=OSError):
+        with (
+            patch("taren.helper.os.path.exists", return_value=False),
+            patch("taren.helper.os.makedirs", side_effect=OSError),
+        ):
             self.assertFalse(Helper.ensure_directory("/not/creatable"))
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -33,7 +36,10 @@ class TestHelper(unittest.TestCase):
             self.assertTrue(Helper.ensureDirectory(str(target)))
 
     def test_delete_file_oserror_branch(self) -> None:
-        with patch("taren.helper.os.path.exists", return_value=True), patch("taren.helper.os.remove", side_effect=OSError):
+        with (
+            patch("taren.helper.os.path.exists", return_value=True),
+            patch("taren.helper.os.remove", side_effect=OSError),
+        ):
             self.assertFalse(Helper.delete_file("/cannot/delete"))
 
 

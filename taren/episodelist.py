@@ -61,7 +61,9 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
             if len(table_cells) < 6:
-                logging.debug("skip malformed episode table row with [%s] cells", len(table_cells))
+                logging.debug(
+                    "skip malformed episode table row with [%s] cells", len(table_cells)
+                )
                 continue
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
@@ -103,7 +105,9 @@ class EpisodeList:
         Retrieve website via cache
         """
         # Get website content from cache handler
-        cache: WebSiteCache = WebSiteCache(self._pattern, self._url, self._cachetime, self._useragent)
+        cache: WebSiteCache = WebSiteCache(
+            self._pattern, self._url, self._cachetime, self._useragent
+        )
         return cache.get_website_from_cache()
 
     ############################################################################

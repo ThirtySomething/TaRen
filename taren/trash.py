@@ -39,7 +39,9 @@ class Trash:
     """
 
     ############################################################################
-    def __init__(self, basedir: str, trash: str, trashage: int, trashignore: str) -> None:
+    def __init__(
+        self, basedir: str, trash: str, trashage: int, trashignore: str
+    ) -> None:
         """
         Default init of variables
         """
@@ -66,7 +68,11 @@ class Trash:
         deleted: int = 0
         # Calculate maximum age
         maxage: float = time.time() - self._trashage * 86400
-        logging.info("Delete files older than [%s] days from trash [%s]", self._trashage, self._trashfolder)
+        logging.info(
+            "Delete files older than [%s] days from trash [%s]",
+            self._trashage,
+            self._trashfolder,
+        )
         # Loop over all in trash
         for filename in os.listdir(self._trashfolder):
             # Build FQN
@@ -108,7 +114,9 @@ class Trash:
                 if fname == self._trashignorefile:
                     continue
                 # List file
-                file_mod_time: datetime = datetime.fromtimestamp(os.path.getmtime(fname))
+                file_mod_time: datetime = datetime.fromtimestamp(
+                    os.path.getmtime(fname)
+                )
                 age: timedelta = today - file_mod_time
                 logging.info("File [%s|%02d]", filename, age.days)
                 filesintrash += 1
@@ -124,7 +132,9 @@ class Trash:
         filenameWithPath, fileExtension = os.path.splitext(file)
         filenameRaw: str = os.path.basename(filenameWithPath)
 
-        logging.debug("File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension)
+        logging.debug(
+            "File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension
+        )
 
         # Build search mask for variants
         searchmask: str = filenameRaw + "*" + fileExtension
@@ -132,11 +142,16 @@ class Trash:
 
         # Search for existing variants
         dst: str = ""
-        dstVariants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
+        dstVariants: list[str] = fnmatch.filter(
+            os.listdir(self._trashfolder), searchmask
+        )
         if len(dstVariants) == 0:
             dst = os.path.join(self._trashfolder, (filenameRaw + fileExtension))
         else:
-            dst = os.path.join(self._trashfolder, (filenameRaw + "_" + str(len(dstVariants)) + fileExtension))
+            dst = os.path.join(
+                self._trashfolder,
+                (filenameRaw + "_" + str(len(dstVariants)) + fileExtension),
+            )
 
         # Move file to trash
         logging.debug("Move file [%s] to [%s]", file, dst)

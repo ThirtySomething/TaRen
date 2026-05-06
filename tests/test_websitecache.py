@@ -21,8 +21,12 @@ class TestWebsiteCache(unittest.TestCase):
                 cache._write_to_cache()
             self.assertTrue(Path(cache._cachename).exists())
 
-            failed = WebSiteCache(str(Path(tmpdir) / "cache_fail"), "http://example", 1, "ua")
-            with patch("taren.websitecache.requests.get", side_effect=Exception("boom")):
+            failed = WebSiteCache(
+                str(Path(tmpdir) / "cache_fail"), "http://example", 1, "ua"
+            )
+            with patch(
+                "taren.websitecache.requests.get", side_effect=Exception("boom")
+            ):
                 with patch("taren.websitecache.requests.RequestException", Exception):
                     failed._write_to_cache()
             self.assertFalse(Path(failed._cachename).exists())
@@ -35,7 +39,9 @@ class TestWebsiteCache(unittest.TestCase):
             Path(cache._cachename).write_text("cached", encoding="utf-8")
             self.assertEqual(cache.get_website_from_cache(), "cached")
 
-            missing = WebSiteCache(str(Path(tmpdir) / "missing"), "http://example", 1, "ua")
+            missing = WebSiteCache(
+                str(Path(tmpdir) / "missing"), "http://example", 1, "ua"
+            )
             with patch.object(WebSiteCache, "_write_to_cache", return_value=None):
                 self.assertEqual(missing.get_website_from_cache(), "")
 
@@ -45,8 +51,12 @@ class TestWebsiteCache(unittest.TestCase):
             cache = WebSiteCache(base, "http://example", 1, "ua")
             Path(cache._cachename).write_text("stale", encoding="utf-8")
 
-            with patch.object(WebSiteCache, "_get_age_in_days", return_value=10), patch("taren.websitecache.Helper.delete_file", wraps=Helper.delete_file), patch.object(
-                WebSiteCache, "_write_to_cache", return_value=None
+            with (
+                patch.object(WebSiteCache, "_get_age_in_days", return_value=10),
+                patch(
+                    "taren.websitecache.Helper.delete_file", wraps=Helper.delete_file
+                ),
+                patch.object(WebSiteCache, "_write_to_cache", return_value=None),
             ):
                 self.assertEqual(cache.get_website_from_cache(), "")
 
@@ -60,7 +70,10 @@ class TestWebsiteCache(unittest.TestCase):
             response.content = b"new-content"
             response.raise_for_status.return_value = None
 
-            with patch.object(WebSiteCache, "_get_age_in_days", return_value=10), patch("taren.websitecache.requests.get", return_value=response):
+            with (
+                patch.object(WebSiteCache, "_get_age_in_days", return_value=10),
+                patch("taren.websitecache.requests.get", return_value=response),
+            ):
                 self.assertEqual(cache.get_website_from_cache(), "new-content")
 
     def test_get_age_in_days_paths(self) -> None:

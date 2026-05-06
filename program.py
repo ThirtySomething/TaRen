@@ -39,8 +39,12 @@ TAREN_CONFIG.save()
 LOGGER_SETUP = logging.getLogger()
 loglevel: str = TAREN_CONFIG.value_get("logging", "loglevel").upper()
 LOGGER_SETUP.setLevel(loglevel)
-LOGGER_HANDLER = logging.FileHandler(TAREN_CONFIG.value_get("logging", "logfile"), "w", "utf-8")
-LOGGER_HANDLER.setFormatter(logging.Formatter(TAREN_CONFIG.value_get("logging", "logstring")))
+LOGGER_HANDLER = logging.FileHandler(
+    TAREN_CONFIG.value_get("logging", "logfile"), "w", "utf-8"
+)
+LOGGER_HANDLER.setFormatter(
+    logging.Formatter(TAREN_CONFIG.value_get("logging", "logstring"))
+)
 LOGGER_SETUP.addHandler(LOGGER_HANDLER)
 
 # Script to rename files downloaded with MediathekView to a specific format

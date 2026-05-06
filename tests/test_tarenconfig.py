@@ -13,8 +13,12 @@ class TestTarenConfig(unittest.TestCase):
                 calls.append((section, key, value))
 
         self.assertTrue(TarenConfig.setup(cast(Any, Dummy())))
-        self.assertTrue(any(section == "taren" and key == "wiki" for section, key, _ in calls))
-        self.assertTrue(any(section == "logging" and key == "logfile" for section, key, _ in calls))
+        self.assertTrue(
+            any(section == "taren" and key == "wiki" for section, key, _ in calls)
+        )
+        self.assertTrue(
+            any(section == "logging" and key == "logfile" for section, key, _ in calls)
+        )
 
 
 if __name__ == "__main__":

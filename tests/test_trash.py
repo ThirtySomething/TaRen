@@ -51,7 +51,9 @@ class TestTrash(unittest.TestCase):
             ignore_path = Path(tmpdir) / ".trash" / ".ignore"
             ignore_path.write_text("x", encoding="utf-8")
 
-            with patch("taren.trash.Helper.delete_file", wraps=Helper.delete_file) as delete_mock:
+            with patch(
+                "taren.trash.Helper.delete_file", wraps=Helper.delete_file
+            ) as delete_mock:
                 trash.cleanup()
 
             self.assertTrue(delete_mock.called)

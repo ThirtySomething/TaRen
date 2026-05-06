@@ -40,7 +40,9 @@ class WebSiteCache:
     """
 
     ############################################################################
-    def __init__(self, cachename: str, websiteurl: str, cacheage: int, useragent: str) -> None:
+    def __init__(
+        self, cachename: str, websiteurl: str, cacheage: int, useragent: str
+    ) -> None:
         """
         Default init of variables
         """
@@ -61,9 +63,16 @@ class WebSiteCache:
         cacheage: int = 0
         if os.path.exists(self._cachename):
             today: datetime = datetime.today()
-            modified_date: datetime = datetime.fromtimestamp(os.path.getmtime(self._cachename))
+            modified_date: datetime = datetime.fromtimestamp(
+                os.path.getmtime(self._cachename)
+            )
             cacheage = (today - modified_date).days
-        logging.info("cache file [%s] aged [%s] days, maxage [%s] days", self._cachename, cacheage, self._cacheage)
+        logging.info(
+            "cache file [%s] aged [%s] days, maxage [%s] days",
+            self._cachename,
+            cacheage,
+            self._cacheage,
+        )
         return cacheage
 
     ############################################################################
@@ -91,7 +100,11 @@ class WebSiteCache:
             return
         with codecs.open(self._cachename, "w", "utf-8") as file:
             file.write(websitecontent.decode("utf-8"))
-        logging.info("saved content of [%s] to cache file [%s]", self._websiteurl, self._cachename)
+        logging.info(
+            "saved content of [%s] to cache file [%s]",
+            self._websiteurl,
+            self._cachename,
+        )
 
     ############################################################################
     def get_website_from_cache(self) -> str:
@@ -106,7 +119,9 @@ class WebSiteCache:
         if not os.path.exists(self._cachename):
             self._write_to_cache()
         if not os.path.exists(self._cachename):
-            logging.error("cache file [%s] not available, download failed", self._cachename)
+            logging.error(
+                "cache file [%s] not available, download failed", self._cachename
+            )
             return ""
         content: str = self._read_from_cache()
         return content

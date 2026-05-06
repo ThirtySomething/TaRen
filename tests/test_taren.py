@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import patch
 
-from taren.taren import TaRen
+from taren.taren import MoveToTrashCommand, RenameFileCommand, TaRen
 from taren.stats import Stats
 
 
@@ -93,7 +93,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -121,7 +124,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -147,7 +153,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertTrue(old_path.exists())
@@ -174,7 +183,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -204,7 +216,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             runner = TaRen(cast(Any, config))
             setattr(runner, "_trash", _FakeTrash(init_ok=False))
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertTrue(Path(tmpdir, old_name).exists())
@@ -227,7 +242,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertTrue(old_path.exists())
@@ -253,7 +271,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = _FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+            with (
+                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
+                patch("taren.taren.DownloadList", return_value=fake_download_list),
+            ):
                 runner.rename_process()
 
             self.assertEqual(len(strategy.calls), 1)
@@ -267,11 +288,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             fake_episode_list = SimpleNamespace()
 
-            with patch.object(runner, "_preflight", return_value=True) as preflight, patch.object(
-                runner, "_load_episodes", return_value=fake_episode_list
-            ) as load_episodes, patch.object(runner, "_collect_tasks", return_value=[]) as collect_tasks, patch.object(runner, "_process_tasks") as process_tasks, patch.object(
-                runner, "_finalize"
-            ) as finalize:
+            with (
+                patch.object(runner, "_preflight", return_value=True) as preflight,
+                patch.object(runner, "_load_episodes", return_value=fake_episode_list) as load_episodes,
+                patch.object(runner, "_collect_tasks", return_value=[]) as collect_tasks,
+                patch.object(runner, "_process_tasks") as process_tasks,
+                patch.object(runner, "_finalize") as finalize,
+            ):
                 runner.rename_process()
 
             preflight.assert_called_once_with()
@@ -280,6 +303,29 @@ class TestTaRenRenameProcess(unittest.TestCase):
             collect_tasks.assert_called_once_with(fake_episode_list, load_episodes.call_args.args[0])
             process_tasks.assert_called_once_with([], load_episodes.call_args.args[0])
             finalize.assert_called_once_with(load_episodes.call_args.args[0])
+
+    def test_process_tasks_builds_expected_commands_on_conflict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_label = "Tatort - 0010 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            old_path = Path(tmpdir) / old_name
+            old_path.write_bytes(b"123")
+            new_path = Path(tmpdir) / f"{target_label}.mp4"
+            new_path.write_bytes(b"1")
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            task = SimpleNamespace(filename=old_name, episode=_FakeEpisode(target_label))
+            statistics = Stats()
+
+            with patch.object(runner, "_execute_commands") as execute_commands:
+                runner._process_tasks([task], statistics)
+
+            execute_commands.assert_called_once()
+            commands = execute_commands.call_args.args[0]
+            self.assertEqual(len(commands), 2)
+            self.assertIsInstance(commands[0], MoveToTrashCommand)
+            self.assertIsInstance(commands[1], RenameFileCommand)
 
 
 if __name__ == "__main__":

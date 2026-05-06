@@ -46,6 +46,36 @@ class _ConflictResolutionResult(NamedTuple):
     skip_rename: bool
 
 
+class FileMutationCommand(Protocol):
+    def execute(self, statistics: Stats) -> None:
+        """Execute mutation and update statistics."""
+
+
+class MoveToTrashCommand:
+    def __init__(self, trash: Trash, file_path: str) -> None:
+        self._trash: Trash = trash
+        self._file_path: str = file_path
+
+    def execute(self, statistics: Stats) -> None:
+        self._trash.move(self._file_path)
+        statistics.downloads_moved += 1
+
+
+class RenameFileCommand:
+    def __init__(self, source_file: str, destination_file: str) -> None:
+        self._source_file: str = source_file
+        self._destination_file: str = destination_file
+
+    def execute(self, statistics: Stats) -> None:
+        logging.info(
+            "rename from [%s] to [%s] filename",
+            self._source_file,
+            self._destination_file,
+        )
+        os.rename(self._source_file, self._destination_file)
+        statistics.downloads_renamed += 1
+
+
 class ConflictResolutionStrategy(Protocol):
     def resolve(self, old_fqn: str, new_fqn: str) -> _ConflictResolutionResult:
         """Resolve rename conflicts and return follow-up actions."""
@@ -82,7 +112,11 @@ class TaRen:
     """
 
     ############################################################################
-    def __init__(self, config: TarenConfig, conflict_strategy: ConflictResolutionStrategy | None = None) -> None:
+    def __init__(
+        self,
+        config: TarenConfig,
+        conflict_strategy: ConflictResolutionStrategy | None = None,
+    ) -> None:
         self._config: TarenConfig = config
         self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
         self._pattern: str = self._config.value_get("taren", "pattern")
@@ -92,7 +126,10 @@ class TaRen:
         self._trashage: int = int(self._config.value_get("taren", "trashage"))
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
-            self._config.value_get("taren", "downloads"), self._config.value_get("taren", "trash"), self._trashage, self._config.value_get("taren", "trashignore")
+            self._config.value_get("taren", "downloads"),
+            self._config.value_get("taren", "trash"),
+            self._trashage,
+            self._config.value_get("taren", "trashignore"),
         )
         logging.debug("self._config [%s]", self._config)
         logging.debug("self._searchdir [%s]", self._searchdir)
@@ -192,7 +229,10 @@ class TaRen:
 
         # Process downloads
         for current_download in downloads_to_process:
-            new_fqn: str = os.path.join(self._searchdir, "{}{}".format(current_download.episode, self._extension))
+            new_fqn: str = os.path.join(
+                self._searchdir,
+                "{}{}".format(current_download.episode, self._extension),
+            )
             old_fqn: str = os.path.join(self._searchdir, current_download.filename)
 
             if new_fqn == old_fqn:
@@ -201,16 +241,19 @@ class TaRen:
                 continue
 
             conflict_result: _ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
+            commands: list[FileMutationCommand] = []
             if conflict_result.move_to_trash is not None:
-                self._trash.move(conflict_result.move_to_trash)
-                statistics.downloads_moved += 1
-            if conflict_result.skip_rename:
-                continue
+                commands.append(MoveToTrashCommand(self._trash, conflict_result.move_to_trash))
+            if not conflict_result.skip_rename:
+                commands.append(RenameFileCommand(old_fqn, new_fqn))
+            self._execute_commands(commands, statistics)
 
-            # Rename download to name of episode
-            logging.info("rename from [%s] to [%s] filename", old_fqn, new_fqn)
-            os.rename(old_fqn, new_fqn)
-            statistics.downloads_renamed += 1
+    ############################################################################
+    def _execute_commands(self, commands: list[FileMutationCommand], statistics: Stats) -> None:
+        """Execute prepared file-mutation commands in order."""
+
+        for command in commands:
+            command.execute(statistics)
 
     ############################################################################
     def _finalize(self, statistics: Stats) -> None:

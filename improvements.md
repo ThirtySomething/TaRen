@@ -73,7 +73,14 @@ Observed benefit:
 
 - Smaller units, clearer extension points, simpler test targeting for each step.
 
-### 3. Command Pattern - File System Mutations
+### 3. Command Pattern - File System Mutations (Implemented)
+
+Implementation summary:
+
+- `taren/taren.py` now defines explicit command objects for file mutations.
+- `MoveToTrashCommand` encapsulates trash move operations and associated statistics updates.
+- `RenameFileCommand` encapsulates rename operations and associated statistics updates.
+- `_process_tasks()` builds a command list per task and delegates execution to `_execute_commands()`.
 
 Where it fits:
 
@@ -83,13 +90,13 @@ Why applicable:
 
 - Mutations are discrete operations that could support audit logging, dry-run previews, batching, or rollback hooks.
 
-How to apply incrementally:
+Adopted steps:
 
-1. Define command objects (`RenameFile`, `MoveToTrash`, `DeleteFile`) with `execute()`.
-2. In planning phase, emit command list.
-3. Execute commands with a central runner.
+1. Defined command objects (`RenameFileCommand`, `MoveToTrashCommand`) with `execute(statistics)`.
+2. Build a per-task command list after conflict resolution.
+3. Execute commands in order via `_execute_commands()`.
 
-Expected benefit:
+Observed benefit:
 
 - Better observability of planned vs executed actions and safer extension toward preview mode.
 
@@ -136,9 +143,8 @@ Expected benefit:
 
 ## Suggested Implementation Order
 
-1. File operation commands for dry-run readiness.
-2. Source adapter separation for episode retrieval/parsing.
-3. Null object formalization for `Episode` sentinel behavior.
+1. Source adapter separation for episode retrieval/parsing.
+2. Null object formalization for `Episode` sentinel behavior.
 
 ---
 
