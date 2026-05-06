@@ -327,6 +327,36 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertIsInstance(commands[0], MoveToTrashCommand)
             self.assertIsInstance(commands[1], RenameFileCommand)
 
+    def test_build_commands_for_task_variants(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            commands = runner._build_commands_for_task(
+                "old.mp4",
+                "new.mp4",
+                SimpleNamespace(move_to_trash="old.mp4", skip_rename=True),
+            )
+            self.assertEqual(len(commands), 1)
+            self.assertIsInstance(commands[0], MoveToTrashCommand)
+
+            commands = runner._build_commands_for_task(
+                "old.mp4",
+                "new.mp4",
+                SimpleNamespace(move_to_trash=None, skip_rename=False),
+            )
+            self.assertEqual(len(commands), 1)
+            self.assertIsInstance(commands[0], RenameFileCommand)
+
+            commands = runner._build_commands_for_task(
+                "old.mp4",
+                "new.mp4",
+                SimpleNamespace(move_to_trash="old.mp4", skip_rename=False),
+            )
+            self.assertEqual(len(commands), 2)
+            self.assertIsInstance(commands[0], MoveToTrashCommand)
+            self.assertIsInstance(commands[1], RenameFileCommand)
+
 
 if __name__ == "__main__":
     unittest.main()

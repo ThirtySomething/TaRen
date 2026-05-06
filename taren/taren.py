@@ -96,10 +96,14 @@ class SizeBasedConflictStrategy:
             return _ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
 
         if size_old > size_new:
-            logging.info("one file smaller than the other one, move file [%s] to trash", new_fqn)
+            logging.info(
+                "one file smaller than the other one, move file [%s] to trash", new_fqn
+            )
             return _ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
 
-        logging.info("one file smaller than the other one, move file [%s] to trash", old_fqn)
+        logging.info(
+            "one file smaller than the other one, move file [%s] to trash", old_fqn
+        )
         return _ConflictResolutionResult(move_to_trash=old_fqn, skip_rename=True)
 
 
@@ -118,13 +122,19 @@ class TaRen:
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
+        self._searchdir: str = self._sanitize_path(
+            self._config.value_get("taren", "downloads")
+        )
         self._pattern: str = self._config.value_get("taren", "pattern")
-        self._extension: str = self._sanitize_extension(self._config.value_get("taren", "extension"))
+        self._extension: str = self._sanitize_extension(
+            self._config.value_get("taren", "extension")
+        )
         self._url: str = self._config.value_get("taren", "wiki")
         self._cachetime: int = int(self._config.value_get("taren", "maxcache"))
         self._trashage: int = int(self._config.value_get("taren", "trashage"))
-        self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
+        self._conflict_strategy: ConflictResolutionStrategy = (
+            conflict_strategy or SizeBasedConflictStrategy()
+        )
         self._trash: Trash = Trash(
             self._config.value_get("taren", "downloads"),
             self._config.value_get("taren", "trash"),
@@ -138,7 +148,9 @@ class TaRen:
         logging.debug("self._url [%s]", self._url)
         logging.debug("self._cachetime [%s]", self._cachetime)
         logging.debug("self._trashage [%s]", self._trashage)
-        logging.debug("self._conflict_strategy [%s]", type(self._conflict_strategy).__name__)
+        logging.debug(
+            "self._conflict_strategy [%s]", type(self._conflict_strategy).__name__
+        )
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -172,7 +184,9 @@ class TaRen:
 
         statistics: Stats = Stats()
         episode_list: EpisodeList = self._load_episodes(statistics)
-        downloads_to_process: list[_DownloadTask] | None = self._collect_tasks(episode_list, statistics)
+        downloads_to_process: list[_DownloadTask] | None = self._collect_tasks(
+            episode_list, statistics
+        )
         if downloads_to_process is None:
             return
         self._process_tasks(downloads_to_process, statistics)
@@ -184,7 +198,9 @@ class TaRen:
 
         # Check path of downloads
         if not os.path.exists(self._searchdir):
-            logging.error("Path [%s] does not exist or not found, abort", self._searchdir)
+            logging.error(
+                "Path [%s] does not exist or not found, abort", self._searchdir
+            )
             return False
 
         return True
@@ -195,17 +211,23 @@ class TaRen:
 
         # Get list of episodes from web page
         ua: str = self._config.value_get("taren", "wiki_useragent")
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
+        episode_list: EpisodeList = EpisodeList(
+            self._pattern, self._url, self._cachetime, ua
+        )
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
         return episode_list
 
     ############################################################################
-    def _collect_tasks(self, episode_list: EpisodeList, statistics: Stats) -> list[_DownloadTask] | None:
+    def _collect_tasks(
+        self, episode_list: EpisodeList, statistics: Stats
+    ) -> list[_DownloadTask] | None:
         """Collect downloads that can be processed with known episode metadata."""
 
         # Get list of downloads from filesystem
-        download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
+        download_list: DownloadList = DownloadList(
+            self._searchdir, self._pattern, self._extension
+        )
         downloads: list[str] = download_list.get_filenames()
         statistics.downloads_total = len(downloads)
 
@@ -219,12 +241,16 @@ class TaRen:
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
                 continue
-            downloads_to_process.append(_DownloadTask(filename=current_download, episode=episode))
+            downloads_to_process.append(
+                _DownloadTask(filename=current_download, episode=episode)
+            )
         logging.info("downloads_to_process [%s]", len(downloads_to_process))
         return downloads_to_process
 
     ############################################################################
-    def _process_tasks(self, downloads_to_process: list[_DownloadTask], statistics: Stats) -> None:
+    def _process_tasks(
+        self, downloads_to_process: list[_DownloadTask], statistics: Stats
+    ) -> None:
         """Apply rename and conflict handling for prepared tasks."""
 
         # Process downloads
@@ -240,16 +266,36 @@ class TaRen:
                 statistics.episodes_owned += 1
                 continue
 
-            conflict_result: _ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
-            commands: list[FileMutationCommand] = []
-            if conflict_result.move_to_trash is not None:
-                commands.append(MoveToTrashCommand(self._trash, conflict_result.move_to_trash))
-            if not conflict_result.skip_rename:
-                commands.append(RenameFileCommand(old_fqn, new_fqn))
+            conflict_result: _ConflictResolutionResult = (
+                self._conflict_strategy.resolve(old_fqn, new_fqn)
+            )
+            commands: list[FileMutationCommand] = self._build_commands_for_task(
+                old_fqn, new_fqn, conflict_result
+            )
             self._execute_commands(commands, statistics)
 
     ############################################################################
-    def _execute_commands(self, commands: list[FileMutationCommand], statistics: Stats) -> None:
+    def _build_commands_for_task(
+        self,
+        old_fqn: str,
+        new_fqn: str,
+        conflict_result: _ConflictResolutionResult,
+    ) -> list[FileMutationCommand]:
+        """Factory method for building mutation commands for one task."""
+
+        commands: list[FileMutationCommand] = []
+        if conflict_result.move_to_trash is not None:
+            commands.append(
+                MoveToTrashCommand(self._trash, conflict_result.move_to_trash)
+            )
+        if not conflict_result.skip_rename:
+            commands.append(RenameFileCommand(old_fqn, new_fqn))
+        return commands
+
+    ############################################################################
+    def _execute_commands(
+        self, commands: list[FileMutationCommand], statistics: Stats
+    ) -> None:
         """Execute prepared file-mutation commands in order."""
 
         for command in commands:

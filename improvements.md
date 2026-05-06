@@ -107,6 +107,16 @@ Expected benefit:
 
 ### 4. Factory Method - File Mutation Command Creation
 
+Status:
+
+- Implemented.
+
+Implementation summary:
+
+- `taren/taren.py` now provides `_build_commands_for_task(...)` as explicit factory method for file-mutation commands.
+- `_process_tasks()` now delegates command object construction to that method.
+- Command creation policy is now isolated from task orchestration logic.
+
 Where it fits:
 
 - `TaRen._process_tasks()` still directly constructs concrete command objects.
@@ -115,13 +125,13 @@ Why applicable:
 
 - Command creation logic is now centralized enough to extract and support variants (dry-run commands, audit commands, rollback-capable commands).
 
-How to apply incrementally:
+Adopted steps:
 
-1. Add `_build_commands_for_task(...) -> list[FileMutationCommand]` in `TaRen`.
-2. Move direct `MoveToTrashCommand` / `RenameFileCommand` construction into that method.
-3. Override or swap command factory behavior for simulation mode later.
+1. Added `_build_commands_for_task(...) -> list[FileMutationCommand]` in `TaRen`.
+2. Moved direct `MoveToTrashCommand` / `RenameFileCommand` construction into that method.
+3. Added unit coverage for command factory variants.
 
-Expected benefit:
+Observed benefit:
 
 - Keeps `_process_tasks()` focused on orchestration and prepares cleaner dry-run extensions.
 
@@ -129,9 +139,8 @@ Expected benefit:
 
 ## Priority Order for Proposed Patterns
 
-1. Factory Method for command creation.
-2. Builder for startup/runtime assembly.
-3. HTTP fetch policy strategy.
+1. Builder for startup/runtime assembly.
+2. HTTP fetch policy strategy.
 
 ---
 
