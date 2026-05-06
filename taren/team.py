@@ -27,6 +27,7 @@ SOFTWARE.
 import logging
 import re
 from datetime import date
+from types import NotImplementedType
 from typing import Match
 
 from taren.episode import Episode
@@ -55,13 +56,13 @@ class Team:
         self.team_ended: bool = False
 
     ############################################################################
-    def __gt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool | NotImplementedType:
         """
         Used for sorting
         """
-        if isinstance(other, Team):
-            return self.__repr__() > other.__repr__()
-        raise Exception("Cannot compare Team to Not-A-Team")
+        if not isinstance(other, Team):
+            return NotImplemented
+        return self.__repr__() > other.__repr__()
 
     ############################################################################
     def __repr__(self) -> str:

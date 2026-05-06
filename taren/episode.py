@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 import re
+from types import NotImplementedType
 from typing import Match
 
 
@@ -53,20 +54,22 @@ class Episode:
         self.episode_year: int = 0
 
     ############################################################################
-    def __gt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool | NotImplementedType:
         """
         Used for sorting
         """
-        if isinstance(other, Episode):
-            return self.__repr__() > other.__repr__()
-        raise Exception("Cannot compare Episode to Not-A-Episode")
+        if not isinstance(other, Episode):
+            return NotImplemented
+        return self.__repr__() > other.__repr__()
 
     ############################################################################
     def __repr__(self) -> str:
         """
         Default string representation of an episode
         """
-        measstring: str = "Tatort - {:04d} - {} - {} - {} - {} - {}".format(self.episode_id, self.episode_name, self.episode_inspectors, self.episode_sequence, self.episode_broadcast, self.episode_year)
+        measstring: str = "Tatort - {:04d} - {} - {} - {} - {} - {}".format(
+            self.episode_id, self.episode_name, self.episode_inspectors, self.episode_sequence, self.episode_broadcast, self.episode_year
+        )
         return measstring
 
     ############################################################################
