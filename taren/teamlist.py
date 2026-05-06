@@ -61,6 +61,9 @@ class TeamList:
         for table_row in raw_data:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
+            if len(table_cells) < 6:
+                logging.debug("skip malformed team table row with [%s] cells", len(table_cells))
+                continue
             # Get content of cells
             team_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
             # Create a new and empty episode
