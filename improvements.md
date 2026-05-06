@@ -97,6 +97,17 @@ Observed benefit:
 
 ### 3. Policy/Strategy Pattern - HTTP Retrieval Behavior
 
+Status:
+
+- Implemented.
+
+Implementation summary:
+
+- `taren/websitecache.py` now defines `HttpFetchPolicy` and default `RequestsHttpFetchPolicy`.
+- `RequestsHttpFetchPolicy` encapsulates timeout/retry behavior for HTTP fetches.
+- `WebSiteCache` now accepts an injected fetch policy and delegates network retrieval through it.
+- `CachedHtmlEpisodeSource` / `EpisodeList` accept optional fetch-policy injection and pass it through to cache retrieval.
+
 Where it fits:
 
 - `WebSiteCache._write_to_cache()` has fixed request behavior (single call, no retry/backoff policy, no timeout configuration path).
@@ -105,13 +116,13 @@ Why applicable:
 
 - Network access rules vary by runtime constraints and should be configurable without changing cache internals.
 
-How to apply incrementally:
+Adopted steps:
 
-1. Introduce `HttpFetchPolicy` (`timeout`, optional retries, headers customization).
-2. Inject policy into `WebSiteCache` or into `CachedHtmlEpisodeSource`.
-3. Keep default behavior equivalent to current implementation.
+1. Introduced `HttpFetchPolicy` (`fetch(url, headers) -> bytes | None`).
+2. Added `RequestsHttpFetchPolicy` with timeout + retry behavior.
+3. Injected policy into `WebSiteCache` and through `CachedHtmlEpisodeSource` / `EpisodeList`.
 
-Expected benefit:
+Observed benefit:
 
 - Better resilience and clearer control over network behavior in unstable environments.
 
@@ -149,10 +160,10 @@ Observed benefit:
 
 ## Priority Order for Proposed Patterns
 
-1. HTTP fetch policy strategy.
+All proposed patterns in this report are now implemented.
 
 ---
 
 ## Recommendation
 
-Adopt only one proposed pattern at a time and preserve behavior after each change with targeted tests.
+Continue making incremental improvements in small, test-backed commits.

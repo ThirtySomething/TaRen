@@ -31,7 +31,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from taren.episode import Episode
-from taren.websitecache import WebSiteCache
+from taren.websitecache import HttpFetchPolicy, WebSiteCache
 
 
 class EpisodeSource(Protocol):
@@ -42,8 +42,21 @@ class EpisodeSource(Protocol):
 class CachedHtmlEpisodeSource:
     """Adapter for retrieving episode HTML via website cache."""
 
-    def __init__(self, pattern: str, url: str, cachetime: int, useragent: str) -> None:
-        self._cache: WebSiteCache = WebSiteCache(pattern, url, cachetime, useragent)
+    def __init__(
+        self,
+        pattern: str,
+        url: str,
+        cachetime: int,
+        useragent: str,
+        fetch_policy: HttpFetchPolicy | None = None,
+    ) -> None:
+        self._cache: WebSiteCache = WebSiteCache(
+            pattern,
+            url,
+            cachetime,
+            useragent,
+            fetch_policy=fetch_policy,
+        )
 
     def fetch(self) -> str:
         return self._cache.get_website_from_cache()
@@ -61,13 +74,20 @@ class EpisodeList:
         url: str,
         cachetime: int,
         useragent: str,
+        fetch_policy: HttpFetchPolicy | None = None,
         episode_source: EpisodeSource | None = None,
     ) -> None:
         self._pattern: str = pattern
         self._url: str = url
         self._cachetime: int = cachetime
         self._useragent: str = useragent
-        self._episode_source: EpisodeSource = episode_source or CachedHtmlEpisodeSource(pattern, url, cachetime, useragent)
+        self._episode_source: EpisodeSource = episode_source or CachedHtmlEpisodeSource(
+            pattern,
+            url,
+            cachetime,
+            useragent,
+            fetch_policy=fetch_policy,
+        )
         self._episodes: list[Episode] = []
         logging.debug("pattern [%s]", pattern)
         logging.debug("url [%s]", url)

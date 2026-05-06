@@ -67,9 +67,16 @@ class TestEpisodeList(unittest.TestCase):
 
             payload = source.fetch()
 
-            cache_cls.assert_called_once_with("Tatort", "http://example", 1, "ua")
+            cache_cls.assert_called_once_with("Tatort", "http://example", 1, "ua", fetch_policy=None)
             cache_instance.get_website_from_cache.assert_called_once_with()
             self.assertEqual(payload, "<html></html>")
+
+    def test_cached_html_episode_source_passes_custom_fetch_policy(self) -> None:
+        with patch("taren.episodelist.WebSiteCache") as cache_cls:
+            policy = object()
+            CachedHtmlEpisodeSource("Tatort", "http://example", 1, "ua", fetch_policy=policy)
+
+            cache_cls.assert_called_once_with("Tatort", "http://example", 1, "ua", fetch_policy=policy)
 
     def test_find_episode_uses_empty_instance_factory(self) -> None:
         el = EpisodeList("Tatort", "http://example", 1, "ua")
