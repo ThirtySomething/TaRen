@@ -42,28 +42,44 @@ from taren.taren import TaRen
 
 
 class TestTaRenRenameProcess(unittest.TestCase):
-    def _build_config(self, downloads_path: str) -> FakeConfig:
+    def _build_config(self, collection_path: str) -> FakeConfig:
         return FakeConfig(
             {
-                "taren.downloads": downloads_path,
+                "taren.collection": collection_path,
                 "taren.pattern": "Tatort",
                 "taren.extension": "mp4",
                 "taren.wiki": "http://example/episodes",
                 "taren.maxcache": "1",
                 "taren.trashage": "1",
                 "taren.trashignore": ".ignore",
-                "taren.trash": ".trash",
                 "taren.wiki_useragent": "ua",
             }
         )
+
+    def _setup_collection(self, tmpdir: str):
+        """Create downloads and seen subfolders inside the collection root."""
+        downloads = Path(tmpdir) / "downloads"
+        seen = Path(tmpdir) / "seen"
+        downloads.mkdir(exist_ok=True)
+        seen.mkdir(exist_ok=True)
+        return downloads, seen
+
+    def _dl_mocks(self, downloads_files: list, seen_files: list | None = None):
+        """Return DownloadList side_effect list: first call=downloads dir, second=seen dir."""
+        seen_files = seen_files or []
+        return [
+            SimpleNamespace(get_filenames=lambda f=downloads_files: f),
+            SimpleNamespace(get_filenames=lambda f=seen_files: f),
+        ]
 
     def test_rename_process_equal_size_conflict(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0001 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
+            downloads, seen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
             old_path.write_bytes(b"1234")
-            new_path = Path(tmpdir) / f"{target_label}.mp4"
+            new_path = seen / f"{target_label}.mp4"
             new_path.write_bytes(b"abcd")
 
             fake_episode_list = SimpleNamespace(
@@ -71,7 +87,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode(target_label),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -80,7 +95,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
@@ -92,9 +107,10 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0002 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
+            downloads, seen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
             old_path.write_bytes(b"1")
-            new_path = Path(tmpdir) / f"{target_label}.mp4"
+            new_path = seen / f"{target_label}.mp4"
             new_path.write_bytes(b"12345")
 
             fake_episode_list = SimpleNamespace(
@@ -102,7 +118,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode(target_label),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -111,7 +126,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
@@ -119,19 +134,20 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertTrue(new_path.exists())
             self.assertIn(old_name, fake_trash.moved)
 
-    def test_rename_process_skips_when_already_processed(self) -> None:
+    def test_rename_process_skips_when_already_in_seen(self) -> None:
+        """File already in seen/ with correct name is counted as owned, not re-processed."""
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0003 - A - B - C - 2020"
             old_name = f"{target_label}.mp4"
-            old_path = Path(tmpdir) / old_name
-            old_path.write_bytes(b"123")
+            downloads, seen = self._setup_collection(tmpdir)
+            seen_path = seen / old_name
+            seen_path.write_bytes(b"123")
 
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode(target_label),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -140,20 +156,24 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch(
+                    "taren.taren.DownloadList",
+                    side_effect=self._dl_mocks([], [old_name]),
+                ),
             ):
                 runner.rename_process()
 
-            self.assertTrue(old_path.exists())
+            self.assertTrue(seen_path.exists())
             self.assertEqual(fake_trash.moved, [])
 
     def test_rename_process_old_larger_branch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0004 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
+            downloads, seen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
             old_path.write_bytes(b"123456")
-            new_path = Path(tmpdir) / f"{target_label}.mp4"
+            new_path = seen / f"{target_label}.mp4"
             new_path.write_bytes(b"1")
 
             fake_episode_list = SimpleNamespace(
@@ -161,7 +181,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode(target_label),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -170,7 +189,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
@@ -178,7 +197,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertTrue(new_path.exists())
             self.assertIn(f"{target_label}.mp4", fake_trash.moved)
 
-    def test_rename_process_aborts_when_searchdir_missing(self) -> None:
+    def test_rename_process_aborts_when_collection_missing(self) -> None:
         config = self._build_config("/path/that/does/not/exist")
         runner = TaRen(cast(Any, config))
         with patch("taren.taren.logging.error") as log_error:
@@ -188,14 +207,14 @@ class TestTaRenRenameProcess(unittest.TestCase):
     def test_rename_process_aborts_when_trash_init_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             old_name = "Tatort_source.mp4"
-            Path(tmpdir, old_name).write_bytes(b"123")
+            downloads, seen = self._setup_collection(tmpdir)
+            (downloads / old_name).write_bytes(b"123")
 
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -203,16 +222,17 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
-            self.assertTrue(Path(tmpdir, old_name).exists())
+            self.assertTrue((downloads / old_name).exists())
 
     def test_rename_process_skips_download_without_episode_match(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
+            downloads, seen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
             old_path.write_bytes(b"123")
 
             fake_episode_list = SimpleNamespace(
@@ -220,7 +240,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 get_episode_count=lambda: 0,
                 find_episode=lambda _: SimpleNamespace(empty=True),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -229,7 +248,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
@@ -240,7 +259,8 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0099 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
+            downloads, seen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
             old_path.write_bytes(b"123")
 
             fake_episode_list = SimpleNamespace(
@@ -248,7 +268,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 get_episode_count=lambda: 1,
                 find_episode=lambda _: FakeEpisode(target_label),
             )
-            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             strategy = SpyConflictStrategy()
@@ -258,13 +277,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", return_value=fake_download_list),
+                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
             ):
                 runner.rename_process()
 
             self.assertEqual(len(strategy.calls), 1)
             self.assertFalse(old_path.exists())
-            self.assertTrue(Path(tmpdir, f"{target_label}.mp4").exists())
+            self.assertTrue((seen / f"{target_label}.mp4").exists())
 
     def test_rename_process_uses_template_pipeline_methods(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -293,14 +312,17 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0010 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            old_path = Path(tmpdir) / old_name
-            old_path.write_bytes(b"123")
-            new_path = Path(tmpdir) / f"{target_label}.mp4"
-            new_path.write_bytes(b"1")
+            downloads, seen = self._setup_collection(tmpdir)
+            (downloads / old_name).write_bytes(b"123")
+            (seen / f"{target_label}.mp4").write_bytes(b"1")
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            task = SimpleNamespace(filename=old_name, episode=FakeEpisode(target_label))
+            task = SimpleNamespace(
+                filename=old_name,
+                episode=FakeEpisode(target_label),
+                sourcedir=str(downloads),
+            )
             statistics = Stats()
 
             with patch.object(runner, "_execute_commands") as execute_commands:

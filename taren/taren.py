@@ -36,6 +36,7 @@ from taren.episodelist import EpisodeList
 from taren.filemutationcommand import FileMutationCommand
 from taren.movetotrashcommand import MoveToTrashCommand
 from taren.renamefilecommand import RenameFileCommand
+from taren.helper import Helper
 from taren.sizebasedconflictstrategy import SizeBasedConflictStrategy
 from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
@@ -51,13 +52,20 @@ class TaRen:
     """
 
     ############################################################################
+    # Fixed subfolder names within the collection root
+    FOLDER_DOWNLOADS: str = "downloads"
+    FOLDER_SEEN: str = "seen"
+    FOLDER_TRASH: str = "trash"
+
     def __init__(
         self,
         config: TarenConfig,
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
+        self._collection: str = self._sanitize_path(self._config.value_get("taren", "collection"))
+        self._downloads: str = os.path.join(self._collection, TaRen.FOLDER_DOWNLOADS)
+        self._seen: str = os.path.join(self._collection, TaRen.FOLDER_SEEN)
         self._pattern: str = self._config.value_get("taren", "pattern")
         self._extension: str = self._sanitize_extension(self._config.value_get("taren", "extension"))
         self._url: str = self._config.value_get("taren", "wiki")
@@ -65,13 +73,15 @@ class TaRen:
         self._trashage: int = int(self._config.value_get("taren", "trashage"))
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
-            self._config.value_get("taren", "downloads"),
-            self._config.value_get("taren", "trash"),
+            self._collection,
+            TaRen.FOLDER_TRASH,
             self._trashage,
             self._config.value_get("taren", "trashignore"),
         )
         logging.debug("self._config [%s]", self._config)
-        logging.debug("self._searchdir [%s]", self._searchdir)
+        logging.debug("self._collection [%s]", self._collection)
+        logging.debug("self._downloads [%s]", self._downloads)
+        logging.debug("self._seen [%s]", self._seen)
         logging.debug("self._pattern [%s]", self._pattern)
         logging.debug("self._extension [%s]", self._extension)
         logging.debug("self._url [%s]", self._url)
@@ -121,10 +131,17 @@ class TaRen:
     def _preflight(self) -> bool:
         """Perform required pre-checks before processing."""
 
-        # Check path of downloads
-        if not os.path.exists(self._searchdir):
-            logging.error("Path [%s] does not exist or not found, abort", self._searchdir)
+        # Check collection root exists
+        if not os.path.exists(self._collection):
+            logging.error(
+                "Collection path [%s] does not exist or not found, abort",
+                self._collection,
+            )
             return False
+
+        # Ensure downloads and seen subfolders exist
+        Helper.ensure_directory(self._downloads)
+        Helper.ensure_directory(self._seen)
 
         return True
 
@@ -143,22 +160,22 @@ class TaRen:
     def _collect_tasks(self, episode_list: EpisodeList, statistics: Stats) -> list[DownloadTask] | None:
         """Collect downloads that can be processed with known episode metadata."""
 
-        # Get list of downloads from filesystem
-        download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
-        downloads: list[str] = download_list.get_filenames()
-        statistics.downloads_total = len(downloads)
-
         # Check for trash
         if not self._trash.init():
             return None
 
-        # Create list of downloads to process
+        # Scan both downloads/ and seen/ for matching files
         downloads_to_process: list[DownloadTask] = []
-        for current_download in downloads:
-            episode: Episode = episode_list.find_episode(current_download)
-            if episode.empty:
-                continue
-            downloads_to_process.append(DownloadTask(filename=current_download, episode=episode))
+        total_files: int = 0
+        for sourcedir in (self._downloads, self._seen):
+            filelist: list[str] = DownloadList(sourcedir, self._pattern, self._extension).get_filenames()
+            total_files += len(filelist)
+            for current_download in filelist:
+                episode: Episode = episode_list.find_episode(current_download)
+                if episode.empty:
+                    continue
+                downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=sourcedir))
+        statistics.downloads_total = total_files
         logging.info("downloads_to_process [%s]", len(downloads_to_process))
         return downloads_to_process
 
@@ -169,10 +186,10 @@ class TaRen:
         # Process downloads
         for current_download in downloads_to_process:
             new_fqn: str = os.path.join(
-                self._searchdir,
+                self._seen,
                 "{}{}".format(current_download.episode, self._extension),
             )
-            old_fqn: str = os.path.join(self._searchdir, current_download.filename)
+            old_fqn: str = os.path.join(current_download.sourcedir, current_download.filename)
 
             if new_fqn == old_fqn:
                 # Already processed episode
