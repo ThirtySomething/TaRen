@@ -21,7 +21,13 @@ This report was rebuilt from scratch against the current workspace state.
 
 ## Applicable Design Patterns
 
-### 1. Strategy Pattern - Rename Conflict Resolution
+### 1. Strategy Pattern - Rename Conflict Resolution (Implemented)
+
+Implementation summary:
+
+- `taren/taren.py` now defines a `ConflictResolutionStrategy` protocol and uses an injected strategy in `TaRen`.
+- Default behavior is provided by `SizeBasedConflictStrategy` and preserves the previous size-based conflict semantics.
+- `rename_process()` delegates collision decisions to the strategy and executes returned actions (`move_to_trash`, `skip_rename`).
 
 Where it fits:
 
@@ -31,13 +37,13 @@ Why applicable:
 
 - Collision behavior is a policy decision that may evolve (keep newest, keep largest, checksum-first, timestamp-first, dry-run).
 
-How to apply incrementally:
+Adopted steps:
 
-1. Introduce a `ConflictResolutionStrategy` protocol with `resolve(old_fqn, new_fqn) -> Action`.
-2. Move current size-based logic into `SizeBasedConflictStrategy`.
-3. Inject strategy into `TaRen` with config default.
+1. Introduced a `ConflictResolutionStrategy` protocol with `resolve(old_fqn, new_fqn) -> result`.
+2. Moved prior inlined size-based logic into `SizeBasedConflictStrategy`.
+3. Injected strategy into `TaRen` with default fallback to the size-based strategy.
 
-Expected benefit:
+Observed benefit:
 
 - Isolates decision policy from orchestration and makes branch-heavy logic easier to test independently.
 
@@ -124,14 +130,13 @@ Expected benefit:
 
 ## Suggested Implementation Order
 
-1. Strategy for collision resolution (highest complexity concentration, easiest payoff).
-2. Template-method style decomposition of `rename_process()`.
-3. File operation commands for dry-run readiness.
-4. Source adapter separation for episode retrieval/parsing.
-5. Null object formalization for `Episode` sentinel behavior.
+1. Template-method style decomposition of `rename_process()`.
+2. File operation commands for dry-run readiness.
+3. Source adapter separation for episode retrieval/parsing.
+4. Null object formalization for `Episode` sentinel behavior.
 
 ---
 
 ## Recommendation
 
-Do not apply all patterns at once. Start with Strategy + workflow decomposition in small commits, keeping behavior and tests unchanged after each step.
+Do not apply all remaining patterns at once. Continue with workflow decomposition in small commits, keeping behavior and tests unchanged after each step.

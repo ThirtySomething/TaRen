@@ -46,6 +46,15 @@ class _FakeTrash:
         return 0
 
 
+class _SpyConflictStrategy:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    def resolve(self, old_fqn: str, new_fqn: str):
+        self.calls.append((old_fqn, new_fqn))
+        return SimpleNamespace(move_to_trash=None, skip_rename=False)
+
+
 class TestTaRenRenameProcess(unittest.TestCase):
     def _build_config(self, downloads_path: str) -> _FakeConfig:
         return _FakeConfig(
@@ -222,6 +231,33 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             self.assertTrue(old_path.exists())
             self.assertEqual(fake_trash.moved, [])
+
+    def test_rename_process_uses_injected_conflict_strategy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_label = "Tatort - 0099 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            old_path = Path(tmpdir) / old_name
+            old_path.write_bytes(b"123")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: _FakeEpisode(target_label),
+            )
+            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
+
+            config = self._build_config(tmpdir)
+            strategy = _SpyConflictStrategy()
+            runner = TaRen(cast(Any, config), conflict_strategy=cast(Any, strategy))
+            fake_trash = _FakeTrash()
+            setattr(runner, "_trash", fake_trash)
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+                runner.rename_process()
+
+            self.assertEqual(len(strategy.calls), 1)
+            self.assertFalse(old_path.exists())
+            self.assertTrue(Path(tmpdir, f"{target_label}.mp4").exists())
 
 
 if __name__ == "__main__":
