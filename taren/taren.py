@@ -31,7 +31,6 @@ from typing import NamedTuple
 from taren.downloadlist import DownloadList
 from taren.episode import Episode
 from taren.episodelist import EpisodeList
-from taren.grouping import Grouping
 from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
 from taren.teamlist import TeamList
@@ -177,17 +176,6 @@ class TaRen:
             logging.info("rename from [%s] to [%s] filename", old_fqn, new_fqn)
             os.rename(old_fqn, new_fqn)
             statistics.downloads_renamed += 1
-
-        # Get list of teams
-        team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime, ua)
-        team_list.get_teams()
-
-        # Re-scan downloads after renaming to reflect current filenames
-        downloads = download_list.get_filenames()
-
-        # Create HTML file with list of episodes
-        grouping: Grouping = Grouping(self._config, team_list, episode_list, downloads)
-        # grouping.process()
 
         # Cleanup trash
         statistics.downloads_deleted = self._trash.cleanup()

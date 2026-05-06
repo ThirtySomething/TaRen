@@ -31,7 +31,6 @@ import sys
 
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
-from taren.grouping import Grouping
 
 TAREN_CONFIG = TarenConfig("program.json")
 TAREN_CONFIG.save()
@@ -67,7 +66,3 @@ if __name__ == "__main__":
 
     # Start magic process :D
     DATA.rename_process()
-
-    # Create page with grouped information
-    # GROUPING: Grouping = Grouping(TAREN_CONFIG)
-    # GROUPING.process()
