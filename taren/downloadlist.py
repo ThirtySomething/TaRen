@@ -42,9 +42,9 @@ class DownloadList:
         self._searchdir: str = searchdir
         self._pattern: str = pattern
         self._extension: str = extension
-        logging.debug("searchdir [{}]".format(self._searchdir))
-        logging.debug("pattern [{}]".format(self._pattern))
-        logging.debug("extension [{}]".format(self._extension))
+        logging.debug("searchdir [%s]", self._searchdir)
+        logging.debug("pattern [%s]", self._pattern)
+        logging.debug("extension [%s]", self._extension)
 
     ############################################################################
     def get_filenames(self) -> list[str]:
@@ -57,5 +57,5 @@ class DownloadList:
         files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()
         # Log info about found files
-        logging.info("total number of downloads [{}]".format(len(files)))
+        logging.info("total number of downloads [%s]", len(files))
         return files

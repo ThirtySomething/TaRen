@@ -45,10 +45,10 @@ class TeamList:
         self._cachetime: int = cachetime
         self._useragent: str = useragent
         self._teams: list[Team] = []
-        logging.debug("listname [{}]".format(listname))
-        logging.debug("url [{}]".format(url))
-        logging.debug("cachetime [{}]".format(cachetime))
-        logging.debug("useragent [{}]".format(useragent))
+        logging.debug("listname [%s]", listname)
+        logging.debug("url [%s]", url)
+        logging.debug("cachetime [%s]", cachetime)
+        logging.debug("useragent [%s]", useragent)
 
     ############################################################################
     def _build_list_of_teams(self, raw_data: str) -> list[Team]:
@@ -115,9 +115,9 @@ class TeamList:
 
         # Check team for logging data
         if team.empty:
-            logging.info("no match for episode [{}]".format(episode))
+            logging.info("no match for episode [%s]", episode)
         else:
-            logging.debug("episode [{}] matches team [{}]".format(episode, team))
+            logging.debug("episode [%s] matches team [%s]", episode, team)
 
         # Return either empty team or found team
         return team
@@ -137,4 +137,4 @@ class TeamList:
         self._teams = self._parse_website(websitecontent)
         # for curteam in self._teams:
         #     logging.debug("{}".format(curteam))
-        logging.info("total number of teams [{}]".format(len(self._teams)))
+        logging.info("total number of teams [%s]", len(self._teams))

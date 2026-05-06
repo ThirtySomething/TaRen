@@ -36,11 +36,11 @@ class Helper:
             try:
                 # Create missing folder
                 os.makedirs(dirname)
-                logging.debug("Directory [{}] created".format(dirname))
+                logging.debug("Directory [%s] created", dirname)
             except OSError:
-                logging.error("Creation of the directory [{}] failed, abort".format(dirname))
+                logging.error("Creation of the directory [%s] failed, abort", dirname)
         else:
-            logging.debug("Directory [{}] alread exists".format(dirname))
+            logging.debug("Directory [%s] alread exists", dirname)
         return os.path.exists(dirname)
 
     ############################################################################

@@ -48,10 +48,10 @@ class WebSiteCache:
         self._cachename: str = "{}.html".format(cachename)
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent
-        logging.debug("cache file [{}]".format(self._cachename))
-        logging.debug("cacheage [{}]".format(self._cacheage))
-        logging.debug("websiteurl [{}]".format(self._websiteurl))
-        logging.debug("useragent [{}]".format(self._useragent))
+        logging.debug("cache file [%s]", self._cachename)
+        logging.debug("cacheage [%s]", self._cacheage)
+        logging.debug("websiteurl [%s]", self._websiteurl)
+        logging.debug("useragent [%s]", self._useragent)
 
     ############################################################################
     def _get_age_in_days(self) -> int:
@@ -63,7 +63,7 @@ class WebSiteCache:
             today: datetime = datetime.datetime.today()
             modified_date: datetime = datetime.datetime.fromtimestamp(os.path.getmtime(self._cachename))
             cacheage = (today - modified_date).days
-        logging.info("cache file [{}] aged [{}] days, maxage [{}] days".format(self._cachename, cacheage, self._cacheage))
+        logging.info("cache file [%s] aged [%s] days, maxage [%s] days", self._cachename, cacheage, self._cacheage)
         return cacheage
 
     ############################################################################
@@ -73,7 +73,7 @@ class WebSiteCache:
         """
         with codecs.open(self._cachename, "r", "utf-8") as file:
             websitecontent: str = file.read()
-        logging.info("read content from cache file [{}]".format(self._cachename))
+        logging.info("read content from cache file [%s]", self._cachename)
         return websitecontent
 
     ############################################################################
@@ -87,11 +87,11 @@ class WebSiteCache:
             response.raise_for_status()
             websitecontent: bytes = response.content
         except requests.RequestException as e:
-            logging.error("Failed to download [{}]: {}".format(self._websiteurl, e))
+            logging.error("Failed to download [%s]: %s", self._websiteurl, e)
             return
         with codecs.open(self._cachename, "w", "utf-8") as file:
             file.write(websitecontent.decode("utf-8"))
-        logging.info("saved content of [{}] to cache file [{}]".format(self._websiteurl, self._cachename))
+        logging.info("saved content of [%s] to cache file [%s]", self._websiteurl, self._cachename)
 
     ############################################################################
     def get_website_from_cache(self) -> str:
@@ -102,11 +102,11 @@ class WebSiteCache:
         """
         if self._get_age_in_days() > self._cacheage:
             Helper.delete_file(self._cachename)
-            logging.info("deleted cache file [{}]".format(self._cachename))
+            logging.info("deleted cache file [%s]", self._cachename)
         if not os.path.exists(self._cachename):
             self._write_to_cache()
         if not os.path.exists(self._cachename):
-            logging.error("cache file [{}] not available, download failed".format(self._cachename))
+            logging.error("cache file [%s] not available, download failed", self._cachename)
             return ""
         content: str = self._read_from_cache()
         return content

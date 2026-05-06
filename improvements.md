@@ -1,58 +1,58 @@
 # TaRen Code Analysis — Improvement Notes
 
-## Fixed
+## Verified Fixed
 
-- `taren/trash.py` — Double `os.path.join` in `move()` ✓
-- `taren/stats.py` — Division by zero in `__str__` ✓
-- `taren/taren.py` — Windows-only path separator in `_sanitize_path` ✓
-- `taren/taren.py` — Inconsistent return type in `rename_process` ✓
-- `taren/websitecache.py` — No HTTP error handling in `_write_to_cache` ✓
-- `taren/team.py` — `_strip_invalid_characters` iteration bug + never called from `parse()` ✓
-- `taren/grouping.py` — Non-existent attribute `taren_downloads` in `_buildDocument` ✓
-- `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice ✓
-- `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
-- `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists ✓
-- `taren/downloadlist.py` — Duplicate extension sanitization ✓
-- `self: object` annotations replaced with idiomatic `self` ✓
-- Yoda conditions in `team.py` and `trash.py` ✓
+- `taren/trash.py` — Removed duplicate `os.path.join` in `move()`.
+- `taren/stats.py` — Guarded division-by-zero in `__str__()`.
+- `taren/taren.py` — Replaced Windows-only path separator logic in `_sanitize_path()`.
+- `taren/taren.py` — Unified early returns in `rename_process()` to match `-> None`.
+- `taren/websitecache.py` — Added HTTP error handling in `_write_to_cache()`.
+- `taren/team.py` — Fixed `_strip_invalid_characters()` iteration and call path.
+- `taren/grouping.py` — Replaced invalid config attribute access in `_buildDocument()`.
+- `taren/taren.py` — Removed duplicate `EpisodeList` object creation in rename flow.
+- `taren/websitecache.py` — Added post-download cache existence guard in `get_website_from_cache()`.
+- `taren/taren.py` — Replaced anonymous two-item lists with named task structure.
+- `taren/downloadlist.py` — Removed duplicate extension sanitization.
+- Project-wide — Replaced `self: object` with idiomatic `self`.
+- `taren/team.py`, `taren/trash.py` — Removed Yoda conditions.
+- Project-wide — Standardized active logging calls to lazy `%s`/`%d` style.
 
 ---
 
-## Redundancy / Design Issues
+## Open Bugs / Risks
 
 ### `taren/grouping.py` — `process()` is incomplete
 
-The method iterates downloads, finds episodes and teams, logs them — but **never calls `_buildDocument`** and never builds the `documentData` dict. The method produces no output.
+`process()` only logs team/episode matches and never builds `documentData` or calls `_buildDocument()`, so no output artifact is produced.
+
+### `taren/episodelist.py` and `taren/teamlist.py` — fragile parse path on empty/failed cache
+
+If website download fails, cache methods can return an empty string. Both parsers then do:
+
+```python
+table = websitedata.find("table")
+rows = table.find_all("tr")
+```
+
+When `table` is `None`, this raises `AttributeError` and aborts processing.
 
 ---
 
-## Code Style / Minor Issues
+## Design / Maintainability Issues
 
-### `__gt__` raises generic `Exception`
+### `taren/episode.py` and `taren/team.py` — `__gt__` raises generic `Exception`
 
-Both `Episode.__gt__` and `Team.__gt__` raise `Exception("Cannot compare …")`. Python convention is to raise `TypeError` (or return `NotImplemented`) for type mismatches in comparison operators.
+Comparison methods should return `NotImplemented` or raise `TypeError` for unsupported types.
 
-### Inconsistent logging format strings
+### `taren/episodelist.py` and `taren/teamlist.py` — incorrect BeautifulSoup annotations
 
-Some log calls use `.format()`, some use `%`-style (`logging.info("msg: [%s]", value)`). Pick one style. The `%`-style is preferred for `logging` because arguments are only formatted if the message is actually emitted.
+`table: str` and `rows: list[str]` are incorrect; these are BeautifulSoup tag objects/lists.
 
-### Wrong type annotations for BeautifulSoup objects
+### `taren/helper.py` — naming and error contract
 
-In `episodelist.py` and `teamlist.py`:
+- `ensureDirectory` is non-PEP8 in a snake_case codebase.
+- `delete_file()` is annotated as returning `bool` but returns nothing and does not log failures.
 
-```python
-table: str = websitedata.find("table")   # actually bs4.Tag
-rows: list[str] = table.find_all("tr")   # actually list[bs4.Tag]
-```
+### Commented-out code blocks still present
 
-### Commented-out dead code
-
-Multiple blocks of commented-out code exist across several files (e.g. alternative inspector-stripping regex in `episode.py`, disabled `grouping.process()` calls in `taren.py` and `program.py`). These should either be restored or removed.
-
-### `helper.py` — `ensureDirectory` violates PEP 8 naming
-
-`ensureDirectory` should be `ensure_directory`. All other methods in the project use `snake_case`.
-
-### `helper.py` — `delete_file` silently propagates `OSError`
-
-No error handling; callers assume the file was deleted. At minimum the exception should be logged before propagating.
+Multiple modules keep disabled code paths (e.g., grouping execution in `program.py` and `taren.py`, alternative regex logic in `episode.py`).

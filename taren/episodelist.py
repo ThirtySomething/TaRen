@@ -44,10 +44,10 @@ class EpisodeList:
         self._cachetime: int = cachetime
         self._useragent: str = useragent
         self._episodes: list[Episode] = []
-        logging.debug("pattern [{}]".format(pattern))
-        logging.debug("url [{}]".format(url))
-        logging.debug("cachetime [{}]".format(cachetime))
-        logging.debug("useragent [{}]".format(useragent))
+        logging.debug("pattern [%s]", pattern)
+        logging.debug("url [%s]", url)
+        logging.debug("cachetime [%s]", cachetime)
+        logging.debug("useragent [%s]", useragent)
 
     ############################################################################
     def _build_list_of_episodes(self, raw_data: str) -> list[Episode]:
@@ -134,4 +134,4 @@ class EpisodeList:
         websitecontent: str = self._read_website()
         # Parse website
         self._episodes = self._parse_website(websitecontent)
-        logging.info("total number of episodes [{}]".format(len(self._episodes)))
+        logging.info("total number of episodes [%s]", len(self._episodes))

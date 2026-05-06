@@ -65,14 +65,14 @@ class TaRen:
         self._trash: Trash = Trash(
             self._config.value_get("taren", "downloads"), self._config.value_get("taren", "trash"), self._trashage, self._config.value_get("taren", "trashignore")
         )
-        logging.debug("self._config [{}]".format(self._config))
-        logging.debug("self._searchdir [{}]".format(self._searchdir))
-        logging.debug("self._pattern [{}]".format(self._pattern))
-        logging.debug("self._extension [{}]".format(self._extension))
-        logging.debug("self._url [{}]".format(self._url))
-        logging.debug("self._url_team [{}]".format(self._url_team))
-        logging.debug("self._cachetime [{}]".format(self._cachetime))
-        logging.debug("self._trashage [{}]".format(self._trashage))
+        logging.debug("self._config [%s]", self._config)
+        logging.debug("self._searchdir [%s]", self._searchdir)
+        logging.debug("self._pattern [%s]", self._pattern)
+        logging.debug("self._extension [%s]", self._extension)
+        logging.debug("self._url [%s]", self._url)
+        logging.debug("self._url_team [%s]", self._url_team)
+        logging.debug("self._cachetime [%s]", self._cachetime)
+        logging.debug("self._trashage [%s]", self._trashage)
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -103,7 +103,7 @@ class TaRen:
 
         # Check path of downloads
         if not os.path.exists(self._searchdir):
-            logging.error("Path [{}] does not exist or not found, abort".format(self._searchdir))
+            logging.error("Path [%s] does not exist or not found, abort", self._searchdir)
             return
 
         # Object to handle statistics
@@ -132,7 +132,7 @@ class TaRen:
                 continue
             downloads_to_process.append(_DownloadTask(filename=current_download, episode=episode))
             # logging.debug("added dowload to process list: [{}]".format(current_download))
-        logging.info("downloads_to_process [{}]".format(len(downloads_to_process)))
+        logging.info("downloads_to_process [%s]", len(downloads_to_process))
 
         # Process downloads
         for current_download in downloads_to_process:
@@ -153,28 +153,28 @@ class TaRen:
 
                 if size_old == size_new:
                     # Episode and download are equal
-                    logging.info("file size equal, move file [{}] to trash".format(new_fqn))
+                    logging.info("file size equal, move file [%s] to trash", new_fqn)
                     # Move to trash
                     self._trash.move(new_fqn)
                     statistics.downloads_moved += 1
 
                 if size_old > size_new:
                     # Episode is greater than download
-                    logging.info("one file smaller than the other one, move file [{}] to trash".format(new_fqn))
+                    logging.info("one file smaller than the other one, move file [%s] to trash", new_fqn)
                     # Move to trash
                     self._trash.move(new_fqn)
                     statistics.downloads_moved += 1
 
                 if size_old < size_new:
                     # Download is greater than episode
-                    logging.info("one file smaller than the other one, move file [{}] to trash".format(old_fqn))
+                    logging.info("one file smaller than the other one, move file [%s] to trash", old_fqn)
                     # Move to trash
                     self._trash.move(old_fqn)
                     statistics.downloads_moved += 1
                     continue
 
             # Rename download to name of episode
-            logging.info("rename from [{}] to [{}] filename".format(old_fqn, new_fqn))
+            logging.info("rename from [%s] to [%s] filename", old_fqn, new_fqn)
             os.rename(old_fqn, new_fqn)
             statistics.downloads_renamed += 1
 
@@ -196,4 +196,4 @@ class TaRen:
         statistics.downloads_trash = self._trash.list()
 
         # Summary
-        logging.info("summary: {}".format(statistics))
+        logging.info("summary: %s", statistics)

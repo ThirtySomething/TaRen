@@ -71,13 +71,13 @@ class Grouping:
             logging.debug("-" * 80)
             episode: Episode = self._episodes.find_episode(currentDownload)
             if episode.empty:
-                logging.error("No episode found for [{}]".format(currentDownload))
+                logging.error("No episode found for [%s]", currentDownload)
                 continue
             team: Team = self._teams.find_team(episode)
             if team.empty:
-                logging.error("No team found for [{}]".format(episode))
+                logging.error("No team found for [%s]", episode)
                 continue
 
-            logging.debug("Team [{}]".format(team))
-            logging.debug("Episode [{}]".format(episode))
-            logging.debug("Download [{}]".format(currentDownload))
+            logging.debug("Team [%s]", team)
+            logging.debug("Episode [%s]", episode)
+            logging.debug("Download [%s]", currentDownload)
