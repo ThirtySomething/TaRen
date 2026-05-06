@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+tab_width = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Brace placement is not part of core EditorConfig.
+# The following keys are honored by specific toolchains/editors.
+
+[*.{cs,csx}]
+csharp_new_line_before_open_brace = all
+
+[*.{java,kt,kts}]
+ij_java_brace_style = next_line
+
+[*.{js,jsx,ts,tsx}]
+ij_javascript_brace_style = next_line
+
+[*.{c,cc,cpp,cxx,h,hpp}]
+ij_cpp_brace_style = next_line
