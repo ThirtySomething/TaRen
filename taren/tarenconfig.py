@@ -29,6 +29,8 @@ import sys
 from importlib import import_module
 from pathlib import Path
 
+from taren.tarendefines import TarenDefines
+
 
 def _load_mdo_class() -> type:
     try:
@@ -51,23 +53,35 @@ class TarenConfig(MDO):
 
     ############################################################################
     def setup(self) -> bool:
-        self.add("logging", "logfile", "program.log")
-        self.add("logging", "loglevel", "info")
         self.add(
-            "logging",
-            "logstring",
+            TarenDefines.CFG_SECTION_LOGGING,
+            TarenDefines.CFG_KEY_LOGFILE,
+            "program.log",
+        )
+        self.add(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "info")
+        self.add(
+            TarenDefines.CFG_SECTION_LOGGING,
+            TarenDefines.CFG_KEY_LOGSTRING,
             "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s",
         )
-        self.add("taren", "collection", "v:\\tatort")
-        self.add("taren", "extension", "mp4")
-        self.add("taren", "maxcache", "6")
-        self.add("taren", "pattern", "Tatort")
-        self.add("taren", "trashage", "3")
-        self.add("taren", "trashignore", ".ignore")
-        self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
         self.add(
-            "taren",
-            "wiki_useragent",
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_COLLECTION,
+            "v:\\tatort",
+        )
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION, "mp4")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_MAXCACHE, "6")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN, "Tatort")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE, "3")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE, ".ignore")
+        self.add(
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_WIKI,
+            "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen",
+        )
+        self.add(
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_WIKI_USERAGENT,
             "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0",
         )
         return True

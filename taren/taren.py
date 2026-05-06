@@ -38,6 +38,7 @@ from taren.movetotrashcommand import MoveToTrashCommand
 from taren.renamefilecommand import RenameFileCommand
 from taren.helper import Helper
 from taren.sizebasedconflictstrategy import SizeBasedConflictStrategy
+from taren.tarendefines import TarenDefines
 from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
 from taren.trash import Trash
@@ -51,32 +52,26 @@ class TaRen:
     - Perform renaming
     """
 
-    ############################################################################
-    # Fixed subfolder names within the collection root
-    FOLDER_DOWNLOADS: str = "downloads"
-    FOLDER_SEEN: str = "seen"
-    FOLDER_TRASH: str = "trash"
-
     def __init__(
         self,
         config: TarenConfig,
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        self._collection: str = self._sanitize_path(self._config.value_get("taren", "collection"))
-        self._downloads: str = os.path.join(self._collection, TaRen.FOLDER_DOWNLOADS)
-        self._seen: str = os.path.join(self._collection, TaRen.FOLDER_SEEN)
-        self._pattern: str = self._config.value_get("taren", "pattern")
-        self._extension: str = self._sanitize_extension(self._config.value_get("taren", "extension"))
-        self._url: str = self._config.value_get("taren", "wiki")
-        self._cachetime: int = int(self._config.value_get("taren", "maxcache"))
-        self._trashage: int = int(self._config.value_get("taren", "trashage"))
+        self._collection: str = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
+        self._downloads: str = os.path.join(self._collection, TarenDefines.FOLDER_DOWNLOADS)
+        self._seen: str = os.path.join(self._collection, TarenDefines.FOLDER_SEEN)
+        self._pattern: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN)
+        self._extension: str = self._sanitize_extension(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION))
+        self._url: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI)
+        self._cachetime: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_MAXCACHE))
+        self._trashage: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE))
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
             self._collection,
-            TaRen.FOLDER_TRASH,
+            TarenDefines.FOLDER_TRASH,
             self._trashage,
-            self._config.value_get("taren", "trashignore"),
+            self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE),
         )
         logging.debug("self._config [%s]", self._config)
         logging.debug("self._collection [%s]", self._collection)
@@ -150,7 +145,7 @@ class TaRen:
         """Load episode metadata from configured source."""
 
         # Get list of episodes from web page
-        ua: str = self._config.value_get("taren", "wiki_useragent")
+        ua: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT)
         episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()

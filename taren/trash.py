@@ -39,9 +39,7 @@ class Trash:
     """
 
     ############################################################################
-    def __init__(
-        self, basedir: str, trash: str, trashage: int, trashignore: str
-    ) -> None:
+    def __init__(self, basedir: str, trash: str, trashage: int, trashignore: str) -> None:
         """
         Default init of variables
         """
@@ -92,9 +90,13 @@ class Trash:
     ############################################################################
     def init(self) -> bool:
         """
-        Ensure existence of the trash folder
+        Ensure existence of the trash folder and the trashignore marker file
         """
-        return Helper.ensure_directory(self._trashfolder)
+        if not Helper.ensure_directory(self._trashfolder):
+            return False
+        if not os.path.exists(self._trashignorefile):
+            Path(self._trashignorefile).touch()
+        return True
 
     ############################################################################
     def list(self) -> int:
@@ -114,9 +116,7 @@ class Trash:
                 if fname == self._trashignorefile:
                     continue
                 # List file
-                file_mod_time: datetime = datetime.fromtimestamp(
-                    os.path.getmtime(fname)
-                )
+                file_mod_time: datetime = datetime.fromtimestamp(os.path.getmtime(fname))
                 age: timedelta = today - file_mod_time
                 logging.info("File [%s|%02d]", filename, age.days)
                 filesintrash += 1
@@ -132,9 +132,7 @@ class Trash:
         filenameWithPath, fileExtension = os.path.splitext(file)
         filenameRaw: str = os.path.basename(filenameWithPath)
 
-        logging.debug(
-            "File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension
-        )
+        logging.debug("File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension)
 
         # Build search mask for variants
         searchmask: str = filenameRaw + "*" + fileExtension
@@ -142,9 +140,7 @@ class Trash:
 
         # Search for existing variants
         dst: str = ""
-        dstVariants: list[str] = fnmatch.filter(
-            os.listdir(self._trashfolder), searchmask
-        )
+        dstVariants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
         if len(dstVariants) == 0:
             dst = os.path.join(self._trashfolder, (filenameRaw + fileExtension))
         else:

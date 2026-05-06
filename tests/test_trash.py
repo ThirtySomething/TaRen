@@ -35,6 +35,19 @@ from taren.trash import Trash
 
 
 class TestTrash(unittest.TestCase):
+    def test_init_creates_trash_folder_and_ignore_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            self.assertTrue(trash.init())
+            self.assertTrue((Path(tmpdir) / ".trash").is_dir())
+            self.assertTrue((Path(tmpdir) / ".trash" / ".ignore").exists())
+
+    def test_init_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            self.assertTrue(trash.init())
+            self.assertTrue(trash.init())
+
     def test_move_and_variant_naming(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
@@ -77,9 +90,7 @@ class TestTrash(unittest.TestCase):
             ignore_path = Path(tmpdir) / ".trash" / ".ignore"
             ignore_path.write_text("x", encoding="utf-8")
 
-            with patch(
-                "taren.trash.Helper.delete_file", wraps=Helper.delete_file
-            ) as delete_mock:
+            with patch("taren.trash.Helper.delete_file", wraps=Helper.delete_file) as delete_mock:
                 trash.cleanup()
 
             self.assertTrue(delete_mock.called)
