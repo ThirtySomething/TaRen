@@ -130,19 +130,42 @@ class TaRen:
         - Find affected downloads
         """
 
+        if not self._preflight():
+            return
+
+        statistics: Stats = Stats()
+        episode_list: EpisodeList = self._load_episodes(statistics)
+        downloads_to_process: list[_DownloadTask] | None = self._collect_tasks(episode_list, statistics)
+        if downloads_to_process is None:
+            return
+        self._process_tasks(downloads_to_process, statistics)
+        self._finalize(statistics)
+
+    ############################################################################
+    def _preflight(self) -> bool:
+        """Perform required pre-checks before processing."""
+
         # Check path of downloads
         if not os.path.exists(self._searchdir):
             logging.error("Path [%s] does not exist or not found, abort", self._searchdir)
-            return
+            return False
 
-        # Object to handle statistics
-        statistics: Stats = Stats()
+        return True
+
+    ############################################################################
+    def _load_episodes(self, statistics: Stats) -> EpisodeList:
+        """Load episode metadata from configured source."""
 
         # Get list of episodes from web page
         ua: str = self._config.value_get("taren", "wiki_useragent")
         episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
+        return episode_list
+
+    ############################################################################
+    def _collect_tasks(self, episode_list: EpisodeList, statistics: Stats) -> list[_DownloadTask] | None:
+        """Collect downloads that can be processed with known episode metadata."""
 
         # Get list of downloads from filesystem
         download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
@@ -151,7 +174,7 @@ class TaRen:
 
         # Check for trash
         if not self._trash.init():
-            return
+            return None
 
         # Create list of downloads to process
         downloads_to_process: list[_DownloadTask] = []
@@ -161,6 +184,11 @@ class TaRen:
                 continue
             downloads_to_process.append(_DownloadTask(filename=current_download, episode=episode))
         logging.info("downloads_to_process [%s]", len(downloads_to_process))
+        return downloads_to_process
+
+    ############################################################################
+    def _process_tasks(self, downloads_to_process: list[_DownloadTask], statistics: Stats) -> None:
+        """Apply rename and conflict handling for prepared tasks."""
 
         # Process downloads
         for current_download in downloads_to_process:
@@ -183,6 +211,10 @@ class TaRen:
             logging.info("rename from [%s] to [%s] filename", old_fqn, new_fqn)
             os.rename(old_fqn, new_fqn)
             statistics.downloads_renamed += 1
+
+    ############################################################################
+    def _finalize(self, statistics: Stats) -> None:
+        """Finalize processing by handling trash maintenance and summary logging."""
 
         # Cleanup trash
         statistics.downloads_deleted = self._trash.cleanup()

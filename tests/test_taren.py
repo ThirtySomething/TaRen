@@ -7,6 +7,7 @@ from typing import Any, cast
 from unittest.mock import patch
 
 from taren.taren import TaRen
+from taren.stats import Stats
 
 
 class _FakeConfig:
@@ -258,6 +259,27 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertEqual(len(strategy.calls), 1)
             self.assertFalse(old_path.exists())
             self.assertTrue(Path(tmpdir, f"{target_label}.mp4").exists())
+
+    def test_rename_process_uses_template_pipeline_methods(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            fake_episode_list = SimpleNamespace()
+
+            with patch.object(runner, "_preflight", return_value=True) as preflight, patch.object(
+                runner, "_load_episodes", return_value=fake_episode_list
+            ) as load_episodes, patch.object(runner, "_collect_tasks", return_value=[]) as collect_tasks, patch.object(runner, "_process_tasks") as process_tasks, patch.object(
+                runner, "_finalize"
+            ) as finalize:
+                runner.rename_process()
+
+            preflight.assert_called_once_with()
+            load_episodes.assert_called_once()
+            self.assertIsInstance(load_episodes.call_args.args[0], Stats)
+            collect_tasks.assert_called_once_with(fake_episode_list, load_episodes.call_args.args[0])
+            process_tasks.assert_called_once_with([], load_episodes.call_args.args[0])
+            finalize.assert_called_once_with(load_episodes.call_args.args[0])
 
 
 if __name__ == "__main__":

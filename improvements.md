@@ -47,7 +47,13 @@ Observed benefit:
 
 - Isolates decision policy from orchestration and makes branch-heavy logic easier to test independently.
 
-### 2. Template Method Pattern - Rename Workflow Pipeline
+### 2. Template Method Pattern - Rename Workflow Pipeline (Implemented)
+
+Implementation summary:
+
+- `taren/taren.py` now uses `rename_process()` as the template entrypoint and delegates to protected steps.
+- Added pipeline hooks: `_preflight`, `_load_episodes`, `_collect_tasks`, `_process_tasks`, `_finalize`.
+- Control flow remains behavior-compatible while making the workflow extension-friendly.
 
 Where it fits:
 
@@ -57,13 +63,13 @@ Why applicable:
 
 - Workflow order is stable, but individual steps may vary (dry-run, alternate metadata source, additional validation).
 
-How to apply incrementally:
+Adopted steps:
 
 1. Split `rename_process()` into protected step methods (`_preflight`, `_load_episodes`, `_collect_tasks`, `_process_tasks`, `_finalize`).
-2. Keep behavior identical.
-3. Optionally add a subclass for dry-run or simulation mode.
+2. Preserved external behavior and existing integration semantics.
+3. Added orchestration test coverage to lock the pipeline contract.
 
-Expected benefit:
+Observed benefit:
 
 - Smaller units, clearer extension points, simpler test targeting for each step.
 
@@ -130,13 +136,12 @@ Expected benefit:
 
 ## Suggested Implementation Order
 
-1. Template-method style decomposition of `rename_process()`.
-2. File operation commands for dry-run readiness.
-3. Source adapter separation for episode retrieval/parsing.
-4. Null object formalization for `Episode` sentinel behavior.
+1. File operation commands for dry-run readiness.
+2. Source adapter separation for episode retrieval/parsing.
+3. Null object formalization for `Episode` sentinel behavior.
 
 ---
 
 ## Recommendation
 
-Do not apply all remaining patterns at once. Continue with workflow decomposition in small commits, keeping behavior and tests unchanged after each step.
+Do not apply all remaining patterns at once. Continue in small commits, keeping behavior and tests unchanged after each step.
