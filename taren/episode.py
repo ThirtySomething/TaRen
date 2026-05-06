@@ -27,7 +27,52 @@ SOFTWARE.
 import logging
 import re
 from types import NotImplementedType
-from typing import Match
+from typing import Match, Protocol
+
+
+class EpisodeMatchRule(Protocol):
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        """Return True/False when handled, else None to continue chain."""
+
+
+class _ExactRepresentationMatchRule:
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        if str(episode) == filename:
+            return True
+        return None
+
+
+class _LeadingNumberMatchRule:
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        filename_match = re.search(r"(^[0-9]{4} )", filename)
+        if not filename_match:
+            return None
+        filename_id: int = int(filename_match.group(1))
+        return episode.episode_id == filename_id
+
+
+class _DailymotionTokenMatchRule:
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        filename_match = re.search(r"(_E([0-9]{3,4})_)", filename)
+        if not filename_match:
+            return None
+        filename_id: int = int(filename_match.group(2))
+        return episode.episode_id == filename_id
+
+
+class _TatortPrefixMatchRule:
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        filename_match = re.search(r"^(Tatort - ([0-9]{4}) )", filename)
+        if not filename_match:
+            return None
+        filename_id: int = int(filename_match.group(2))
+        return episode.episode_id == filename_id
+
+
+class _EpisodeNameContainsRule:
+    def try_match(self, filename: str, episode: "Episode") -> bool | None:
+        # Final fallback rule decides yes/no and ends the chain.
+        return episode.episode_name.lower() in filename.lower()
 
 
 class Episode:
@@ -38,6 +83,13 @@ class Episode:
 
     # Invalid characters inside filenames on Windows
     _invalid_characters: list[str] = ['"', "*", "<", ">", "?", "\\", "|", "/", ":"]
+    _match_rules: tuple[EpisodeMatchRule, ...] = (
+        _ExactRepresentationMatchRule(),
+        _LeadingNumberMatchRule(),
+        _DailymotionTokenMatchRule(),
+        _TatortPrefixMatchRule(),
+        _EpisodeNameContainsRule(),
+    )
 
     ############################################################################
     def __init__(self) -> None:
@@ -99,30 +151,11 @@ class Episode:
         """
         Check if episode matches the filename
         """
-        # Filename is equal to episode string representation
-        if str(self) == filename:
-            return True
-
-        # Check leading episode number => download marked as special episode manually
-        filename_match = re.search(r"(^[0-9]{4} )", filename)
-        if filename_match:
-            filename_id: int = int(filename_match.group(1))
-            return self.episode_id == filename_id
-
-        # Check for download of dailymotion
-        filename_match = re.search(r"(_E([0-9]{3,4})_)", filename)
-        if filename_match:
-            filename_id: int = int(filename_match.group(2))
-            return self.episode_id == filename_id
-
-        # Check episode prefix with number => alredy handled by TaRen
-        filename_match = re.search(r"^(Tatort - ([0-9]{4}) )", filename)
-        if filename_match:
-            filename_id: int = int(filename_match.group(2))
-            return self.episode_id == filename_id
-
-        # Last check => Is episode name part of filename
-        return self.episode_name.lower() in filename.lower()
+        for rule in self._match_rules:
+            match_result = rule.try_match(filename, self)
+            if match_result is not None:
+                return match_result
+        return False
 
     ############################################################################
     def parse(self, data_row: list[str]) -> None:

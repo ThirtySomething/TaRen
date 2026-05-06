@@ -1,9 +1,40 @@
 import unittest
+from unittest.mock import patch
 
 from taren.episode import Episode
 
 
 class TestEpisode(unittest.TestCase):
+    def test_matches_stops_on_first_decisive_rule(self) -> None:
+        class _NoneRule:
+            def __init__(self) -> None:
+                self.called = 0
+
+            def try_match(self, filename: str, episode: Episode) -> bool | None:
+                self.called += 1
+                return None
+
+        class _TrueRule:
+            def __init__(self) -> None:
+                self.called = 0
+
+            def try_match(self, filename: str, episode: Episode) -> bool | None:
+                self.called += 1
+                return True
+
+        class _FailRule:
+            def try_match(self, filename: str, episode: Episode) -> bool | None:
+                raise AssertionError("rule chain did not short-circuit")
+
+        none_rule = _NoneRule()
+        true_rule = _TrueRule()
+
+        with patch.object(Episode, "_match_rules", (none_rule, true_rule, _FailRule())):
+            self.assertTrue(Episode().matches("anything"))
+
+        self.assertEqual(none_rule.called, 1)
+        self.assertEqual(true_rule.called, 1)
+
     def test_empty_instance_factory_returns_empty_episode(self) -> None:
         episode = Episode.empty_instance()
         self.assertTrue(episode.empty)
