@@ -87,7 +87,7 @@ class Team:
         """
         for current_invalid_character in Team._invalid_characters:
             self.team_location = self.team_location.replace(current_invalid_character, " ").strip()
-            for index, inspector in self.team_inspectors:
+            for index, inspector in enumerate(self.team_inspectors):
                 self.team_inspectors[index] = inspector.replace(current_invalid_character, " ").strip()
 
     ############################################################################
@@ -166,6 +166,6 @@ class Team:
 
         # logging.debug("{}".format(self))
         # logging.debug("{}".format("-" * 80))
-
-        # Mark as not empty
+        # Strip invalid characters
+        self._strip_invalid_characters()  # Mark as not empty
         self.empty = False

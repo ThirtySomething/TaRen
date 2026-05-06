@@ -7,24 +7,8 @@
 - `taren/taren.py` — Windows-only path separator in `_sanitize_path` ✓
 - `taren/taren.py` — Inconsistent return type in `rename_process` ✓
 - `taren/websitecache.py` — No HTTP error handling in `_write_to_cache` ✓
-
----
-
-## Bugs (open)
-
-### `taren/team.py` — `_strip_invalid_characters` iteration bug
-
-```python
-for index, inspector in self.team_inspectors:   # wrong: unpacking a str
-```
-
-`self.team_inspectors` is `list[str]`; iterating it yields strings, not `(index, str)` pairs. Should be `enumerate(self.team_inspectors)`. This method is also **never called** from `parse()`, unlike the equivalent method in `Episode`.
-
----
-
-### `taren/grouping.py` — Non-existent attribute access
-
-`_buildDocument` references `self._config.taren_downloads`, but `TarenConfig` (MDO subclass) exposes configuration only through `value_get("taren", "downloads")`. This raises `AttributeError` at runtime.
+- `taren/team.py` — `_strip_invalid_characters` iteration bug + never called from `parse()` ✓
+- `taren/grouping.py` — Non-existent attribute `taren_downloads` in `_buildDocument` ✓
 
 ---
 

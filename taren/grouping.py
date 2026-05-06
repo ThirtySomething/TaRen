@@ -59,7 +59,7 @@ class Grouping:
             for group in documentData:
                 groupfile.write("   <h2>{}</h2>\n".format(group))
                 for episode in documentData[group]:
-                    episodepath: str = os.path.join(self._config.taren_downloads, episode)
+                    episodepath: str = os.path.join(self._config.value_get("taren", "downloads"), episode)
                     groupfile.write('   <a href="file:///{}">{}</a><br>\n'.format(episodepath, episode))
                 groupfile.write("   <p>")
             groupfile.write("</body>\n")
