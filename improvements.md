@@ -9,16 +9,11 @@
 - `taren/websitecache.py` — No HTTP error handling in `_write_to_cache` ✓
 - `taren/team.py` — `_strip_invalid_characters` iteration bug + never called from `parse()` ✓
 - `taren/grouping.py` — Non-existent attribute `taren_downloads` in `_buildDocument` ✓
+- `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice ✓
 
 ---
 
 ## Redundancy / Design Issues
-
-### `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice
-
-Both objects are created once for the rename phase and then **created again** for the grouping/HTML phase later in `rename_process`. The second creation triggers duplicate web requests (or cache reads) and duplicate filesystem scans. Reuse the instances from the first pass.
-
----
 
 ### `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download
 

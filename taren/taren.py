@@ -172,18 +172,12 @@ class TaRen:
             os.rename(old_fqn, new_fqn)
             statistics.downloads_renamed += 1
 
-        # Get list of episodes
+        # Get list of teams
         team_list: TeamList = TeamList(self._teamlist, self._url_team, self._cachetime, ua)
         team_list.get_teams()
 
-        # Get list of episodes from web page
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
-        episode_list.get_episodes()
-        statistics.episodes_total = episode_list.get_episode_count()
-
-        # Get list of downloads from filesystem
-        download_list: DownloadList = DownloadList(self._searchdir, self._pattern, self._extension)
-        downloads: list[str] = download_list.get_filenames()
+        # Re-scan downloads after renaming to reflect current filenames
+        downloads = download_list.get_filenames()
 
         # Create HTML file with list of episodes
         grouping: Grouping = Grouping(self._config, team_list, episode_list, downloads)
