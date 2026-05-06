@@ -58,7 +58,6 @@ class TarenConfig(MDO):
         self.add("taren", "extension", "mp4")
         self.add("taren", "maxcache", "6")
         self.add("taren", "pattern", "Tatort")
-        self.add("taren", "playlist", "v:\\tatort\\Tatort.html")
         self.add("taren", "trash", ".trash")
         self.add("taren", "trashage", "3")
         self.add("taren", "trashignore", ".ignore")
