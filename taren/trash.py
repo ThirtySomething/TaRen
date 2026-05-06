@@ -133,7 +133,7 @@ class Trash:
         # Search for existing variants
         dst: str = ""
         dstVariants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
-        if 0 == len(dstVariants):
+        if len(dstVariants) == 0:
             dst = os.path.join(self._trashfolder, (filenameRaw + fileExtension))
         else:
             dst = os.path.join(self._trashfolder, (filenameRaw + "_" + str(len(dstVariants)) + fileExtension))

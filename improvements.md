@@ -13,6 +13,8 @@
 - `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
 - `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists ✓
 - `taren/downloadlist.py` — Duplicate extension sanitization ✓
+- `taren/downloadlist.py` — Duplicate extension sanitization ✓
+- Yoda conditions in `team.py` and `trash.py` ✓
 
 ---
 
@@ -25,10 +27,6 @@ The method iterates downloads, finds episodes and teams, logs them — but **nev
 ---
 
 ## Code Style / Minor Issues
-
-### Yoda conditions throughout
-
-Non-Pythonic comparisons like `0 == len(dstVariants)`, `None == team_period_raw.group(1)` are used instead of `len(dstVariants) == 0` / `team_period_raw.group(1) is None`.
 
 ### `self: object` annotation on every method
 

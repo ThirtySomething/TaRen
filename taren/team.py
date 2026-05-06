@@ -107,7 +107,7 @@ class Team:
         inspectorMatch: int = 0
         inspectorCheck: str = episode.episode_inspectors.lower()
         for inspector in self.team_inspectors:
-            if not -1 == inspectorCheck.find(inspector.lower()):
+            if inspectorCheck.find(inspector.lower()) != -1:
                 inspectorMatch = inspectorMatch + 1
 
         return len(self.team_inspectors) == inspectorMatch
@@ -124,19 +124,19 @@ class Team:
         # Fiddle out team period and running flag
         team_period_raw: Match[str] = re.search(r"(seit )?([0-9]{4})((.*)([0-9]{4}))?", data_row[0])
         # logging.debug("team_period_raw.groups() {}".format(team_period_raw.groups()))
-        if None == team_period_raw.group(1):
+        if team_period_raw.group(1) is None:
             self.team_ended = True
         else:
             self.team_ended = False
         self.team_period_begin: int = int(team_period_raw.group(2))
         # Handle running period
-        if not None == team_period_raw.group(1) and None == team_period_raw.group(3) and None == team_period_raw.group(4) and None == team_period_raw.group(5):
+        if team_period_raw.group(1) is not None and team_period_raw.group(3) is None and team_period_raw.group(4) is None and team_period_raw.group(5) is None:
             self.team_period_end: int = int(date.today().year)
         # Handle single year
-        if None == team_period_raw.group(1) and None == team_period_raw.group(3) and None == team_period_raw.group(4) and None == team_period_raw.group(5):
+        if team_period_raw.group(1) is None and team_period_raw.group(3) is None and team_period_raw.group(4) is None and team_period_raw.group(5) is None:
             self.team_period_end: int = self.team_period_begin
         # Handle time period
-        if None == team_period_raw.group(1) and not None == team_period_raw.group(3) and not None == team_period_raw.group(4) and not None == team_period_raw.group(5):
+        if team_period_raw.group(1) is None and team_period_raw.group(3) is not None and team_period_raw.group(4) is not None and team_period_raw.group(5) is not None:
             self.team_period_end: int = int(team_period_raw.group(5))
 
         # Create list of inspectors
