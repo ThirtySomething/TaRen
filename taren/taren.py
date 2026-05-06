@@ -52,7 +52,7 @@ class TaRen:
     """
 
     ############################################################################
-    def __init__(self: object, config: TarenConfig) -> None:
+    def __init__(self, config: TarenConfig) -> None:
         self._config: TarenConfig = config
         self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
         self._pattern: str = self._config.value_get("taren", "pattern")
@@ -75,7 +75,7 @@ class TaRen:
         logging.debug("self._trashage [{}]".format(self._trashage))
 
     ############################################################################
-    def _sanitize_extension(self: object, extension: str) -> str:
+    def _sanitize_extension(self, extension: str) -> str:
         """
         Ensure extension starts with a dot
         """
@@ -84,7 +84,7 @@ class TaRen:
         return extension
 
     ############################################################################
-    def _sanitize_path(self: object, path: str) -> str:
+    def _sanitize_path(self, path: str) -> str:
         """
         Ensure searchdir ends with trailing slash
         """
@@ -93,7 +93,7 @@ class TaRen:
         return path
 
     ############################################################################
-    def rename_process(self: object) -> None:
+    def rename_process(self) -> None:
         """
         Controls the complete process:
         - Get website content about the episodes

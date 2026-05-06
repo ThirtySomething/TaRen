@@ -39,7 +39,7 @@ class Trash:
     """
 
     ############################################################################
-    def __init__(self: object, basedir: str, trash: str, trashage: int, trashignore: str) -> None:
+    def __init__(self, basedir: str, trash: str, trashage: int, trashignore: str) -> None:
         """
         Default init of variables
         """
@@ -56,7 +56,7 @@ class Trash:
         logging.debug("trashignore [{}]".format(self._trashignorefile))
 
     ############################################################################
-    def cleanup(self: object) -> int:
+    def cleanup(self) -> int:
         """
         Delete files from trah older than configured age
         """
@@ -84,14 +84,14 @@ class Trash:
         return deleted
 
     ############################################################################
-    def init(self: object) -> bool:
+    def init(self) -> bool:
         """
         Ensure existence of the trash folder
         """
         return Helper.ensureDirectory(self._trashfolder)
 
     ############################################################################
-    def list(self: object) -> int:
+    def list(self) -> int:
         """
         List all files from trah
         """
@@ -115,7 +115,7 @@ class Trash:
         return filesintrash
 
     ############################################################################
-    def move(self: object, file: str) -> None:
+    def move(self, file: str) -> None:
         """
         Move file to trash and modify file date to deletion timestamp
         """

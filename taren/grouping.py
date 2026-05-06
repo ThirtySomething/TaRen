@@ -42,14 +42,14 @@ class Grouping:
     """
 
     ############################################################################
-    def __init__(self: object, config: TarenConfig, teams: TeamList, episodes: EpisodeList, downloads: list[str]) -> None:
+    def __init__(self, config: TarenConfig, teams: TeamList, episodes: EpisodeList, downloads: list[str]) -> None:
         self._config: TarenConfig = config
         self._teams: TeamList = teams
         self._episodes: EpisodeList = episodes
         self._downloads: DownloadList = downloads
 
     ############################################################################
-    def _buildDocument(self: object, outputFile: str, documentData: dict) -> None:
+    def _buildDocument(self, outputFile: str, documentData: dict) -> None:
         with open(outputFile, "w") as groupfile:
             groupfile.write("<html>\n")
             groupfile.write("<head>\n")
@@ -66,7 +66,7 @@ class Grouping:
             groupfile.write("</html>\n")
 
     ############################################################################
-    def process(self: object) -> None:
+    def process(self) -> None:
         for currentDownload in self._downloads:
             logging.debug("-" * 80)
             episode: Episode = self._episodes.find_episode(currentDownload)

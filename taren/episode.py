@@ -39,7 +39,7 @@ class Episode:
     _invalid_characters: list[str] = ['"', "*", "<", ">", "?", "\\", "|", "/", ":"]
 
     ############################################################################
-    def __init__(self: object) -> None:
+    def __init__(self) -> None:
         """
         Default is an empty episode for __repr__ method
         """
@@ -53,7 +53,7 @@ class Episode:
         self.episode_year: int = 0
 
     ############################################################################
-    def __gt__(self: object, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         """
         Used for sorting
         """
@@ -62,7 +62,7 @@ class Episode:
         raise Exception("Cannot compare Episode to Not-A-Episode")
 
     ############################################################################
-    def __repr__(self: object) -> str:
+    def __repr__(self) -> str:
         """
         Default string representation of an episode
         """
@@ -70,7 +70,7 @@ class Episode:
         return measstring
 
     ############################################################################
-    def _strip_invalid_characters(self: object) -> None:
+    def _strip_invalid_characters(self) -> None:
         """
         Remove characters which are invalid for filenames
         """
@@ -81,7 +81,7 @@ class Episode:
             self.episode_sequence = self.episode_sequence.replace(current_invalid_character, "-").strip()
 
     ############################################################################
-    def matches(self: object, filename: str) -> bool:
+    def matches(self, filename: str) -> bool:
         """
         Check if episode matches the filename
         """
@@ -111,7 +111,7 @@ class Episode:
         return self.episode_name.lower() in filename.lower()
 
     ############################################################################
-    def parse(self: object, data_row: list[str]):
+    def parse(self, data_row: list[str]):
         """
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """

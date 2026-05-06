@@ -40,7 +40,7 @@ class WebSiteCache:
     """
 
     ############################################################################
-    def __init__(self: object, cachename: str, websiteurl: str, cacheage: int, useragent: str) -> None:
+    def __init__(self, cachename: str, websiteurl: str, cacheage: int, useragent: str) -> None:
         """
         Default init of variables
         """
@@ -54,7 +54,7 @@ class WebSiteCache:
         logging.debug("useragent [{}]".format(self._useragent))
 
     ############################################################################
-    def _get_age_in_days(self: object) -> int:
+    def _get_age_in_days(self) -> int:
         """
         Determine age in days of cached file
         """
@@ -67,7 +67,7 @@ class WebSiteCache:
         return cacheage
 
     ############################################################################
-    def _read_from_cache(self: object) -> str:
+    def _read_from_cache(self) -> str:
         """
         Read content from cached file
         """
@@ -77,7 +77,7 @@ class WebSiteCache:
         return websitecontent
 
     ############################################################################
-    def _write_to_cache(self: object) -> None:
+    def _write_to_cache(self) -> None:
         """
         Write downloaded content to cache file
         """
@@ -94,7 +94,7 @@ class WebSiteCache:
         logging.info("saved content of [{}] to cache file [{}]".format(self._websiteurl, self._cachename))
 
     ############################################################################
-    def get_website_from_cache(self: object) -> str:
+    def get_website_from_cache(self) -> str:
         """
         First check cache file, if creation age is greater than given limit, then remove
         cache file. If cache file does not exist, retrieve website content and save to

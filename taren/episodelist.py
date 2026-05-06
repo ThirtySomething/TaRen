@@ -38,7 +38,7 @@ class EpisodeList:
     """
 
     ############################################################################
-    def __init__(self: object, pattern: str, url: str, cachetime: int, useragent: str) -> None:
+    def __init__(self, pattern: str, url: str, cachetime: int, useragent: str) -> None:
         self._pattern: str = pattern
         self._url: str = url
         self._cachetime: int = cachetime
@@ -50,7 +50,7 @@ class EpisodeList:
         logging.debug("useragent [{}]".format(useragent))
 
     ############################################################################
-    def _build_list_of_episodes(self: object, raw_data: str) -> list[Episode]:
+    def _build_list_of_episodes(self, raw_data: str) -> list[Episode]:
         """
         Extract episodes from episode list
         """
@@ -74,7 +74,7 @@ class EpisodeList:
         return episodes
 
     ############################################################################
-    def _parse_website(self: object, websitecontent: str) -> list[Episode]:
+    def _parse_website(self, websitecontent: str) -> list[Episode]:
         """
         Build internal list about episodes based on website content.
         """
@@ -89,7 +89,7 @@ class EpisodeList:
         return episodes
 
     ############################################################################
-    def _read_website(self: object) -> str:
+    def _read_website(self) -> str:
         """
         Retrieve website via cache
         """
@@ -98,7 +98,7 @@ class EpisodeList:
         return cache.get_website_from_cache()
 
     ############################################################################
-    def find_episode(self: object, filename: str) -> Episode:
+    def find_episode(self, filename: str) -> Episode:
         """
         Find episode in list
         """
@@ -122,11 +122,11 @@ class EpisodeList:
         return episode
 
     ############################################################################
-    def get_episode_count(self: object) -> int:
+    def get_episode_count(self) -> int:
         return len(self._episodes)
 
     ############################################################################
-    def get_episodes(self: object) -> None:
+    def get_episodes(self) -> None:
         """
         Read website and extract episodes, return them as list.
         """

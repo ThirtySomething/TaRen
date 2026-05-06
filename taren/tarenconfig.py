@@ -38,7 +38,7 @@ class TarenConfig(MDO):
     """
 
     ############################################################################
-    def setup(self: object) -> bool:
+    def setup(self) -> bool:
         self.add("logging", "logfile", "program.log")
         self.add("logging", "loglevel", "info")
         self.add("logging", "logstring", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)s:%(funcName)s | %(message)s")

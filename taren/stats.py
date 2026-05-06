@@ -35,7 +35,7 @@ class Stats:
     """
 
     ############################################################################
-    def __init__(self: object) -> None:
+    def __init__(self) -> None:
         self.downloads_deleted: int = 0
         self.downloads_moved: int = 0
         self.downloads_renamed: int = 0

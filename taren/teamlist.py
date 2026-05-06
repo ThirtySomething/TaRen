@@ -39,7 +39,7 @@ class TeamList:
     """
 
     ############################################################################
-    def __init__(self: object, listname: str, url: str, cachetime: int, useragent: str) -> None:
+    def __init__(self, listname: str, url: str, cachetime: int, useragent: str) -> None:
         self._listname: str = listname
         self._url: str = url
         self._cachetime: int = cachetime
@@ -51,7 +51,7 @@ class TeamList:
         logging.debug("useragent [{}]".format(useragent))
 
     ############################################################################
-    def _build_list_of_teams(self: object, raw_data: str) -> list[Team]:
+    def _build_list_of_teams(self, raw_data: str) -> list[Team]:
         """
         Extract teams from team list
         """
@@ -75,7 +75,7 @@ class TeamList:
         return teams
 
     ############################################################################
-    def _parse_website(self: object, websitecontent: str) -> list[Team]:
+    def _parse_website(self, websitecontent: str) -> list[Team]:
         """
         Build internal list about teams based on website content.
         """
@@ -90,7 +90,7 @@ class TeamList:
         return teams
 
     ############################################################################
-    def _read_website(self: object) -> str:
+    def _read_website(self) -> str:
         """
         Retrieve website via cache
         """
@@ -99,7 +99,7 @@ class TeamList:
         return cache.get_website_from_cache()
 
     ############################################################################
-    def find_team(self: object, episode: Episode) -> Team:
+    def find_team(self, episode: Episode) -> Team:
         """
         Find team in list
         """
@@ -123,11 +123,11 @@ class TeamList:
         return team
 
     ############################################################################
-    def get_team_count(self: object) -> int:
+    def get_team_count(self) -> int:
         return len(self._teams)
 
     ############################################################################
-    def get_teams(self: object) -> None:
+    def get_teams(self) -> None:
         """
         Read website and extract teams, return them as list.
         """

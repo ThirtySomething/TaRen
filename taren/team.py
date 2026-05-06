@@ -42,7 +42,7 @@ class Team:
     _invalid_characters: list[str] = ['"', "*", "<", ">", "?", "\\", "|", "/", ":"]
 
     ############################################################################
-    def __init__(self: object) -> None:
+    def __init__(self) -> None:
         """
         Default is an empty team for __repr__ method
         """
@@ -55,7 +55,7 @@ class Team:
         self.team_ended: bool = False
 
     ############################################################################
-    def __gt__(self: object, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         """
         Used for sorting
         """
@@ -64,7 +64,7 @@ class Team:
         raise Exception("Cannot compare Team to Not-A-Team")
 
     ############################################################################
-    def __repr__(self: object) -> str:
+    def __repr__(self) -> str:
         """
         Default string representation of an episode
         """
@@ -81,7 +81,7 @@ class Team:
         return measstring
 
     ############################################################################
-    def _strip_invalid_characters(self: object) -> None:
+    def _strip_invalid_characters(self) -> None:
         """
         Remove characters which are invalid for filenames
         """
@@ -91,7 +91,7 @@ class Team:
                 self.team_inspectors[index] = inspector.replace(current_invalid_character, " ").strip()
 
     ############################################################################
-    def matches(self: object, episode: Episode) -> bool:
+    def matches(self, episode: Episode) -> bool:
         """
         Check if episode matches the team
         """
@@ -113,7 +113,7 @@ class Team:
         return len(self.team_inspectors) == inspectorMatch
 
     ############################################################################
-    def parse(self: object, data_row: list[str]):
+    def parse(self, data_row: list[str]):
         """
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """

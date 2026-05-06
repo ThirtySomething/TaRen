@@ -35,7 +35,7 @@ class DownloadList:
     """
 
     ############################################################################
-    def __init__(self: object, searchdir: str, pattern: str, extension: str) -> None:
+    def __init__(self, searchdir: str, pattern: str, extension: str) -> None:
         """
         Init of variables
         """
@@ -47,7 +47,7 @@ class DownloadList:
         logging.debug("extension [{}]".format(self._extension))
 
     ############################################################################
-    def get_filenames(self: object) -> list[str]:
+    def get_filenames(self) -> list[str]:
         """
         Retrieve list of affected downloads
         """

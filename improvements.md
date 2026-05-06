@@ -13,7 +13,7 @@
 - `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
 - `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists ✓
 - `taren/downloadlist.py` — Duplicate extension sanitization ✓
-- `taren/downloadlist.py` — Duplicate extension sanitization ✓
+- `self: object` annotations replaced with idiomatic `self` ✓
 - Yoda conditions in `team.py` and `trash.py` ✓
 
 ---
@@ -27,10 +27,6 @@ The method iterates downloads, finds episodes and teams, logs them — but **nev
 ---
 
 ## Code Style / Minor Issues
-
-### `self: object` annotation on every method
-
-Annotating `self` as `object` is unconventional in Python and adds visual noise. The standard is an unannotated `self`.
 
 ### `__gt__` raises generic `Exception`
 
