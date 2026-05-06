@@ -27,11 +27,12 @@ class _FakeEpisode:
 
 
 class _FakeTrash:
-    def __init__(self) -> None:
+    def __init__(self, init_ok: bool = True) -> None:
+        self._init_ok = init_ok
         self.moved: list[str] = []
 
     def init(self) -> bool:
-        return True
+        return self._init_ok
 
     def move(self, file_path: str) -> None:
         self.moved.append(os.path.basename(file_path))
@@ -169,6 +170,58 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertFalse(old_path.exists())
             self.assertTrue(new_path.exists())
             self.assertIn(f"{target_label}.mp4", fake_trash.moved)
+
+    def test_rename_process_aborts_when_searchdir_missing(self) -> None:
+        config = self._build_config("/path/that/does/not/exist")
+        runner = TaRen(cast(Any, config))
+        with patch("taren.taren.logging.error") as log_error:
+            runner.rename_process()
+        self.assertTrue(log_error.called)
+
+    def test_rename_process_aborts_when_trash_init_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_name = "Tatort_source.mp4"
+            Path(tmpdir, old_name).write_bytes(b"123")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: _FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
+            )
+            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            setattr(runner, "_trash", _FakeTrash(init_ok=False))
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+                runner.rename_process()
+
+            self.assertTrue(Path(tmpdir, old_name).exists())
+
+    def test_rename_process_skips_download_without_episode_match(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_name = "Tatort_source.mp4"
+            old_path = Path(tmpdir) / old_name
+            old_path.write_bytes(b"123")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 0,
+                find_episode=lambda _: SimpleNamespace(empty=True),
+            )
+            fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            fake_trash = _FakeTrash()
+            setattr(runner, "_trash", fake_trash)
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list), patch("taren.taren.DownloadList", return_value=fake_download_list):
+                runner.rename_process()
+
+            self.assertTrue(old_path.exists())
+            self.assertEqual(fake_trash.moved, [])
 
 
 if __name__ == "__main__":
