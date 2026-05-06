@@ -67,6 +67,16 @@ Observed benefit:
 
 ### 2. Builder Pattern - Runtime Assembly in Composition Root
 
+Status:
+
+- Implemented.
+
+Implementation summary:
+
+- `program.py` now defines `TarenRuntimeBuilder` with explicit steps for config, logger, and runner creation.
+- Builder returns a `TarenRuntime` object containing assembled startup/runtime components.
+- Entry point now uses `main()` + builder instead of module-level assembly side effects.
+
 Where it fits:
 
 - `program.py` currently performs config setup, logging setup, and runtime object creation inline.
@@ -75,13 +85,13 @@ Why applicable:
 
 - Startup concerns (config, logging, runner creation) are cohesive but currently scattered in top-level script code.
 
-How to apply incrementally:
+Adopted steps:
 
-1. Add `TarenRuntimeBuilder` with steps for config and logging creation.
-2. Build a `TaRen` instance and return a small runtime object (`runner`, `config`, `logger`).
+1. Added `TarenRuntimeBuilder` with steps for config and logging creation.
+2. Build `TaRen` instance and return `TarenRuntime` (`runner`, `config`, `logger`).
 3. Keep `program.py` as a thin `main()` calling the builder.
 
-Expected benefit:
+Observed benefit:
 
 - Easier testing of startup wiring and cleaner command-line or alternate entrypoint support.
 
@@ -139,8 +149,7 @@ Observed benefit:
 
 ## Priority Order for Proposed Patterns
 
-1. Builder for startup/runtime assembly.
-2. HTTP fetch policy strategy.
+1. HTTP fetch policy strategy.
 
 ---
 
