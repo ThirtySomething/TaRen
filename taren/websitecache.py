@@ -25,7 +25,7 @@ SOFTWARE.
 """
 
 import codecs
-import datetime
+from datetime import datetime
 import logging
 import os
 
@@ -60,8 +60,8 @@ class WebSiteCache:
         """
         cacheage: int = 0
         if os.path.exists(self._cachename):
-            today: datetime = datetime.datetime.today()
-            modified_date: datetime = datetime.datetime.fromtimestamp(os.path.getmtime(self._cachename))
+            today: datetime = datetime.today()
+            modified_date: datetime = datetime.fromtimestamp(os.path.getmtime(self._cachename))
             cacheage = (today - modified_date).days
         logging.info("cache file [%s] aged [%s] days, maxage [%s] days", self._cachename, cacheage, self._cacheage)
         return cacheage

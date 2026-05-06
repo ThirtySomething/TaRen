@@ -28,7 +28,7 @@ import fnmatch
 import logging
 import os
 import time
-import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from taren.helper import Helper
 
@@ -65,7 +65,7 @@ class Trash:
             Helper.delete_file(self._trashignorefile)
         deleted: int = 0
         # Calculate maximum age
-        maxage: int = time.time() - self._trashage * 86400
+        maxage: float = time.time() - self._trashage * 86400
         logging.info("Delete files older than [%s] days from trash [%s]", self._trashage, self._trashfolder)
         # Loop over all in trash
         for filename in os.listdir(self._trashfolder):
@@ -96,7 +96,7 @@ class Trash:
         List all files from trah
         """
         logging.info("List files from trash [%s]", self._trashfolder)
-        today: datetime = datetime.datetime.today()
+        today: datetime = datetime.today()
         filesintrash: int = 0
         # Loop over all in trash
         for filename in os.listdir(self._trashfolder):
@@ -108,8 +108,8 @@ class Trash:
                 if fname == self._trashignorefile:
                     continue
                 # List file
-                file_mod_time: datetime = datetime.datetime.fromtimestamp(os.path.getmtime(fname))
-                age: datetime = today - file_mod_time
+                file_mod_time: datetime = datetime.fromtimestamp(os.path.getmtime(fname))
+                age: timedelta = today - file_mod_time
                 logging.info("File [%s|%02d]", filename, age.days)
                 filesintrash += 1
         return filesintrash
