@@ -126,7 +126,6 @@ class TaRen:
             if episode.empty:
                 continue
             downloads_to_process.append(_DownloadTask(filename=current_download, episode=episode))
-            # logging.debug("added dowload to process list: [{}]".format(current_download))
         logging.info("downloads_to_process [%s]", len(downloads_to_process))
 
         # Process downloads
@@ -136,13 +135,11 @@ class TaRen:
 
             if new_fqn == old_fqn:
                 # Already processed episode
-                # logging.debug("filenames identical, skip file [{}]".format(old_fqn))
                 statistics.episodes_owned += 1
                 continue
 
             if os.path.exists(new_fqn):
                 # New episode already exists
-                # logging.debug("file already exists [{}]".format(new_fqn))
                 size_old: int = os.stat(old_fqn).st_size
                 size_new: int = os.stat(new_fqn).st_size
 
