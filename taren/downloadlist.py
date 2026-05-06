@@ -42,9 +42,6 @@ class DownloadList:
         self._searchdir: str = searchdir
         self._pattern: str = pattern
         self._extension: str = extension
-        # Ensure extenstion starts with a dot
-        if not self._extension.startswith("."):
-            self._extension = ".{}".format(self._extension)
         logging.debug("searchdir [{}]".format(self._searchdir))
         logging.debug("pattern [{}]".format(self._pattern))
         logging.debug("extension [{}]".format(self._extension))

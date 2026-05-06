@@ -12,16 +12,11 @@
 - `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice ✓
 - `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
 - `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists ✓
+- `taren/downloadlist.py` — Duplicate extension sanitization ✓
 
 ---
 
 ## Redundancy / Design Issues
-
-### `taren/downloadlist.py` — Duplicate extension sanitization
-
-`TaRen.__init__` calls `_sanitize_extension` before passing the extension to `DownloadList`, and `DownloadList.__init__` sanitizes it again. Pick one location.
-
----
 
 ### `taren/grouping.py` — `process()` is incomplete
 
