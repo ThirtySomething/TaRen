@@ -93,19 +93,19 @@ class Episode:
             return True
 
         # Check leading episode number => download marked as special episode manually
-        filename_match: Match[str] = re.search(r"(^[0-9]{4} )", filename)
+        filename_match = re.search(r"(^[0-9]{4} )", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(1))
             return self.episode_id == filename_id
 
         # Check for download of dailymotion
-        filename_match: Match[str] = re.search(r"(_E([0-9]{3,4})_)", filename)
+        filename_match = re.search(r"(_E([0-9]{3,4})_)", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(2))
             return self.episode_id == filename_id
 
         # Check episode prefix with number => alredy handled by TaRen
-        filename_match: Match[str] = re.search(r"^(Tatort - ([0-9]{4}) )", filename)
+        filename_match = re.search(r"^(Tatort - ([0-9]{4}) )", filename)
         if filename_match:
             filename_id: int = int(filename_match.group(2))
             return self.episode_id == filename_id
@@ -114,18 +114,25 @@ class Episode:
         return self.episode_name.lower() in filename.lower()
 
     ############################################################################
-    def parse(self, data_row: list[str]):
+    def parse(self, data_row: list[str]) -> None:
         """
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """
-        if len(data_row) == 0:
+        if len(data_row) < 6:
+            logging.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
             return
         # logging.debug("data row {}".format(data_row))
         # Episode number is first element of row
-        episode_id_raw: Match[str] = re.search(r"([0-9]+)", data_row[0])
+        episode_id_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[0])
+        if episode_id_raw is None:
+            logging.warning("skip episode row without valid episode id: %s", data_row)
+            return
         self.episode_id = int(episode_id_raw.group(1))
         # Year of episode
-        episode_year_raw: Match[str] = re.search(r"([0-9]{4})", data_row[3])
+        episode_year_raw: Match[str] | None = re.search(r"([0-9]{4})", data_row[3])
+        if episode_year_raw is None:
+            logging.warning("skip episode row without valid episode year: %s", data_row)
+            return
         self.episode_year = int(episode_year_raw.group(1))
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
         self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()

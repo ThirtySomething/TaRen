@@ -1,58 +1,88 @@
-# TaRen Code Analysis — Improvement Notes
+# TaRen Python Analysis - Fresh Snapshot (2026-05-05)
+
+This report was rebuilt from scratch against the current workspace state.
 
 ## Verified Fixed
 
-- `taren/trash.py` — Removed duplicate `os.path.join` in `move()`.
-- `taren/stats.py` — Guarded division-by-zero in `__str__()`.
-- `taren/taren.py` — Replaced Windows-only path separator logic in `_sanitize_path()`.
-- `taren/taren.py` — Unified early returns in `rename_process()` to match `-> None`.
-- `taren/websitecache.py` — Added HTTP error handling in `_write_to_cache()`.
-- `taren/team.py` — Fixed `_strip_invalid_characters()` iteration and call path.
-- `taren/grouping.py` — Replaced invalid config attribute access in `_buildDocument()`.
-- `taren/taren.py` — Removed duplicate `EpisodeList` object creation in rename flow.
-- `taren/websitecache.py` — Added post-download cache existence guard in `get_website_from_cache()`.
-- `taren/taren.py` — Replaced anonymous two-item lists with named task structure.
-- `taren/downloadlist.py` — Removed duplicate extension sanitization.
-- Project-wide — Replaced `self: object` with idiomatic `self`.
-- `taren/team.py`, `taren/trash.py` — Removed Yoda conditions.
-- Project-wide — Standardized active logging calls to lazy `%s`/`%d` style.
+- `taren/trash.py` - Removed duplicate `os.path.join` in `move()`.
+- `taren/stats.py` - Guarded division-by-zero in `__str__()`.
+- `taren/taren.py` - Replaced Windows-only path separator logic in `_sanitize_path()`.
+- `taren/taren.py` - Unified early returns in `rename_process()` to match `-> None`.
+- `taren/websitecache.py` - Added HTTP error handling in `_write_to_cache()`.
+- `taren/team.py` - Fixed `_strip_invalid_characters()` iteration and call path.
+- `taren/grouping.py` - Replaced invalid config attribute access in `_buildDocument()`.
+- `taren/taren.py` - Removed duplicate `EpisodeList` object creation in rename flow.
+- `taren/websitecache.py` - Added post-download cache existence guard in `get_website_from_cache()`.
+- `taren/taren.py` - Replaced anonymous two-item lists with named task structure.
+- `taren/downloadlist.py` - Removed duplicate extension sanitization.
+- Project-wide - Replaced `self: object` with idiomatic `self`.
+- `taren/team.py`, `taren/trash.py` - Removed Yoda conditions.
+- Project-wide - Standardized active logging calls to lazy `%s`/`%d` style.
+- `taren/episodelist.py`, `taren/teamlist.py` - Added guards for empty cache content and missing table before parsing.
+- `taren/episode.py`, `taren/team.py` - Updated `__gt__` to return `NotImplemented` for unsupported types.
+- `taren/helper.py` - Added `ensure_directory()` and made `delete_file()` honor bool return contract with logging.
 
 ---
 
 ## Open Bugs / Risks
 
-### `taren/grouping.py` — `process()` is incomplete
+### Critical
 
-`process()` only logs team/episode matches and never builds `documentData` or calls `_buildDocument()`, so no output artifact is produced.
+### `taren/episode.py` - parse can crash on short or malformed row data
 
-### `taren/episodelist.py` and `taren/teamlist.py` — fragile parse path on empty/failed cache
+- `parse()` only checks `len(data_row) == 0`, but later reads indices `0..5` unconditionally.
+- `re.search(...).group(1)` is called without checking that the match exists.
+- Result: `IndexError` or `AttributeError` on malformed wiki row content.
 
-If website download fails, cache methods can return an empty string. Both parsers then do:
+### `taren/team.py` - parse can crash on short or malformed row data
 
-```python
-table = websitedata.find("table")
-rows = table.find_all("tr")
-```
+- Same failure shape as episode parsing: direct indexing (`0..5`) and unchecked `re.search(...).group(...)` access.
+- Result: `IndexError` or `AttributeError` during team extraction.
 
-When `table` is `None`, this raises `AttributeError` and aborts processing.
+### High
+
+### `taren/taren.py` - existing-file collision branch can move same target twice
+
+In the `if os.path.exists(new_fqn)` block, the size checks are three standalone `if` statements.
+
+- `size_old == size_new` moves `new_fqn` to trash.
+- Then `size_old > size_new` is checked in a separate `if` and can execute independently in future edits.
+
+Current numeric logic means equality does not satisfy `>`, but this structure is fragile and easy to regress. Converting to `if / elif / else` removes ambiguity and prevents accidental double-move logic.
+
+### Medium
+
+### `taren/grouping.py` - process is functionally incomplete
+
+`process()` resolves episode/team matches and only logs them. It does not build `documentData` and does not call `_buildDocument()`, so no output grouping artifact is produced.
+
+### `taren/episodelist.py`, `taren/teamlist.py` - row content is not validated before parse
+
+Empty or header-only rows produce empty `td` lists, but parsers still call `parse()`.
+
+- Current behavior relies on downstream parse methods, which currently assume at least 6 fields.
+- Add `len(table_cells) < 6: continue` in list builders for local robustness.
+
+### `taren/tarenconfig.py` - setup return contract mismatch
+
+`setup()` is annotated `-> bool` but returns no value on any path.
+
+### `taren/tarenconfig.py` - fragile import bootstrapping
+
+Config currently mutates `sys.path` to load `MDO` from a relative vendor directory. This is brittle across entrypoints and packaging contexts.
+
+### Low
+
+### `taren/trash.py`, `taren/websitecache.py`, `taren/episode.py`, `taren/team.py` - typing/annotation quality gaps
+
+Current diagnostics show multiple type issues (module-as-type annotations, unchecked `Match | None`, and mismatched inferred types). These are mostly maintainability concerns but can hide real defects.
 
 ---
 
-## Design / Maintainability Issues
+## Suggested Next Fix Order
 
-### `taren/episode.py` and `taren/team.py` — `__gt__` raises generic `Exception`
-
-Comparison methods should return `NotImplemented` or raise `TypeError` for unsupported types.
-
-### `taren/episodelist.py` and `taren/teamlist.py` — incorrect BeautifulSoup annotations
-
-`table: str` and `rows: list[str]` are incorrect; these are BeautifulSoup tag objects/lists.
-
-### `taren/helper.py` — naming and error contract
-
-- `ensureDirectory` is non-PEP8 in a snake_case codebase.
-- `delete_file()` is annotated as returning `bool` but returns nothing and does not log failures.
-
-### Commented-out code blocks still present
-
-Multiple modules keep disabled code paths (e.g., grouping execution in `program.py` and `taren.py`, alternative regex logic in `episode.py`).
+1. Harden `Episode.parse()` and `Team.parse()` against short rows and missing regex matches.
+2. Rewrite size-comparison branch in `rename_process()` to explicit `if / elif / else`.
+3. Complete `Grouping.process()` or remove/disable feature path until implemented.
+4. Fix `TarenConfig.setup()` return type/behavior and reduce `sys.path` mutation.
+5. Clean remaining typing issues to improve static analysis signal quality.
