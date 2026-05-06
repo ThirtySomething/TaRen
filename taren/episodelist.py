@@ -27,6 +27,7 @@ SOFTWARE.
 import logging
 
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 from taren.episode import Episode
 from taren.websitecache import WebSiteCache
@@ -50,7 +51,7 @@ class EpisodeList:
         logging.debug("useragent [%s]", useragent)
 
     ############################################################################
-    def _build_list_of_episodes(self, raw_data: str) -> list[Episode]:
+    def _build_list_of_episodes(self, raw_data: list[Tag]) -> list[Episode]:
         """
         Extract episodes from episode list
         """
@@ -58,7 +59,7 @@ class EpisodeList:
         # For each HTML table row aka raw episode data
         for table_row in raw_data:
             # Extract all columns as cell
-            table_cells: list[str] = table_row.find_all("td")
+            table_cells: list[Tag] = table_row.find_all("td")
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
             # Create a new and empty episode
@@ -78,12 +79,18 @@ class EpisodeList:
         """
         Build internal list about episodes based on website content.
         """
+        if not websitecontent.strip():
+            logging.warning("episode list website content is empty")
+            return []
         # Parse website using BeautifulSoup
         websitedata: BeautifulSoup = BeautifulSoup(websitecontent, "html.parser")
         # Get table with episodes - there is only one tables
-        table: str = websitedata.find("table")
+        table = websitedata.find("table")
+        if table is None:
+            logging.warning("episode list table not found in website content")
+            return []
         # Get raw episode data from table data row
-        rows: list[str] = table.find_all("tr")
+        rows: list[Tag] = table.find_all("tr")
         # Build list of episodes for all rows
         episodes: list[Episode] = self._build_list_of_episodes(rows)
         return episodes

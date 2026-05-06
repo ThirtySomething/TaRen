@@ -27,6 +27,7 @@ SOFTWARE.
 import logging
 
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 from taren.episode import Episode
 from taren.team import Team
@@ -51,7 +52,7 @@ class TeamList:
         logging.debug("useragent [%s]", useragent)
 
     ############################################################################
-    def _build_list_of_teams(self, raw_data: str) -> list[Team]:
+    def _build_list_of_teams(self, raw_data: list[Tag]) -> list[Team]:
         """
         Extract teams from team list
         """
@@ -59,7 +60,7 @@ class TeamList:
         # For each HTML table row aka raw episode data
         for table_row in raw_data:
             # Extract all columns as cell
-            table_cells: list[str] = table_row.find_all("td")
+            table_cells: list[Tag] = table_row.find_all("td")
             # Get content of cells
             team_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
             # Create a new and empty episode
@@ -79,12 +80,18 @@ class TeamList:
         """
         Build internal list about teams based on website content.
         """
+        if not websitecontent.strip():
+            logging.warning("team list website content is empty")
+            return []
         # Parse website using BeautifulSoup
         websitedata: BeautifulSoup = BeautifulSoup(websitecontent, "html.parser")
         # Get table with teams - there is only one tables
-        table: str = websitedata.find("table")
+        table = websitedata.find("table")
+        if table is None:
+            logging.warning("team list table not found in website content")
+            return []
         # Get raw team data from table data row
-        rows: list[str] = table.find_all("tr")
+        rows: list[Tag] = table.find_all("tr")
         # Build list of episodes for all rows
         teams: list[Team] = self._build_list_of_teams(rows)
         return teams
