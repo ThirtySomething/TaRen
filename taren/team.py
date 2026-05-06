@@ -114,16 +114,20 @@ class Team:
         return len(self.team_inspectors) == inspectorMatch
 
     ############################################################################
-    def parse(self, data_row: list[str]):
+    def parse(self, data_row: list[str]) -> None:
         """
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """
-        if len(data_row) == 0:
+        if len(data_row) < 6:
+            logging.warning("skip malformed team row (expected >= 6 columns): %s", data_row)
             return
         # logging.debug("data row {}".format(data_row))
 
         # Fiddle out team period and running flag
-        team_period_raw: Match[str] = re.search(r"(seit )?([0-9]{4})((.*)([0-9]{4}))?", data_row[0])
+        team_period_raw: Match[str] | None = re.search(r"(seit )?([0-9]{4})((.*)([0-9]{4}))?", data_row[0])
+        if team_period_raw is None:
+            logging.warning("skip team row without valid period data: %s", data_row)
+            return
         # logging.debug("team_period_raw.groups() {}".format(team_period_raw.groups()))
         if team_period_raw.group(1) is None:
             self.team_ended = True
@@ -144,7 +148,7 @@ class Team:
         # Split names by comma
         for cur_inspector in data_row[1].split(","):
             # Strip everything inside round brackets
-            inspector_raw: Match[str] = re.sub(r"\([^\)]+\)", "", cur_inspector.strip()).strip()
+            inspector_raw: str = re.sub(r"\([^\)]+\)", "", cur_inspector.strip()).strip()
             # Split by space and get last element (this is the name of the inspector)
             inspector: str = inspector_raw.split(" ")[-1]
             # Append inspector to list
@@ -155,14 +159,17 @@ class Team:
         # Split locations by comma
         for cur_location in data_row[4].split(","):
             # Strip everything inside round brackets
-            location_raw: Match[str] = re.sub(r"\([^\)]+\)", "", cur_location.strip()).strip()
+            location_raw: str = re.sub(r"\([^\)]+\)", "", cur_location.strip()).strip()
             # Append location to list
             locations.append(location_raw.strip())
         # Set location string
         self.team_location = ", ".join(locations)
 
         # Fiddle out number of episodes
-        team_episode_count_raw: Match[str] = re.search(r"([0-9]+)", data_row[5])
+        team_episode_count_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[5])
+        if team_episode_count_raw is None:
+            logging.warning("skip team row without valid episode count: %s", data_row)
+            return
         self.team_episode_count: int = int(team_episode_count_raw.group(1))
 
         # logging.debug("{}".format(self))
