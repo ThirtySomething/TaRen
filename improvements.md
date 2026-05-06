@@ -1,19 +1,16 @@
 # TaRen Code Analysis — Improvement Notes
 
-## Bugs
+## Fixed
 
-### `taren/trash.py` — Double `os.path.join` in `move()`
-
-The `dst` variable is built with `os.path.join(self._trashfolder, filename)` inside the if/else block and then unconditionally joined with `self._trashfolder` **again** on the next line, producing a broken path.
-
-```python
-# Bug: dst already contains the full path
-dst: str = os.path.join(self._trashfolder, dst)
-```
-
-Fix: remove the duplicate join, or build only the filename in the if/else and join once at the end.
+- `taren/trash.py` — Double `os.path.join` in `move()` ✓
+- `taren/stats.py` — Division by zero in `__str__` ✓
+- `taren/taren.py` — Windows-only path separator in `_sanitize_path` ✓
+- `taren/taren.py` — Inconsistent return type in `rename_process` ✓
+- `taren/websitecache.py` — No HTTP error handling in `_write_to_cache` ✓
 
 ---
+
+## Bugs (open)
 
 ### `taren/team.py` — `_strip_invalid_characters` iteration bug
 
@@ -31,47 +28,25 @@ for index, inspector in self.team_inspectors:   # wrong: unpacking a str
 
 ---
 
-### `taren/stats.py` — Division by zero in `__str__`
-
-```python
-100 / self.episodes_total * self.episodes_owned
-```
-
-Raises `ZeroDivisionError` when `episodes_total == 0` (e.g. when the web request fails). Add a guard: `(100 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0`.
-
----
-
-### `taren/taren.py` — Windows-only path separator in `_sanitize_path`
-
-```python
-path = "{}\\".format(path)   # hardcoded backslash
-```
-
-This breaks on Linux/macOS. Use `os.sep` or `os.path.join`.
-
----
-
-### `taren/taren.py` — Inconsistent return type in `rename_process`
-
-The method returns `None` on early exit (path does not exist) but returns `False` when `self._trash.init()` fails. The caller never uses the return value, but the inconsistency is confusing and the return type annotation is missing.
-
----
-
-### `taren/websitecache.py` — No HTTP error handling in `_write_to_cache`
-
-```python
-websitecontent: bytes = requests.get(self._websiteurl, headers=headers).content
-```
-
-Network errors and non-2xx responses are silently ignored. Add `.raise_for_status()` and wrap in a `try/except requests.RequestException`.
-
----
-
 ## Redundancy / Design Issues
 
 ### `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice
 
 Both objects are created once for the rename phase and then **created again** for the grouping/HTML phase later in `rename_process`. The second creation triggers duplicate web requests (or cache reads) and duplicate filesystem scans. Reuse the instances from the first pass.
+
+---
+
+### `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download
+
+After `_write_to_cache` returns early on a network error, the cache file still does not exist, but `_read_from_cache` is called unconditionally — raising `FileNotFoundError`. Add a guard:
+
+```python
+if not os.path.exists(self._cachename):
+    self._write_to_cache()
+if not os.path.exists(self._cachename):   # download may have failed
+    return ""
+content: str = self._read_from_cache()
+```
 
 ---
 

@@ -82,8 +82,8 @@ class TaRen:
         """
         Ensure searchdir ends with trailing slash
         """
-        if not path.endswith("\\"):
-            path = "{}\\".format(path)
+        if not path.endswith(os.sep):
+            path = "{}{}".format(path, os.sep)
         return path
 
     ############################################################################
@@ -116,7 +116,7 @@ class TaRen:
 
         # Check for trash
         if not self._trash.init():
-            return False
+            return
 
         # Create list of downloads to process
         downloads_to_process: list[str] = []

@@ -82,7 +82,13 @@ class WebSiteCache:
         Write downloaded content to cache file
         """
         headers = {"User-Agent": self._useragent}
-        websitecontent: bytes = requests.get(self._websiteurl, headers=headers).content
+        try:
+            response = requests.get(self._websiteurl, headers=headers)
+            response.raise_for_status()
+            websitecontent: bytes = response.content
+        except requests.RequestException as e:
+            logging.error("Failed to download [{}]: {}".format(self._websiteurl, e))
+            return
         with codecs.open(self._cachename, "w", "utf-8") as file:
             file.write(websitecontent.decode("utf-8"))
         logging.info("saved content of [{}] to cache file [{}]".format(self._websiteurl, self._cachename))

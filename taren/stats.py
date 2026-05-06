@@ -52,6 +52,7 @@ class Stats:
     ############################################################################
     def __str__(self):
         """Represent statistics as string"""
+        owned_pct: float = (100 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
         return "\n episodes total [{}],\n episodes owned [{}/{:3.2f}%],\n downloads deleted [{}],\n downloads moved [{}],\n downloads renamed [{}],\n downloads total [{}],\n downloads trash [{}]".format(
-            self.episodes_total, self.episodes_owned, (100 / self.episodes_total * self.episodes_owned), self.downloads_deleted, self.downloads_moved, self.downloads_renamed, self.downloads_total, self.downloads_trash
+            self.episodes_total, self.episodes_owned, owned_pct, self.downloads_deleted, self.downloads_moved, self.downloads_renamed, self.downloads_total, self.downloads_trash
         )
