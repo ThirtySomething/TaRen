@@ -1,6 +1,6 @@
 # TaRen Python Analysis - Fresh Snapshot (2026-05-05)
 
-This report was rebuilt from scratch against the current workspace state.
+This report was rebuilt from scratch against the current workspace state after recent fixes.
 
 ## Verified Fixed
 
@@ -19,70 +19,54 @@ This report was rebuilt from scratch against the current workspace state.
 - `taren/team.py`, `taren/trash.py` - Removed Yoda conditions.
 - Project-wide - Standardized active logging calls to lazy `%s`/`%d` style.
 - `taren/episodelist.py`, `taren/teamlist.py` - Added guards for empty cache content and missing table before parsing.
+- `taren/episodelist.py`, `taren/teamlist.py` - Added row validation before parsing (`len(table_cells) < 6`).
 - `taren/episode.py`, `taren/team.py` - Updated `__gt__` to return `NotImplemented` for unsupported types.
+- `taren/episode.py`, `taren/team.py` - Hardened `parse()` against malformed rows and missing regex matches.
 - `taren/helper.py` - Added `ensure_directory()` and made `delete_file()` honor bool return contract with logging.
+- `taren/taren.py` - Converted collision size handling to `if/elif/else` to enforce one branch per conflict.
+- `taren/tarenconfig.py` - `setup()` now explicitly returns `True`.
+- `taren/tarenconfig.py` - Reworked MDO import bootstrap to resilient fallback loading.
+- `taren/trash.py`, `taren/websitecache.py` - Corrected datetime-related typing annotations.
 
 ---
 
 ## Open Bugs / Risks
 
-### Critical
-
-### `taren/episode.py` - parse can crash on short or malformed row data
-
-- `parse()` only checks `len(data_row) == 0`, but later reads indices `0..5` unconditionally.
-- `re.search(...).group(1)` is called without checking that the match exists.
-- Result: `IndexError` or `AttributeError` on malformed wiki row content.
-
-### `taren/team.py` - parse can crash on short or malformed row data
-
-- Same failure shape as episode parsing: direct indexing (`0..5`) and unchecked `re.search(...).group(...)` access.
-- Result: `IndexError` or `AttributeError` during team extraction.
-
 ### High
 
-### `taren/taren.py` - existing-file collision branch can move same target twice
+### `taren/grouping.py` - constructor annotation mismatch for downloads
 
-In the `if os.path.exists(new_fqn)` block, the size checks are three standalone `if` statements.
-
-- `size_old == size_new` moves `new_fqn` to trash.
-- Then `size_old > size_new` is checked in a separate `if` and can execute independently in future edits.
-
-Current numeric logic means equality does not satisfy `>`, but this structure is fragile and easy to regress. Converting to `if / elif / else` removes ambiguity and prevents accidental double-move logic.
+- `downloads` is passed in as `list[str]`, but stored as `DownloadList`.
+- Static analysis reports non-iterable `DownloadList` when looping over `_downloads`.
+- This is currently masked at runtime because grouping execution is disabled.
 
 ### Medium
 
-### `taren/grouping.py` - process is functionally incomplete
+### `taren/grouping.py` - feature path is incomplete and currently disabled
 
-`process()` resolves episode/team matches and only logs them. It does not build `documentData` and does not call `_buildDocument()`, so no output grouping artifact is produced.
-
-### `taren/episodelist.py`, `taren/teamlist.py` - row content is not validated before parse
-
-Empty or header-only rows produce empty `td` lists, but parsers still call `parse()`.
-
-- Current behavior relies on downstream parse methods, which currently assume at least 6 fields.
-- Add `len(table_cells) < 6: continue` in list builders for local robustness.
-
-### `taren/tarenconfig.py` - setup return contract mismatch
-
-`setup()` is annotated `-> bool` but returns no value on any path.
-
-### `taren/tarenconfig.py` - fragile import bootstrapping
-
-Config currently mutates `sys.path` to load `MDO` from a relative vendor directory. This is brittle across entrypoints and packaging contexts.
+- `process()` only resolves/logs team and episode matches.
+- It does not build grouped data and does not call `_buildDocument()`.
+- In addition, invocation is commented out in `taren/taren.py` (`# grouping.process()`).
 
 ### Low
 
-### `taren/trash.py`, `taren/websitecache.py`, `taren/episode.py`, `taren/team.py` - typing/annotation quality gaps
+### `taren/grouping.py` - broad dict annotation in document builder
 
-Current diagnostics show multiple type issues (module-as-type annotations, unchecked `Match | None`, and mismatched inferred types). These are mostly maintainability concerns but can hide real defects.
+- `_buildDocument(self, outputFile: str, documentData: dict)` uses an unspecific `dict` type.
+- Prefer a concrete type such as `dict[str, list[str]]` for better readability and tooling.
+
+---
+
+## Current Diagnostic Status
+
+- No diagnostics issues in: `taren/episode.py`, `taren/team.py`, `taren/trash.py`, `taren/websitecache.py`, `taren/taren.py`, `taren/tarenconfig.py`.
+- Remaining diagnostics issues are isolated to `taren/grouping.py`.
 
 ---
 
 ## Suggested Next Fix Order
 
-1. Harden `Episode.parse()` and `Team.parse()` against short rows and missing regex matches.
-2. Rewrite size-comparison branch in `rename_process()` to explicit `if / elif / else`.
-3. Complete `Grouping.process()` or remove/disable feature path until implemented.
-4. Fix `TarenConfig.setup()` return type/behavior and reduce `sys.path` mutation.
-5. Clean remaining typing issues to improve static analysis signal quality.
+1. Fix `Grouping.__init__` typing (`_downloads` should be `list[str]`).
+2. Implement complete grouping output flow in `Grouping.process()`.
+3. Re-enable grouping execution in `taren/taren.py` once process path is complete.
+4. Tighten grouping helper annotations (`documentData` structure type).
