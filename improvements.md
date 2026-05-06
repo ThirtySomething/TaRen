@@ -10,24 +10,11 @@
 - `taren/team.py` — `_strip_invalid_characters` iteration bug + never called from `parse()` ✓
 - `taren/grouping.py` — Non-existent attribute `taren_downloads` in `_buildDocument` ✓
 - `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice ✓
+- `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
 
 ---
 
 ## Redundancy / Design Issues
-
-### `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download
-
-After `_write_to_cache` returns early on a network error, the cache file still does not exist, but `_read_from_cache` is called unconditionally — raising `FileNotFoundError`. Add a guard:
-
-```python
-if not os.path.exists(self._cachename):
-    self._write_to_cache()
-if not os.path.exists(self._cachename):   # download may have failed
-    return ""
-content: str = self._read_from_cache()
-```
-
----
 
 ### `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists
 

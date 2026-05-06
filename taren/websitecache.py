@@ -105,5 +105,8 @@ class WebSiteCache:
             logging.info("deleted cache file [{}]".format(self._cachename))
         if not os.path.exists(self._cachename):
             self._write_to_cache()
+        if not os.path.exists(self._cachename):
+            logging.error("cache file [{}] not available, download failed".format(self._cachename))
+            return ""
         content: str = self._read_from_cache()
         return content
