@@ -1,10 +1,19 @@
 import unittest
 from unittest.mock import patch
 
-from taren.episodelist import EpisodeList
+from taren.episodelist import CachedHtmlEpisodeSource, EpisodeList
 
 
 class TestEpisodeList(unittest.TestCase):
+    class _FakeEpisodeSource:
+        def __init__(self, payload: str) -> None:
+            self.payload = payload
+            self.called = 0
+
+        def fetch(self) -> str:
+            self.called += 1
+            return self.payload
+
     def test_parse_website_guards(self) -> None:
         el = EpisodeList("Tatort", "http://example", 1, "ua")
         self.assertEqual(el._parse_website(""), [])
@@ -39,14 +48,27 @@ class TestEpisodeList(unittest.TestCase):
             <tr><td>123</td><td>Fall A</td><td>ARD</td><td>2020</td><td>Inspector</td><td>1</td></tr>
         </table>
         """
-        el = EpisodeList("Tatort", "http://example", 1, "ua")
-        with patch.object(EpisodeList, "_read_website", return_value=html):
-            el.get_episodes()
+        source = self._FakeEpisodeSource(html)
+        el = EpisodeList("Tatort", "http://example", 1, "ua", episode_source=source)
+        el.get_episodes()
 
         self.assertEqual(el.get_episode_count(), 1)
+        self.assertEqual(source.called, 1)
         found = el.find_episode("Fall A in filename")
         self.assertFalse(found.empty)
         self.assertTrue(el.find_episode("completely unrelated").empty)
+
+    def test_cached_html_episode_source_uses_website_cache(self) -> None:
+        with patch("taren.episodelist.WebSiteCache") as cache_cls:
+            cache_instance = cache_cls.return_value
+            cache_instance.get_website_from_cache.return_value = "<html></html>"
+            source = CachedHtmlEpisodeSource("Tatort", "http://example", 1, "ua")
+
+            payload = source.fetch()
+
+            cache_cls.assert_called_once_with("Tatort", "http://example", 1, "ua")
+            cache_instance.get_website_from_cache.assert_called_once_with()
+            self.assertEqual(payload, "<html></html>")
 
 
 if __name__ == "__main__":

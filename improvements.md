@@ -100,7 +100,14 @@ Observed benefit:
 
 - Better observability of planned vs executed actions and safer extension toward preview mode.
 
-### 4. Repository/Adapter Pattern - Episode Source Access
+### 4. Repository/Adapter Pattern - Episode Source Access (Implemented)
+
+Implementation summary:
+
+- `taren/episodelist.py` now defines an `EpisodeSource` protocol as the repository-style source contract.
+- `CachedHtmlEpisodeSource` adapts `WebSiteCache` to that contract.
+- `EpisodeList` accepts an optional injected source and defaults to `CachedHtmlEpisodeSource`.
+- Website retrieval is now delegated to the configured source via `fetch()`.
 
 Where it fits:
 
@@ -110,13 +117,13 @@ Why applicable:
 
 - Episode metadata could later come from multiple sources (wiki HTML, local cache only, JSON export, test fixtures).
 
-How to apply incrementally:
+Adopted steps:
 
-1. Introduce `EpisodeSource` interface (`fetch() -> str`).
-2. Adapt current `WebSiteCache` usage into `CachedHtmlEpisodeSource`.
-3. Keep parser in `EpisodeList` or move to dedicated parser class.
+1. Introduced `EpisodeSource` interface (`fetch() -> str`).
+2. Adapted `WebSiteCache` usage into `CachedHtmlEpisodeSource`.
+3. Kept parser/model construction in `EpisodeList` while decoupling source retrieval.
 
-Expected benefit:
+Observed benefit:
 
 - Decouples source mechanics from parsing/model assembly; improves substitution in tests and future integrations.
 
@@ -143,8 +150,7 @@ Expected benefit:
 
 ## Suggested Implementation Order
 
-1. Source adapter separation for episode retrieval/parsing.
-2. Null object formalization for `Episode` sentinel behavior.
+1. Null object formalization for `Episode` sentinel behavior.
 
 ---
 

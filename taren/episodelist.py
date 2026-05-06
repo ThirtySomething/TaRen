@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 import logging
+from typing import Protocol
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -33,17 +34,40 @@ from taren.episode import Episode
 from taren.websitecache import WebSiteCache
 
 
+class EpisodeSource(Protocol):
+    def fetch(self) -> str:
+        """Retrieve raw episode source content."""
+
+
+class CachedHtmlEpisodeSource:
+    """Adapter for retrieving episode HTML via website cache."""
+
+    def __init__(self, pattern: str, url: str, cachetime: int, useragent: str) -> None:
+        self._cache: WebSiteCache = WebSiteCache(pattern, url, cachetime, useragent)
+
+    def fetch(self) -> str:
+        return self._cache.get_website_from_cache()
+
+
 class EpisodeList:
     """
     Extract from given website the episode list
     """
 
     ############################################################################
-    def __init__(self, pattern: str, url: str, cachetime: int, useragent: str) -> None:
+    def __init__(
+        self,
+        pattern: str,
+        url: str,
+        cachetime: int,
+        useragent: str,
+        episode_source: EpisodeSource | None = None,
+    ) -> None:
         self._pattern: str = pattern
         self._url: str = url
         self._cachetime: int = cachetime
         self._useragent: str = useragent
+        self._episode_source: EpisodeSource = episode_source or CachedHtmlEpisodeSource(pattern, url, cachetime, useragent)
         self._episodes: list[Episode] = []
         logging.debug("pattern [%s]", pattern)
         logging.debug("url [%s]", url)
@@ -61,9 +85,7 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
             if len(table_cells) < 6:
-                logging.debug(
-                    "skip malformed episode table row with [%s] cells", len(table_cells)
-                )
+                logging.debug("skip malformed episode table row with [%s] cells", len(table_cells))
                 continue
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
@@ -102,13 +124,9 @@ class EpisodeList:
     ############################################################################
     def _read_website(self) -> str:
         """
-        Retrieve website via cache
+        Retrieve website content via configured episode source
         """
-        # Get website content from cache handler
-        cache: WebSiteCache = WebSiteCache(
-            self._pattern, self._url, self._cachetime, self._useragent
-        )
-        return cache.get_website_from_cache()
+        return self._episode_source.fetch()
 
     ############################################################################
     def find_episode(self, filename: str) -> Episode:
