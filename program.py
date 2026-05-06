@@ -55,10 +55,8 @@ if __name__ == "__main__":
     # Initialize program with complete config
     # - Location of downloads
     # - Search pattern
-    # - Filename of teamlist cache
     # - File extension
     # - URL to list of episodes
-    # - URL to list of teams
     # - Maximum age in days of cache file
     # - Trash folder
     # - Days to keep downloads/episodes in trash folder

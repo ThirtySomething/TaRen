@@ -33,7 +33,6 @@ from taren.episode import Episode
 from taren.episodelist import EpisodeList
 from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
-from taren.teamlist import TeamList
 from taren.trash import Trash
 
 
@@ -55,10 +54,8 @@ class TaRen:
         self._config: TarenConfig = config
         self._searchdir: str = self._sanitize_path(self._config.value_get("taren", "downloads"))
         self._pattern: str = self._config.value_get("taren", "pattern")
-        self._teamlist: str = self._config.value_get("taren", "teamlist")
         self._extension: str = self._sanitize_extension(self._config.value_get("taren", "extension"))
         self._url: str = self._config.value_get("taren", "wiki")
-        self._url_team: str = self._config.value_get("taren", "wiki_team")
         self._cachetime: int = int(self._config.value_get("taren", "maxcache"))
         self._trashage: int = int(self._config.value_get("taren", "trashage"))
         self._trash: Trash = Trash(
@@ -69,7 +66,6 @@ class TaRen:
         logging.debug("self._pattern [%s]", self._pattern)
         logging.debug("self._extension [%s]", self._extension)
         logging.debug("self._url [%s]", self._url)
-        logging.debug("self._url_team [%s]", self._url_team)
         logging.debug("self._cachetime [%s]", self._cachetime)
         logging.debug("self._trashage [%s]", self._trashage)
 

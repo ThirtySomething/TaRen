@@ -51,10 +51,8 @@ class TestTaRenRenameProcess(unittest.TestCase):
             {
                 "taren.downloads": downloads_path,
                 "taren.pattern": "Tatort",
-                "taren.teamlist": "Teams",
                 "taren.extension": "mp4",
                 "taren.wiki": "http://example/episodes",
-                "taren.wiki_team": "http://example/teams",
                 "taren.maxcache": "1",
                 "taren.trashage": "1",
                 "taren.trashignore": ".ignore",
