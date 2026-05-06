@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 
+from taren.tarendefines import TarenDefines
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
 from taren.tarenruntime import TarenRuntime
@@ -34,7 +35,7 @@ from taren.tarenruntime import TarenRuntime
 class TarenRuntimeBuilder:
     """Builder for startup/runtime assembly."""
 
-    def __init__(self, config_file: str = "program.json") -> None:
+    def __init__(self, config_file: str = f"{TarenDefines.PROGRAM_NAME}.json") -> None:
         self._config_file: str = config_file
 
     def build_config(self) -> TarenConfig:

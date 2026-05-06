@@ -53,10 +53,11 @@ class TarenConfig(MDO):
 
     ############################################################################
     def setup(self) -> bool:
+        logfile_name: str = f"{TarenDefines.PROGRAM_NAME}.log"
         self.add(
             TarenDefines.CFG_SECTION_LOGGING,
             TarenDefines.CFG_KEY_LOGFILE,
-            "program.log",
+            logfile_name,
         )
         self.add(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "info")
         self.add(

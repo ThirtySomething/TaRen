@@ -29,6 +29,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import program
+from taren.tarendefines import TarenDefines
 import taren.tarenruntimebuilder as tarenruntimebuilder
 
 
@@ -36,7 +37,7 @@ class TestProgramBuilder(unittest.TestCase):
     def test_runtime_builder_builds_config_logger_and_runner(self) -> None:
         config_values = {
             ("logging", "loglevel"): "info",
-            ("logging", "logfile"): "program.log",
+            ("logging", "logfile"): f"{TarenDefines.PROGRAM_NAME}.log",
             ("logging", "logstring"): "%(message)s",
         }
 
@@ -64,12 +65,12 @@ class TestProgramBuilder(unittest.TestCase):
             ) as formatter_cls,
             patch("taren.tarenruntimebuilder.TaRen", return_value=runner_instance) as taren_cls,
         ):
-            runtime = tarenruntimebuilder.TarenRuntimeBuilder("program.json").build()
+            runtime = tarenruntimebuilder.TarenRuntimeBuilder(f"{TarenDefines.PROGRAM_NAME}.json").build()
 
-        config_cls.assert_called_once_with("program.json")
+        config_cls.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.json")
         config_instance.save.assert_called_once_with()
         logger_instance.setLevel.assert_called_once_with("INFO")
-        file_handler_cls.assert_called_once_with("program.log", "w", "utf-8")
+        file_handler_cls.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.log", "w", "utf-8")
         formatter_cls.assert_called_once_with("%(message)s")
         handler_instance.setFormatter.assert_called_once_with(formatter_instance)
         logger_instance.addHandler.assert_called_once_with(handler_instance)
