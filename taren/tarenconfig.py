@@ -54,3 +54,4 @@ class TarenConfig(MDO):
         self.add("taren", "wiki", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Folgen")
         self.add("taren", "wiki_team", "https://de.wikipedia.org/wiki/Liste_der_Tatort-Ermittler")
         self.add("taren", "wiki_useragent", "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0")
+        return True
