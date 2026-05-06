@@ -3,20 +3,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from fakepolicy import FakePolicy
 from taren.helper import Helper
-from taren.websitecache import RequestsHttpFetchPolicy, WebSiteCache
+from taren.requestshttpfetchpolicy import RequestsHttpFetchPolicy
+from taren.websitecache import WebSiteCache
 
 
 class TestWebsiteCache(unittest.TestCase):
-    class _FakePolicy:
-        def __init__(self, payload: bytes | None) -> None:
-            self.payload = payload
-            self.calls: list[tuple[str, dict[str, str]]] = []
-
-        def fetch(self, url: str, headers: dict[str, str]) -> bytes | None:
-            self.calls.append((url, headers))
-            return self.payload
-
     def test_write_to_cache_success_and_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             base = str(Path(tmpdir) / "cache")
@@ -26,13 +19,16 @@ class TestWebsiteCache(unittest.TestCase):
             response.content = b"<html>ok</html>"
             response.raise_for_status.return_value = None
 
-            with patch("taren.websitecache.requests.get", return_value=response):
+            with patch("taren.requestshttpfetchpolicy.requests.get", return_value=response):
                 cache._write_to_cache()
             self.assertTrue(Path(cache._cachename).exists())
 
             failed = WebSiteCache(str(Path(tmpdir) / "cache_fail"), "http://example", 1, "ua")
-            with patch("taren.websitecache.requests.get", side_effect=Exception("boom")):
-                with patch("taren.websitecache.requests.RequestException", Exception):
+            with patch(
+                "taren.requestshttpfetchpolicy.requests.get",
+                side_effect=Exception("boom"),
+            ):
+                with patch("taren.requestshttpfetchpolicy.requests.RequestException", Exception):
                     failed._write_to_cache()
             self.assertFalse(Path(failed._cachename).exists())
 
@@ -73,7 +69,7 @@ class TestWebsiteCache(unittest.TestCase):
 
             with (
                 patch.object(WebSiteCache, "_get_age_in_days", return_value=10),
-                patch("taren.websitecache.requests.get", return_value=response),
+                patch("taren.requestshttpfetchpolicy.requests.get", return_value=response),
             ):
                 self.assertEqual(cache.get_website_from_cache(), "new-content")
 
@@ -88,7 +84,7 @@ class TestWebsiteCache(unittest.TestCase):
     def test_write_to_cache_uses_injected_fetch_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             base = str(Path(tmpdir) / "policy")
-            policy = self._FakePolicy(b"policy-content")
+            policy = FakePolicy(b"policy-content")
             cache = WebSiteCache(base, "http://example", 1, "ua", fetch_policy=policy)
 
             cache._write_to_cache()
@@ -108,10 +104,10 @@ class TestWebsiteCache(unittest.TestCase):
         ok_response.content = b"ok"
 
         with patch(
-            "taren.websitecache.requests.get",
+            "taren.requestshttpfetchpolicy.requests.get",
             side_effect=[requests_exception, ok_response],
         ) as get_mock:
-            with patch("taren.websitecache.requests.RequestException", Exception):
+            with patch("taren.requestshttpfetchpolicy.requests.RequestException", Exception):
                 payload = policy.fetch("http://example", {"User-Agent": "ua"})
 
         self.assertEqual(payload, b"ok")

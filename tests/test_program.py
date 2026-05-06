@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import program
+import taren.tarenruntimebuilder as tarenruntimebuilder
 
 
 class TestProgramBuilder(unittest.TestCase):
@@ -22,13 +23,22 @@ class TestProgramBuilder(unittest.TestCase):
         runner_instance = MagicMock()
 
         with (
-            patch("program.TarenConfig", return_value=config_instance) as config_cls,
-            patch("program.logging.getLogger", return_value=logger_instance),
-            patch("program.logging.FileHandler", return_value=handler_instance) as file_handler_cls,
-            patch("program.logging.Formatter", return_value=formatter_instance) as formatter_cls,
-            patch("program.TaRen", return_value=runner_instance) as taren_cls,
+            patch("taren.tarenruntimebuilder.TarenConfig", return_value=config_instance) as config_cls,
+            patch(
+                "taren.tarenruntimebuilder.logging.getLogger",
+                return_value=logger_instance,
+            ),
+            patch(
+                "taren.tarenruntimebuilder.logging.FileHandler",
+                return_value=handler_instance,
+            ) as file_handler_cls,
+            patch(
+                "taren.tarenruntimebuilder.logging.Formatter",
+                return_value=formatter_instance,
+            ) as formatter_cls,
+            patch("taren.tarenruntimebuilder.TaRen", return_value=runner_instance) as taren_cls,
         ):
-            runtime = program.TarenRuntimeBuilder("program.json").build()
+            runtime = tarenruntimebuilder.TarenRuntimeBuilder("program.json").build()
 
         config_cls.assert_called_once_with("program.json")
         config_instance.save.assert_called_once_with()

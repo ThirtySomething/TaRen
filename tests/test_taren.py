@@ -1,4 +1,3 @@
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,59 +5,19 @@ from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import patch
 
-from taren.taren import MoveToTrashCommand, RenameFileCommand, TaRen
+from fakeconfig import FakeConfig
+from fakeepisode import FakeEpisode
+from faketrash import FakeTrash
+from spyconflictstrategy import SpyConflictStrategy
+from taren.movetotrashcommand import MoveToTrashCommand
+from taren.renamefilecommand import RenameFileCommand
 from taren.stats import Stats
-
-
-class _FakeConfig:
-    def __init__(self, values: dict[str, str]) -> None:
-        self._values = values
-
-    def value_get(self, section: str, key: str) -> str:
-        return self._values[f"{section}.{key}"]
-
-
-class _FakeEpisode:
-    def __init__(self, label: str) -> None:
-        self.empty = False
-        self._label = label
-
-    def __str__(self) -> str:
-        return self._label
-
-
-class _FakeTrash:
-    def __init__(self, init_ok: bool = True) -> None:
-        self._init_ok = init_ok
-        self.moved: list[str] = []
-
-    def init(self) -> bool:
-        return self._init_ok
-
-    def move(self, file_path: str) -> None:
-        self.moved.append(os.path.basename(file_path))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-    def cleanup(self) -> int:
-        return 0
-
-    def list(self) -> int:
-        return 0
-
-
-class _SpyConflictStrategy:
-    def __init__(self) -> None:
-        self.calls: list[tuple[str, str]] = []
-
-    def resolve(self, old_fqn: str, new_fqn: str):
-        self.calls.append((old_fqn, new_fqn))
-        return SimpleNamespace(move_to_trash=None, skip_rename=False)
+from taren.taren import TaRen
 
 
 class TestTaRenRenameProcess(unittest.TestCase):
-    def _build_config(self, downloads_path: str) -> _FakeConfig:
-        return _FakeConfig(
+    def _build_config(self, downloads_path: str) -> FakeConfig:
+        return FakeConfig(
             {
                 "taren.downloads": downloads_path,
                 "taren.pattern": "Tatort",
@@ -84,13 +43,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode(target_label),
+                find_episode=lambda _: FakeEpisode(target_label),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -115,13 +74,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode(target_label),
+                find_episode=lambda _: FakeEpisode(target_label),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -144,13 +103,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode(target_label),
+                find_episode=lambda _: FakeEpisode(target_label),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -174,13 +133,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode(target_label),
+                find_episode=lambda _: FakeEpisode(target_label),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -208,13 +167,13 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
+                find_episode=lambda _: FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            setattr(runner, "_trash", _FakeTrash(init_ok=False))
+            setattr(runner, "_trash", FakeTrash(init_ok=False))
 
             with (
                 patch("taren.taren.EpisodeList", return_value=fake_episode_list),
@@ -239,7 +198,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -261,14 +220,14 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
                 get_episode_count=lambda: 1,
-                find_episode=lambda _: _FakeEpisode(target_label),
+                find_episode=lambda _: FakeEpisode(target_label),
             )
             fake_download_list = SimpleNamespace(get_filenames=lambda: [old_name])
 
             config = self._build_config(tmpdir)
-            strategy = _SpyConflictStrategy()
+            strategy = SpyConflictStrategy()
             runner = TaRen(cast(Any, config), conflict_strategy=cast(Any, strategy))
-            fake_trash = _FakeTrash()
+            fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
             with (
@@ -315,7 +274,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            task = SimpleNamespace(filename=old_name, episode=_FakeEpisode(target_label))
+            task = SimpleNamespace(filename=old_name, episode=FakeEpisode(target_label))
             statistics = Stats()
 
             with patch.object(runner, "_execute_commands") as execute_commands:

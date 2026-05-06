@@ -28,42 +28,10 @@ import codecs
 from datetime import datetime
 import logging
 import os
-from typing import Protocol
-
-import requests
 
 from taren.helper import Helper
-
-
-class HttpFetchPolicy(Protocol):
-    def fetch(self, url: str, headers: dict[str, str]) -> bytes | None:
-        """Fetch bytes for the given URL, returning None on failure."""
-
-
-class RequestsHttpFetchPolicy:
-    """Default HTTP fetch strategy using requests with retry/timeout policy."""
-
-    def __init__(self, timeout_seconds: float = 10.0, retries: int = 1) -> None:
-        self._timeout_seconds: float = timeout_seconds
-        self._retries: int = max(1, retries)
-
-    def fetch(self, url: str, headers: dict[str, str]) -> bytes | None:
-        for attempt in range(1, self._retries + 1):
-            try:
-                response = requests.get(url, headers=headers, timeout=self._timeout_seconds)
-                response.raise_for_status()
-                return response.content
-            except requests.RequestException as e:
-                if attempt == self._retries:
-                    logging.error("Failed to download [%s]: %s", url, e)
-                    return None
-                logging.warning(
-                    "download attempt [%s/%s] failed for [%s]: %s",
-                    attempt,
-                    self._retries,
-                    url,
-                    e,
-                )
+from taren.httpfetchpolicy import HttpFetchPolicy
+from taren.requestshttpfetchpolicy import RequestsHttpFetchPolicy
 
 
 class WebSiteCache:
@@ -101,7 +69,9 @@ class WebSiteCache:
         cacheage: int = 0
         if os.path.exists(self._cachename):
             today: datetime = datetime.today()
-            modified_date: datetime = datetime.fromtimestamp(os.path.getmtime(self._cachename))
+            modified_date: datetime = datetime.fromtimestamp(
+                os.path.getmtime(self._cachename)
+            )
             cacheage = (today - modified_date).days
         logging.info(
             "cache file [%s] aged [%s] days, maxage [%s] days",
@@ -127,7 +97,9 @@ class WebSiteCache:
         Write downloaded content to cache file
         """
         headers = {"User-Agent": self._useragent}
-        websitecontent: bytes | None = self._fetch_policy.fetch(self._websiteurl, headers)
+        websitecontent: bytes | None = self._fetch_policy.fetch(
+            self._websiteurl, headers
+        )
         if websitecontent is None:
             return
         with codecs.open(self._cachename, "w", "utf-8") as file:
@@ -151,7 +123,9 @@ class WebSiteCache:
         if not os.path.exists(self._cachename):
             self._write_to_cache()
         if not os.path.exists(self._cachename):
-            logging.error("cache file [%s] not available, download failed", self._cachename)
+            logging.error(
+                "cache file [%s] not available, download failed", self._cachename
+            )
             return ""
         content: str = self._read_from_cache()
         return content

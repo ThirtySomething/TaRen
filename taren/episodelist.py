@@ -25,41 +25,14 @@ SOFTWARE.
 """
 
 import logging
-from typing import Protocol
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from taren.cachedhtmlepisodesource import CachedHtmlEpisodeSource
 from taren.episode import Episode
-from taren.websitecache import HttpFetchPolicy, WebSiteCache
-
-
-class EpisodeSource(Protocol):
-    def fetch(self) -> str:
-        """Retrieve raw episode source content."""
-
-
-class CachedHtmlEpisodeSource:
-    """Adapter for retrieving episode HTML via website cache."""
-
-    def __init__(
-        self,
-        pattern: str,
-        url: str,
-        cachetime: int,
-        useragent: str,
-        fetch_policy: HttpFetchPolicy | None = None,
-    ) -> None:
-        self._cache: WebSiteCache = WebSiteCache(
-            pattern,
-            url,
-            cachetime,
-            useragent,
-            fetch_policy=fetch_policy,
-        )
-
-    def fetch(self) -> str:
-        return self._cache.get_website_from_cache()
+from taren.episodesource import EpisodeSource
+from taren.httpfetchpolicy import HttpFetchPolicy
 
 
 class EpisodeList:
@@ -105,7 +78,9 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
             if len(table_cells) < 6:
-                logging.debug("skip malformed episode table row with [%s] cells", len(table_cells))
+                logging.debug(
+                    "skip malformed episode table row with [%s] cells", len(table_cells)
+                )
                 continue
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]

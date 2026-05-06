@@ -1,20 +1,13 @@
 import unittest
 from unittest.mock import patch
 
-from taren.episodelist import CachedHtmlEpisodeSource, EpisodeList
+from fakeepisodesource import FakeEpisodeSource
+from taren.cachedhtmlepisodesource import CachedHtmlEpisodeSource
+from taren.episodelist import EpisodeList
 from taren.episode import Episode
 
 
 class TestEpisodeList(unittest.TestCase):
-    class _FakeEpisodeSource:
-        def __init__(self, payload: str) -> None:
-            self.payload = payload
-            self.called = 0
-
-        def fetch(self) -> str:
-            self.called += 1
-            return self.payload
-
     def test_parse_website_guards(self) -> None:
         el = EpisodeList("Tatort", "http://example", 1, "ua")
         self.assertEqual(el._parse_website(""), [])
@@ -49,7 +42,7 @@ class TestEpisodeList(unittest.TestCase):
             <tr><td>123</td><td>Fall A</td><td>ARD</td><td>2020</td><td>Inspector</td><td>1</td></tr>
         </table>
         """
-        source = self._FakeEpisodeSource(html)
+        source = FakeEpisodeSource(html)
         el = EpisodeList("Tatort", "http://example", 1, "ua", episode_source=source)
         el.get_episodes()
 
@@ -60,7 +53,7 @@ class TestEpisodeList(unittest.TestCase):
         self.assertTrue(el.find_episode("completely unrelated").empty)
 
     def test_cached_html_episode_source_uses_website_cache(self) -> None:
-        with patch("taren.episodelist.WebSiteCache") as cache_cls:
+        with patch("taren.cachedhtmlepisodesource.WebSiteCache") as cache_cls:
             cache_instance = cache_cls.return_value
             cache_instance.get_website_from_cache.return_value = "<html></html>"
             source = CachedHtmlEpisodeSource("Tatort", "http://example", 1, "ua")
@@ -72,7 +65,7 @@ class TestEpisodeList(unittest.TestCase):
             self.assertEqual(payload, "<html></html>")
 
     def test_cached_html_episode_source_passes_custom_fetch_policy(self) -> None:
-        with patch("taren.episodelist.WebSiteCache") as cache_cls:
+        with patch("taren.cachedhtmlepisodesource.WebSiteCache") as cache_cls:
             policy = object()
             CachedHtmlEpisodeSource("Tatort", "http://example", 1, "ua", fetch_policy=policy)
 

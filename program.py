@@ -27,48 +27,9 @@ SOFTWARE.
 import logging
 import platform
 import sys
-from dataclasses import dataclass
 
-from taren.taren import TaRen
-from taren.tarenconfig import TarenConfig
-
-
-@dataclass
-class TarenRuntime:
-    config: TarenConfig
-    logger: logging.Logger
-    runner: TaRen
-
-
-class TarenRuntimeBuilder:
-    """Builder for startup/runtime assembly."""
-
-    def __init__(self, config_file: str = "program.json") -> None:
-        self._config_file: str = config_file
-
-    def build_config(self) -> TarenConfig:
-        config: TarenConfig = TarenConfig(self._config_file)
-        config.save()
-        return config
-
-    def build_logger(self, config: TarenConfig) -> logging.Logger:
-        # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
-        logger_setup: logging.Logger = logging.getLogger()
-        loglevel: str = config.value_get("logging", "loglevel").upper()
-        logger_setup.setLevel(loglevel)
-        logger_handler: logging.FileHandler = logging.FileHandler(config.value_get("logging", "logfile"), "w", "utf-8")
-        logger_handler.setFormatter(logging.Formatter(config.value_get("logging", "logstring")))
-        logger_setup.addHandler(logger_handler)
-        return logger_setup
-
-    def build_runner(self, config: TarenConfig) -> TaRen:
-        return TaRen(config)
-
-    def build(self) -> TarenRuntime:
-        config: TarenConfig = self.build_config()
-        logger: logging.Logger = self.build_logger(config)
-        runner: TaRen = self.build_runner(config)
-        return TarenRuntime(config=config, logger=logger, runner=runner)
+from taren.tarenruntime import TarenRuntime
+from taren.tarenruntimebuilder import TarenRuntimeBuilder
 
 
 def main() -> None:

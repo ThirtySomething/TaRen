@@ -167,3 +167,12 @@ All proposed patterns in this report are now implemented.
 ## Recommendation
 
 Continue making incremental improvements in small, test-backed commits.
+
+---
+
+## Structural Convention Update
+
+- Completed: each class/protocol/helper now resides in its own lowercase-named file across source and tests.
+- Runtime startup classes were split out of `program.py` into dedicated modules (`tarenruntime.py`, `tarenruntimebuilder.py`).
+- Cache HTTP abstractions were split so `WebSiteCache` is now the only class in `taren/websitecache.py`.
+- Test helper doubles were moved into dedicated files under `tests/` and reused via imports.
