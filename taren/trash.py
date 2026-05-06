@@ -138,9 +138,6 @@ class Trash:
         else:
             dst = os.path.join(self._trashfolder, (filenameRaw + "_" + str(len(dstVariants)) + fileExtension))
 
-        # Build destination name
-        dst: str = os.path.join(self._trashfolder, dst)
-
         # Move file to trash
         logging.debug("Move file [{}] to [{}]".format(file, dst))
         os.rename(file, dst)

@@ -7,7 +7,7 @@
 # Set base variables, you may tweak here
 ################################################################################
 # Set name of python environment
-ENV_NAME="venv"
+ENV_NAME=".venv"
 # Set name of python environment list exported by pip freeze > ${REQ_NAME}
 REQ_NAME="requirements.txt"
 # Get name of script to start
@@ -73,5 +73,9 @@ fi
 ################################################################################
 # Execute script
 ################################################################################
-echo "Execute script [${SCRIPT}]"
-${PY_INTERPRETER} ${SCRIPT}
+if [[ -f "${SCRIPT}" ]]; then
+    echo "Execute script [${SCRIPT}]"
+    ${PY_INTERPRETER} ${SCRIPT}
+else
+    echo "Script [${SCRIPT}] not found :-("
+fi

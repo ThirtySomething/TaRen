@@ -7,7 +7,7 @@ setlocal EnableDelayedExpansion
 @REM * Set base variables, you may tweak here
 @REM ***************************************************************************
 @REM Set name of python environment
-set "ENV_NAME=venv"
+set "ENV_NAME=.venv"
 @REM Set name of python environment list exported by pip freeze > %REQ_NAME%
 set "REQ_NAME=requirements.txt"
 @REM Get name of script to start
