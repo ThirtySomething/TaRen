@@ -24,7 +24,6 @@ SOFTWARE.
 ******************************************************************************
 """
 
-
 class Stats:
     """
     Statistic object, contains counter for
