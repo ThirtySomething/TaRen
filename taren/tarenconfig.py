@@ -26,10 +26,22 @@ SOFTWARE.
 
 import os
 import sys
+from importlib import import_module
+from pathlib import Path
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../vendor/MDO/MDO/"))
 
-from MDO import MDO
+def _load_mdo_class() -> type:
+    try:
+        return import_module("MDO").MDO
+    except ModuleNotFoundError:
+        vendor_mdo_path: Path = Path(__file__).resolve().parent.parent / "vendor" / "MDO" / "MDO"
+        vendor_mdo_path_str: str = str(vendor_mdo_path)
+        if vendor_mdo_path.exists() and vendor_mdo_path_str not in sys.path:
+            sys.path.insert(0, vendor_mdo_path_str)
+        return import_module("MDO").MDO
+
+
+MDO = _load_mdo_class()
 
 
 class TarenConfig(MDO):
