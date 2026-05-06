@@ -31,7 +31,7 @@ import os
 class Helper:
     ############################################################################
     @staticmethod
-    def ensureDirectory(dirname: str) -> bool:
+    def ensure_directory(dirname: str) -> bool:
         if not os.path.exists(dirname):
             try:
                 # Create missing folder
@@ -46,4 +46,18 @@ class Helper:
     ############################################################################
     @staticmethod
     def delete_file(filename: str) -> bool:
-        os.remove(filename)
+        if not os.path.exists(filename):
+            logging.debug("File [%s] does not exist, nothing to delete", filename)
+            return False
+        try:
+            os.remove(filename)
+            logging.debug("File [%s] deleted", filename)
+            return True
+        except OSError:
+            logging.error("Failed to delete file [%s]", filename)
+            return False
+
+    ############################################################################
+    @staticmethod
+    def ensureDirectory(dirname: str) -> bool:
+        return Helper.ensure_directory(dirname)

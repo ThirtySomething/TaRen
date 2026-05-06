@@ -88,7 +88,7 @@ class Trash:
         """
         Ensure existence of the trash folder
         """
-        return Helper.ensureDirectory(self._trashfolder)
+        return Helper.ensure_directory(self._trashfolder)
 
     ############################################################################
     def list(self) -> int:
