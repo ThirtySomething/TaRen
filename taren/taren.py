@@ -158,14 +158,14 @@ class TaRen:
                     self._trash.move(new_fqn)
                     statistics.downloads_moved += 1
 
-                if size_old > size_new:
+                elif size_old > size_new:
                     # Episode is greater than download
                     logging.info("one file smaller than the other one, move file [%s] to trash", new_fqn)
                     # Move to trash
                     self._trash.move(new_fqn)
                     statistics.downloads_moved += 1
 
-                if size_old < size_new:
+                else:
                     # Download is greater than episode
                     logging.info("one file smaller than the other one, move file [%s] to trash", old_fqn)
                     # Move to trash
