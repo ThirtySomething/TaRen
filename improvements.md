@@ -11,20 +11,11 @@
 - `taren/grouping.py` — Non-existent attribute `taren_downloads` in `_buildDocument` ✓
 - `taren/taren.py` — `EpisodeList` and `DownloadList` fetched twice ✓
 - `taren/websitecache.py` — `get_website_from_cache` reads cache even after failed download ✓
+- `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists ✓
 
 ---
 
 ## Redundancy / Design Issues
-
-### `taren/taren.py` — `downloads_to_process` uses anonymous two-element lists
-
-```python
-downloads_to_process.append([current_download, episode])
-```
-
-A `dataclasses.dataclass` or `typing.NamedTuple` would make access by name (`.filename`, `.episode`) safer than by index (`[0]`, `[1]`).
-
----
 
 ### `taren/downloadlist.py` — Duplicate extension sanitization
 

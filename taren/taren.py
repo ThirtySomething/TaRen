@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 import os
+from typing import NamedTuple
 
 from taren.downloadlist import DownloadList
 from taren.episode import Episode
@@ -35,6 +36,11 @@ from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
 from taren.teamlist import TeamList
 from taren.trash import Trash
+
+
+class _DownloadTask(NamedTuple):
+    filename: str
+    episode: object
 
 
 class TaRen:
@@ -119,19 +125,19 @@ class TaRen:
             return
 
         # Create list of downloads to process
-        downloads_to_process: list[str] = []
+        downloads_to_process: list[_DownloadTask] = []
         for current_download in downloads:
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
                 continue
-            downloads_to_process.append([current_download, episode])
+            downloads_to_process.append(_DownloadTask(filename=current_download, episode=episode))
             # logging.debug("added dowload to process list: [{}]".format(current_download))
         logging.info("downloads_to_process [{}]".format(len(downloads_to_process)))
 
         # Process downloads
         for current_download in downloads_to_process:
-            new_fqn: str = os.path.join(self._searchdir, "{}{}".format(current_download[1], self._extension))
-            old_fqn: str = os.path.join(self._searchdir, current_download[0])
+            new_fqn: str = os.path.join(self._searchdir, "{}{}".format(current_download.episode, self._extension))
+            old_fqn: str = os.path.join(self._searchdir, current_download.filename)
 
             if new_fqn == old_fqn:
                 # Already processed episode
