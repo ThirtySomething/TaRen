@@ -4,6 +4,11 @@ from taren.episode import Episode
 
 
 class TestEpisode(unittest.TestCase):
+    def test_empty_instance_factory_returns_empty_episode(self) -> None:
+        episode = Episode.empty_instance()
+        self.assertTrue(episode.empty)
+        self.assertEqual(episode.episode_id, 0)
+
     def test_gt_returns_not_implemented_for_other_type(self) -> None:
         episode = Episode()
         self.assertIs(episode.__gt__("x"), NotImplemented)

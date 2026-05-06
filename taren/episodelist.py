@@ -134,7 +134,7 @@ class EpisodeList:
         Find episode in list
         """
         # Create empty episode
-        episode: Episode = Episode()
+        episode: Episode = Episode.empty_instance()
         # Loop over all episodes
         for current_episode in self._episodes:
             # Does filename match episode

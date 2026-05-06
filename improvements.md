@@ -127,7 +127,13 @@ Observed benefit:
 
 - Decouples source mechanics from parsing/model assembly; improves substitution in tests and future integrations.
 
-### 5. Null Object Pattern (formalize existing behavior)
+### 5. Null Object Pattern (formalize existing behavior) (Implemented)
+
+Implementation summary:
+
+- `taren/episode.py` now exposes `Episode.empty_instance()` as explicit null-object factory.
+- `taren/episodelist.py` now uses `Episode.empty_instance()` in `find_episode()` instead of ad hoc constructor calls.
+- Tests now verify both the factory behavior and `EpisodeList` usage path.
 
 Where it fits:
 
@@ -137,12 +143,12 @@ Why applicable:
 
 - Pattern already exists implicitly; formalizing reduces accidental partial object states.
 
-How to apply incrementally:
+Adopted steps:
 
-1. Add explicit factory/classmethod for empty instances (`Episode.empty_instance()`).
-2. Keep `find_episode()` return type unchanged.
+1. Added explicit factory/classmethod for empty instances (`Episode.empty_instance()`).
+2. Kept `find_episode()` return type unchanged while routing creation through the factory.
 
-Expected benefit:
+Observed benefit:
 
 - Clearer intent, safer construction path, better readability for sentinel usage.
 
@@ -150,10 +156,10 @@ Expected benefit:
 
 ## Suggested Implementation Order
 
-1. Null object formalization for `Episode` sentinel behavior.
+All planned design-pattern refactorings in this report are now implemented.
 
 ---
 
 ## Recommendation
 
-Do not apply all remaining patterns at once. Continue in small commits, keeping behavior and tests unchanged after each step.
+Continue making incremental improvements in small commits, keeping behavior and tests unchanged after each step.

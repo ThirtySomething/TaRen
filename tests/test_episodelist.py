@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from taren.episodelist import CachedHtmlEpisodeSource, EpisodeList
+from taren.episode import Episode
 
 
 class TestEpisodeList(unittest.TestCase):
@@ -69,6 +70,14 @@ class TestEpisodeList(unittest.TestCase):
             cache_cls.assert_called_once_with("Tatort", "http://example", 1, "ua")
             cache_instance.get_website_from_cache.assert_called_once_with()
             self.assertEqual(payload, "<html></html>")
+
+    def test_find_episode_uses_empty_instance_factory(self) -> None:
+        el = EpisodeList("Tatort", "http://example", 1, "ua")
+        with patch.object(Episode, "empty_instance", wraps=Episode.empty_instance) as factory:
+            missing = el.find_episode("no hit")
+
+        factory.assert_called_once_with()
+        self.assertTrue(missing.empty)
 
 
 if __name__ == "__main__":

@@ -54,6 +54,12 @@ class Episode:
         self.episode_year: int = 0
 
     ############################################################################
+    @classmethod
+    def empty_instance(cls) -> "Episode":
+        """Return an explicit empty episode null-object instance."""
+        return cls()
+
+    ############################################################################
     def __gt__(self, other: object) -> bool | NotImplementedType:
         """
         Used for sorting
@@ -83,18 +89,10 @@ class Episode:
         Remove characters which are invalid for filenames
         """
         for current_invalid_character in Episode._invalid_characters:
-            self.episode_broadcast = self.episode_broadcast.replace(
-                current_invalid_character, " "
-            ).strip()
-            self.episode_inspectors = self.episode_inspectors.replace(
-                current_invalid_character, " "
-            ).strip()
-            self.episode_name = self.episode_name.replace(
-                current_invalid_character, " "
-            ).strip()
-            self.episode_sequence = self.episode_sequence.replace(
-                current_invalid_character, "-"
-            ).strip()
+            self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, " ").strip()
+            self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, " ").strip()
+            self.episode_name = self.episode_name.replace(current_invalid_character, " ").strip()
+            self.episode_sequence = self.episode_sequence.replace(current_invalid_character, "-").strip()
 
     ############################################################################
     def matches(self, filename: str) -> bool:
@@ -132,9 +130,7 @@ class Episode:
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """
         if len(data_row) < 6:
-            logging.warning(
-                "skip malformed episode row (expected >= 6 columns): %s", data_row
-            )
+            logging.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
             return
         # Episode number is first element of row
         episode_id_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[0])
@@ -149,19 +145,13 @@ class Episode:
             return
         self.episode_year = int(episode_year_raw.group(1))
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
-        self.episode_name = re.sub(
-            r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()
-        ).strip()
+        self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
         # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
-        self.episode_inspectors = re.sub(
-            r"\(Gastauftritt(.)+\)", "", data_row[4].strip()
-        ).strip()
+        self.episode_inspectors = re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
         # Get name of broadcast station, 3rd element of row
         self.episode_broadcast = data_row[2].strip()
         # Get sequence number and strip alternative numbering.
-        self.episode_sequence = re.sub(
-            r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()
-        ).strip()
+        self.episode_sequence = re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
         # Strip invalid characters
         self._strip_invalid_characters()
         # Mark as not empty
