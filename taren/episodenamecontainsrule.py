@@ -24,9 +24,19 @@ SOFTWARE.
 ******************************************************************************
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from taren.episodematchrule import EpisodeMatchRule
+
+if TYPE_CHECKING:
+    from taren.episode import Episode
 
 
 class EpisodeNameContainsRule(EpisodeMatchRule):
-    def try_match(self, filename: str, episode: "Episode") -> bool | None:
-        return episode.episode_name.lower() in filename.lower()
+    def try_match(self, filename: str, episode: Episode) -> bool | None:
+        episode_name: str = episode.episode_name.strip()
+        if not episode_name:
+            return None
+        return episode_name.lower() in filename.lower()

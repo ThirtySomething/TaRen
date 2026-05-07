@@ -2,6 +2,16 @@
 
 TaRen steht für `Ta`tort`Ren`amer. Was soll denn das sein?
 
+## Code Analysis Notes
+
+Aktuelle Analyse-Dokumente auf Root-Ebene:
+
+- [ANALYSIS_INDEX.md](./ANALYSIS_INDEX.md)
+- [ANALYSIS_EXECUTIVE_SUMMARY.md](./ANALYSIS_EXECUTIVE_SUMMARY.md)
+- [CODE_ANALYSIS_QUICK_REFERENCE.md](./CODE_ANALYSIS_QUICK_REFERENCE.md)
+- [COMPREHENSIVE_CODE_ANALYSIS.md](./COMPREHENSIVE_CODE_ANALYSIS.md)
+- [improvements.md](./improvements.md)
+
 ## Motivation
 
 Über die [Mediathekview][mediathekview] lade ich mir die Tatort Filme aus der

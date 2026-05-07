@@ -282,7 +282,7 @@ class TestEpisodeNameContainsRule(unittest.TestCase):
         episode = SimpleNamespace(episode_name="")
         filename = "Any Filename.mp4"
         result = self.rule.try_match(filename, episode)
-        self.assertTrue(result)  # Empty string is contained in any string
+        self.assertIsNone(result)
 
     def test_name_contains_empty_filename(self) -> None:
         # When filename is empty
