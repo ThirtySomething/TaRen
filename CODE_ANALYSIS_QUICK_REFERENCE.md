@@ -1,12 +1,12 @@
 # TaRen Code Analysis - Quick Reference
 
-Analysis date: 2026-05-06
+**Updated:** 2026-05-06 (Post-Improvements)
 
 ## Baseline
 
-- Syntax check: `./.venv/bin/python -m compileall -q program.py taren tests`
-- Tests: `./.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`
-- Status: 108 passed, 0 failed
+- Syntax check: `./.venv/bin/python -m compileall -q program.py taren tests` ✓ clean
+- Tests: `./.venv/bin/python -m unittest discover -s tests -p 'test_*.py'` ✓ **113 passed**, 0 failed
+- Quality: All Priority 1-3 improvements completed and validated
 
 ## Architecture Snapshot
 
@@ -18,51 +18,75 @@ Analysis date: 2026-05-06
 - File actions: `taren/renamefilecommand.py`, `taren/movetotrashcommand.py`, `taren/trash.py`
 - Conflict resolution: `taren/sizebasedconflictstrategy.py`
 
-## Prioritized Fix List
+## Completed Improvements
 
-### P1
+### P1 - Operational Safety (All Complete)
 
-1. Abort early when subdirectory creation fails in preflight.
+✅ **1. Preflight Fail-Fast**
 
-- File: `taren/taren.py`
-- Current behavior: `Helper.ensure_directory(...)` result is not checked.
-- Desired behavior: return `False` from preflight with clear log.
+- File: `taren/taren.py` (lines 135-158)
+- Status: IMPLEMENTED
+- Behavior: `_preflight()` checks return values for `ensure_directory()` on both downloads/ and seen/ folders
+- Test: `tests/test_taren.py::TestTaRen::test_preflight_aborts_when_subfolder_creation_fails`
 
-2. Prevent empty-title fallback matches.
+✅ **2. Fallback Match Guard**
 
-- File: `taren/episodenamecontainsrule.py`
-- Current behavior: empty `episode_name` matches every filename.
-- Desired behavior: return `None` (or `False`) when `episode_name.strip()` is empty.
+- File: `taren/episodenamecontainsrule.py` (lines 35-40)
+- Status: IMPLEMENTED
+- Behavior: returns `None` (non-decisive) when episode_name is empty/whitespace
+- Test: `tests/test_match_rules.py::TestEpisodeNameContains::test_name_contains_empty_episode_name`
 
-### P2
+✅ **3. Logger Idempotency**
 
-3. Make logger setup idempotent.
+- File: `taren/tarenruntimebuilder.py` (lines 43-74)
+- Status: IMPLEMENTED
+- Behavior: removes stale file handlers before adding new one; extracted `_create_file_handler()` helper
+- Tests: `tests/test_program.py::TestProgramBuilder::test_build_logger_removes_existing_file_handler_for_same_logfile`, `test_build_logger_idempotent_on_repeated_calls`
 
-- File: `taren/tarenruntimebuilder.py`
-- Current behavior: each build adds another file handler.
-- Desired behavior: remove/replace existing file handler targeting the same file.
+✅ **4. UTF-8 Decode Error Handling**
 
-4. Handle UTF-8 decode failures with explicit logging.
+- File: `taren/websitecache.py` (lines 103-115)
+- Status: IMPLEMENTED
+- Behavior: wraps decode in try/except with explicit error logging (URL, cache filename, error details)
+- Tests: `tests/test_websitecache.py::TestWebSiteCache::test_write_to_cache_handles_invalid_utf8_payload`, `test_get_website_from_cache_returns_empty_when_decode_fails`
 
-- File: `taren/websitecache.py`
-- Current behavior: decode is implicit and may raise generic `UnicodeDecodeError`.
-- Desired behavior: catch, log URL/cache file context, and fail gracefully.
+### P2 - Associated Test Coverage (All Complete)
 
-### P3
+✅ **1. Invalid UTF-8 Response Tests** - Added to `tests/test_websitecache.py`
+✅ **2. Preflight Directory Failure Tests** - Added to `tests/test_taren.py`
+✅ **3. Repeated Logger Build Tests** - Added to `tests/test_program.py`
 
-5. Cleanup consistency issues.
+### P3 - Code Polish (All Complete)
 
-- Files: `taren/helper.py`, `taren/downloadlist.py`, `taren/stats.py`, `taren/taren.py`
-- Items: typo fix, formatting consistency, minor DRY opportunities.
+✅ **1. Helper Typo Fix** (`taren/helper.py` line 45)
 
-## Testing Gaps To Add
+- Changed: `"alread exists"` → `"already exists"`
 
-1. `WebSiteCache` invalid UTF-8 payload handling.
-2. `TaRen._preflight` hard failure path when directory creation fails.
-3. Idempotent logger configuration behavior when `build()` runs repeatedly.
+✅ **2. Import Formatting** (Test files)
 
-## Stable Strengths
+- Normalized to PEP 8: stdlib imports, blank line, local imports
 
-- Match-rule test coverage is now comprehensive (`tests/test_match_rules.py`).
-- Conflict strategy has direct tests (`tests/test_sizebasedconflictstrategy.py`).
-- Main pipeline behavior has broad scenario tests (`tests/test_taren.py`).
+✅ **3. Stats Percentage DRY** (`taren/stats.py`)
+
+- Extracted: `_calculate_owned_percentage()` helper method
+- Eliminates: duplication between `to_dict()` and `__str__()`
+
+## Remaining Opportunities (Priority 4 - Future)
+
+### Code Style
+
+- Mixed string formatting (`.format()` vs f-strings) in ~7 locations
+- Affected: `taren/taren.py`, `taren/episode.py`, `taren/downloadlist.py`, `taren/websitecache.py`
+- Impact: cosmetic; could normalize to f-strings for consistency
+
+### Documentation
+
+- README mentions Python 3.8.1; `pyproject.toml` targets 3.11
+- No functional impact; update for accuracy
+
+## Test Strengths
+
+✓ Match-rule test coverage is comprehensive (`tests/test_match_rules.py` - 35 tests)
+✓ Conflict strategy has direct tests (`tests/test_sizebasedconflictstrategy.py` - 4 tests)
+✓ Main pipeline behavior has broad scenario tests (`tests/test_taren.py` - 24 tests)
+✓ All error paths are now exercised with deterministic assertions

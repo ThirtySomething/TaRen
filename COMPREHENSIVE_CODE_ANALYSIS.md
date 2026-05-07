@@ -1,25 +1,20 @@
 # TaRen Project - Comprehensive Code Analysis
 
-Analysis date: 2026-05-06
+**Updated:** 2026-05-06 (Post-Improvements)
 
 ## 1. Scope And Method
 
-Reviewed from scratch:
+Analyzed from scratch:
 
-- All project Python files in `taren/` plus `program.py`
-- All Python files in `tests/`
+- All project Python files in `taren/` (29 source files) plus `program.py`
+- All Python files in `tests/` (18 files: 12 test modules + 6 fake/spy helpers)
 - Current top-level markdown state
 
 Validation executed:
 
-- Compile check: `./.venv/bin/python -m compileall -q program.py taren tests`
-- Test run: `./.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`
-- Observed result: `Ran 108 tests ... OK`
-
-Constraints observed:
-
-- `pytest` command/module is not available in current environment
-- Existing test workflow in this workspace is therefore effectively `unittest`-based
+- Compile check: `./.venv/bin/python -m compileall -q program.py taren tests` ✓ clean
+- Test run: `./.venv/bin/python -m unittest discover -s tests -p 'test_*.py'` ✓ **113 tests passed** in ~0.06s
+- Quality gate: All Priority 1-3 improvements implemented and passing
 
 ## 2. System Architecture
 
@@ -28,14 +23,14 @@ Constraints observed:
 - `program.py` is minimal and clean: build runtime, fail fast on invalid configuration, run rename process.
 - `TarenRuntimeBuilder` separates concerns well:
     - config creation and validation
-    - logger setup
+    - logger setup (now idempotent)
     - runner construction
 
 ### 2.2 Main Pipeline
 
 `TaRen.rename_process()` follows a clear template:
 
-1. `_preflight()`
+1. `_preflight()` ← Now performs fail-fast directory checks
 2. `_load_episodes()`
 3. `_collect_tasks()`
 4. `_process_tasks()`
@@ -47,50 +42,76 @@ This decomposition is a strong maintainability point and makes targeted tests pr
 
 - Strategy: `ConflictResolutionStrategy` + `SizeBasedConflictStrategy`
 - Command: `RenameFileCommand` and `MoveToTrashCommand`
-- Chain of responsibility: episode match rules in `Episode.matches()`
+- Chain of responsibility: episode match rules in `Episode.matches()` ← Updated with empty-guard
 - Adapter/wrapper: `CachedHtmlEpisodeSource` around `WebSiteCache`
 - Null object: `Episode.empty_instance()`
 
-## 3. Code Quality Findings
+## 3. Code Quality - Status Summary
 
-### 3.1 High Severity
+### 3.1 Resolved Issues (High Severity → Fixed)
 
-1. Preflight does not enforce directory creation success.
+✅ **1. Preflight directory creation enforcement**
 
-- Files: `taren/taren.py`, `taren/helper.py`, `taren/downloadlist.py`
-- Detail:
-    - `_preflight()` checks collection existence but ignores `ensure_directory` results for `downloads` and `seen`.
-    - later `os.listdir(self._searchdir)` can raise if folders are unavailable.
-- Recommendation:
-    - check both return values in `_preflight()` and abort with a clear error.
+- Files: `taren/taren.py` (lines 143-158), `taren/helper.py`
+- Status: FIXED
+- Implementation: `_preflight()` now checks return values from `ensure_directory()` for both downloads/ and seen/ folders
+- Test: `tests/test_taren.py::TestTaRen::test_preflight_aborts_when_subfolder_creation_fails`
+- Impact: Early failure with clear context when directories cannot be created
 
-2. Empty episode names can produce broad false positives.
+✅ **2. Empty episode name fallback false positives**
 
-- Files: `taren/episodenamecontainsrule.py`, `tests/test_match_rules.py`
-- Detail:
-    - substring rule returns true for empty episode names by Python semantics.
-    - currently codified by a unit test expectation.
-- Recommendation:
-    - treat empty episode name as non-decisive (`None`) or explicit miss (`False`).
-    - update tests to reflect safer behavior.
+- Files: `taren/episodenamecontainsrule.py` (lines 35-40), `tests/test_match_rules.py`
+- Status: FIXED
+- Implementation: `try_match()` returns `None` (non-decisive) when episode_name is empty/whitespace
+- Test: `tests/test_match_rules.py::TestEpisodeNameContains::test_name_contains_empty_episode_name`
+- Impact: No false matches when parsing yields empty titles
 
-### 3.2 Medium Severity
+### 3.2 Resolved Issues (Medium Severity → Fixed)
 
-3. Logger configuration not idempotent.
+✅ **3. Logger configuration idempotency**
 
-- File: `taren/tarenruntimebuilder.py`
-- Detail:
-    - each build adds another file handler to the root logger.
-- Recommendation:
-    - deduplicate handlers for the configured file or clear existing handlers before attaching new one.
+- File: `taren/tarenruntimebuilder.py` (lines 43-74)
+- Status: FIXED
+- Implementation:
+    - Extracts stale file handlers from logger.handlers list
+    - Removes handlers targeting the same logfile before adding new one
+    - Extracted `_create_file_handler()` helper for testability
+- Tests: `tests/test_program.py::TestProgramBuilder::test_build_logger_removes_existing_file_handler_for_same_logfile`, `test_build_logger_idempotent_on_repeated_calls`
+- Impact: Safe to call builder multiple times in same process
 
-4. Cache write decode errors are not contextualized.
+✅ **4. Cache write UTF-8 decode error contextualization**
 
-- File: `taren/websitecache.py`
-- Detail:
-    - decode assumes UTF-8 and may raise `UnicodeDecodeError` directly.
-- Recommendation:
-    - wrap decode in try/except and log URL/cache-file context before safe fallback.
+- File: `taren/websitecache.py` (lines 103-115)
+- Status: FIXED
+- Implementation:
+    - Wraps `websitecontent.decode("utf-8")` in try/except
+    - Catches `UnicodeDecodeError` and logs: URL, cache filename, error details
+    - Returns early without writing cache file on failure
+- Tests: `tests/test_websitecache.py::TestWebSiteCache::test_write_to_cache_handles_invalid_utf8_payload`, `test_get_website_from_cache_returns_empty_when_decode_fails`
+- Impact: Explicit error logging with full context when decode fails
+
+### 3.3 Code Quality Remaining (Priority 4 - Future)
+
+**Minor Issues (Low Priority):**
+
+1. **Mixed string formatting styles** (cosmetic)
+    - Location: `taren/taren.py` (3x), `taren/episode.py` (1x), `taren/downloadlist.py` (1x), `taren/websitecache.py` (1x)
+    - Pattern: `.format()` mixed with f-strings
+    - Recommendation: Normalize to f-strings for Python 3.6+ consistency
+    - Impact: Code style consistency only; no functional impact
+
+2. **Documentation freshness** (cosmetic)
+    - Location: `readme.md`
+    - Issue: Technical notes mention Python 3.8.1; `pyproject.toml` targets 3.11
+    - Recommendation: Update README to reflect current tooling version
+    - Impact: Documentation clarity only; no functional impact
+
+3. **Type annotation completeness** (optional)
+    - Core modules have good coverage; minor utilities could benefit
+    - Recommendation: Gradual improvement; not blocking
+    - Impact: Developer experience / IDE support
+
+## 4. Test Coverage Analysis
 
 5. Mixed error signaling styles remain.
 
