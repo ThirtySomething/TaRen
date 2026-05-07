@@ -170,6 +170,8 @@ Files:
 
 ### 7. Make cache filename more collision-safe
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - Cache filename uses only pattern (`{pattern}.html`).
@@ -180,10 +182,17 @@ Proposal:
 - Include a URL hash in cache filename (for example: `<pattern>_<hash>.html`).
 - Optionally persist metadata alongside cache.
 
+Implemented:
+
+- Added `import hashlib` to `taren/websitecache.py`.
+- Modified cache filename generation in `__init__`: now uses `{pattern}_{url_hash}.html` format.
+- URL hash is first 8 chars of MD5(websiteurl), ensuring different URLs produce different cache files.
+- Example: `pattern_c45f8974.html` (where c45f8974 is hash of the URL).
+- All existing tests pass without modification; collision-safety is now transparent.
+
 Files:
 
 - `taren/websitecache.py`
-- `taren/cachedhtmlepisodesource.py`
 
 ### 8. Improve readability/parsability of summary stats
 
@@ -263,7 +272,7 @@ Files:
 3. Failure-path tests for filesystem and config validation. Status: Completed (2026-05-05)
 4. Module logger migration. Status: Completed (2026-05-05)
 5. Typing cleanup and helper alias removal. Status: Completed (2026-05-05)
-6. Cache filename collision improvements.
+6. Cache filename collision improvements. Status: Completed (2026-05-05)
 7. Stats output restructuring.
 
 ## Practical Outcome

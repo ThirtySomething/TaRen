@@ -26,6 +26,7 @@ SOFTWARE.
 
 import codecs
 from datetime import datetime
+import hashlib
 import logging
 import os
 
@@ -54,7 +55,9 @@ class WebSiteCache:
         Default init of variables
         """
         self._cacheage: int = cacheage
-        self._cachename: str = "{}.html".format(cachename)
+        # Include URL hash in cache filename to prevent collisions
+        url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[:8]
+        self._cachename: str = "{}_{}.html".format(cachename, url_hash)
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent
         self._fetch_policy: HttpFetchPolicy = fetch_policy or RequestsHttpFetchPolicy()
