@@ -24,17 +24,16 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import unittest
 import logging
-from pathlib import Path
 import tempfile
+import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import program
-from taren.tarendefines import ConfigurationError
-from taren.tarendefines import TarenDefines
 import taren.tarenruntimebuilder as tarenruntimebuilder
+from taren.tarendefines import ConfigurationError, TarenDefines
 
 
 class TestProgramBuilder(unittest.TestCase):
