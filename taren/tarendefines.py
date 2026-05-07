@@ -67,6 +67,11 @@ class TarenDefines:
     CFG_KEY_HTTP_TIMEOUT: str = "http_timeout"
     CFG_KEY_HTTP_RETRIES: str = "http_retries"
 
+    # ---------------------------------------------------------------------------
+    # Cache configuration
+    # ---------------------------------------------------------------------------
+    URL_HASH_LENGTH: int = 8  # Length of MD5 hash used in cache filename
+
 
 # Exception hierarchy for TaRen
 class TarenError(Exception):

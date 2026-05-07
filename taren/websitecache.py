@@ -33,6 +33,7 @@ import os
 from taren.helper import Helper
 from taren.httpfetchpolicy import HttpFetchPolicy
 from taren.requestshttpfetchpolicy import RequestsHttpFetchPolicy
+from taren.tarendefines import TarenDefines
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ class WebSiteCache:
         """
         self._cacheage: int = cacheage
         # Include URL hash in cache filename to prevent collisions
-        url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[:8]
+        url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[: TarenDefines.URL_HASH_LENGTH]
         self._cachename: str = f"{cachename}_{url_hash}.html"
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent

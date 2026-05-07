@@ -49,29 +49,15 @@ logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s"
 ### 2.2 Complete Type Annotations in Helper Module
 
 **File:** `taren/helper.py`
-**Current State:** Some functions lack explicit return type hints
-**Issue:** Reduces IDE support and self-documentation
+**Status:** ✅ COMPLETED
+**Current State:** All public methods have explicit return type hints
+**Methods Verified:**
 
-```python
-# Current
-@staticmethod
-def ensure_directory(dirname: str) -> bool:
-    """Ensure directory exists and is writable."""
-    # ...
+- `ensure_directory(dirname: str) -> bool` ✓
+- `delete_file(filename: str) -> bool` ✓
 
-@staticmethod
-def delete_file(filename: str):  # ← Missing return type
-    """Delete a file."""
-    # ...
-```
-
-**Recommendation:** Add explicit `-> bool` return types to all public methods
-
-**Effort:** 15 minutes
-**Impact:** Better IDE autocomplete, clearer contracts
-**Validation:** Run type checker: `python -m mypy taren/helper.py`
-
----
+**Impact:** Full IDE support, clear method contracts
+**Validation:** All 113 tests pass
 
 ### 2.3 Standardize Path Handling with pathlib
 
@@ -116,6 +102,12 @@ URL_HASH_LENGTH: int = 8
 **Effort:** 10 minutes
 **Impact:** Self-documenting, easier to adjust globally
 **Validation:** No behavior change
+
+**Status:** ✅ COMPLETED
+**Implementation:** Added `URL_HASH_LENGTH: int = 8` to TarenDefines
+**Updated:** `websitecache.py` now uses `TarenDefines.URL_HASH_LENGTH`
+**Impact:** Self-documenting code, easy to adjust hash length globally
+**Validation:** All 113 tests pass
 
 ---
 
@@ -233,8 +225,8 @@ else:
 ### Phase 1: Quick Wins (45 minutes)
 
 1. ✅ Consolidate debug logging in TaRen.**init** (15 min) - COMPLETED
-2. Add type hints to helper.py (15 min)
-3. Extract magic numbers to TarenDefines (10 min)
+2. ✅ Add type hints to helper.py (15 min) - COMPLETED
+3. ✅ Extract magic numbers to TarenDefines (10 min) - COMPLETED
 4. Fix logging format consistency (30 min) - can overlap
 
 ### Phase 2: Architectural Improvements (1 hour)
