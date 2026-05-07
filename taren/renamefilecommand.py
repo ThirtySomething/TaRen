@@ -35,11 +35,22 @@ class RenameFileCommand:
         self._source_file: str = source_file
         self._destination_file: str = destination_file
 
-    def execute(self, statistics: Stats) -> None:
+    def execute(self, statistics: Stats) -> bool:
         logging.info(
             "rename from [%s] to [%s] filename",
             self._source_file,
             self._destination_file,
         )
-        os.rename(self._source_file, self._destination_file)
-        statistics.downloads_renamed += 1
+        try:
+            os.rename(self._source_file, self._destination_file)
+            statistics.downloads_renamed += 1
+            return True
+        except OSError as exc:
+            logging.error(
+                "failed to rename from [%s] to [%s]: %s",
+                self._source_file,
+                self._destination_file,
+                exc,
+            )
+            statistics.downloads_failed += 1
+            return False

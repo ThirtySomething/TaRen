@@ -63,6 +63,17 @@ class TestTrash(unittest.TestCase):
             self.assertTrue((Path(tmpdir) / ".trash" / "file.mp4").exists())
             self.assertTrue((Path(tmpdir) / ".trash" / "file_1.mp4").exists())
 
+    def test_move_returns_false_when_rename_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            self.assertTrue(trash.init())
+
+            src = Path(tmpdir) / "file.mp4"
+            src.write_text("first", encoding="utf-8")
+
+            with patch("taren.trash.os.rename", side_effect=OSError("locked")):
+                self.assertFalse(trash.move(str(src)))
+
     def test_cleanup_and_list(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")

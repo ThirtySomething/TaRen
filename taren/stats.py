@@ -24,6 +24,7 @@ SOFTWARE.
 ******************************************************************************
 """
 
+
 class Stats:
     """
     Statistic object, contains counter for
@@ -36,6 +37,7 @@ class Stats:
     ############################################################################
     def __init__(self) -> None:
         self.downloads_deleted: int = 0
+        self.downloads_failed: int = 0
         self.downloads_moved: int = 0
         self.downloads_renamed: int = 0
         self.downloads_total: int = 0
@@ -51,16 +53,13 @@ class Stats:
     ############################################################################
     def __str__(self):
         """Represent statistics as string"""
-        owned_pct: float = (
-            (100 / self.episodes_total * self.episodes_owned)
-            if self.episodes_total
-            else 0.0
-        )
-        return "\n episodes total [{}],\n episodes owned [{}/{:3.2f}%],\n downloads deleted [{}],\n downloads moved [{}],\n downloads renamed [{}],\n downloads total [{}],\n downloads trash [{}]".format(
+        owned_pct: float = (100 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+        return "\n episodes total [{}],\n episodes owned [{}/{:3.2f}%],\n downloads deleted [{}],\n downloads failed [{}],\n downloads moved [{}],\n downloads renamed [{}],\n downloads total [{}],\n downloads trash [{}]".format(
             self.episodes_total,
             self.episodes_owned,
             owned_pct,
             self.downloads_deleted,
+            self.downloads_failed,
             self.downloads_moved,
             self.downloads_renamed,
             self.downloads_total,

@@ -14,16 +14,28 @@ Scope: Entire codebase reviewed from current workspace state.
 
 ### 1. Harden file operations against runtime failures
 
+Status: Completed (2026-05-05)
+
 Why this matters:
+
 - Rename/delete/move operations can fail (permissions, locked files, missing paths).
 - Current flow can crash mid-run or produce partial processing.
 
 Proposal:
+
 - Wrap filesystem operations in `try/except` and log meaningful context.
 - Let command execution return success/failure or raise controlled domain errors.
 - Track failures in `Stats` and include them in summary output.
 
+Implemented:
+
+- `FileMutationCommand.execute(...)` now returns `bool` success/failure.
+- Rename and trash move operations are wrapped in guarded filesystem handling.
+- Per-task command execution now aborts remaining commands after the first failure.
+- `Stats` includes `downloads_failed` and summary output includes this metric.
+
 Files:
+
 - `taren/renamefilecommand.py`
 - `taren/movetotrashcommand.py`
 - `taren/trash.py`
@@ -32,33 +44,41 @@ Files:
 ### 2. Add explicit configuration validation at startup
 
 Why this matters:
+
 - Invalid values (negative cache age, non-integer age values, empty URL, bad paths) are not validated early.
 - Runtime failures appear later and are harder to diagnose.
 
 Proposal:
+
 - Add validation step after loading config and before running rename flow.
 - Validate required keys and types (especially integer fields and URL/path fields).
 - Fail fast with one clear error report.
 
 Files:
+
 - `taren/tarenconfig.py`
 - `taren/tarenruntimebuilder.py`
 - `taren/taren.py`
 
 ### 3. Prevent silent mismatch between configured and actual outcomes
 
+Status: Completed (2026-05-05)
+
 Why this matters:
+
 - `Stats` increments after commands execute, but command exceptions are not controlled.
 - Result summaries can become misleading if one command fails after previous state changes.
 
 Proposal:
+
 - Introduce command result object or boolean return.
 - Process commands with per-command error handling and deterministic policy:
-  - stop on first failure, or
-  - continue and aggregate errors.
+    - stop on first failure, or
+    - continue and aggregate errors.
 - Include `downloads_failed` (or similar) in `Stats`.
 
 Files:
+
 - `taren/filemutationcommand.py`
 - `taren/taren.py`
 - `taren/stats.py`
@@ -66,14 +86,17 @@ Files:
 ### 4. Move from root/global logging calls to module loggers
 
 Why this matters:
+
 - Current `logging.info/debug/error` calls are global and harder to control per module.
 - Module loggers improve filtering, testing, and future extensibility.
 
 Proposal:
+
 - In each module, define `logger = logging.getLogger(__name__)`.
 - Replace direct `logging.*` calls with `logger.*`.
 
 Files:
+
 - Most files under `taren/`, especially:
 - `taren/taren.py`
 - `taren/episodelist.py`
@@ -85,69 +108,93 @@ Files:
 ### 5. Tighten type hints for task and config data
 
 Why this matters:
+
 - `DownloadTask.episode` is typed as `object`, reducing static checks and IDE support.
 
 Proposal:
+
 - Type `episode` as `Episode`.
 - Review related APIs for stricter typing consistency.
 
 Files:
+
 - `taren/downloadtask.py`
 - `taren/taren.py`
 
 ### 6. Remove duplicate legacy alias in helper utility
 
 Why this matters:
+
 - `ensureDirectory` duplicates `ensure_directory` and keeps mixed naming style.
 
 Proposal:
+
 - Remove `ensureDirectory` alias if no external compatibility requirement exists.
 
 Files:
+
 - `taren/helper.py`
 
 ### 7. Make cache filename more collision-safe
 
 Why this matters:
+
 - Cache filename uses only pattern (`{pattern}.html`).
 - Different URLs with same pattern can collide.
 
 Proposal:
+
 - Include a URL hash in cache filename (for example: `<pattern>_<hash>.html`).
 - Optionally persist metadata alongside cache.
 
 Files:
+
 - `taren/websitecache.py`
 - `taren/cachedhtmlepisodesource.py`
 
 ### 8. Improve readability/parsability of summary stats
 
 Why this matters:
+
 - Current multi-line `__str__` formatting is human-readable but less structured.
 
 Proposal:
+
 - Use deterministic key-value style output.
 - Consider adding `to_dict()` for future JSON output.
 
 Files:
+
 - `taren/stats.py`
 
 ## Test Coverage Gaps
 
 ### 9. Add failure-path tests for file operations
 
+Status: Completed (2026-05-05)
+
 Why this matters:
+
 - Current tests mostly validate successful flows.
 - The highest-risk behavior is around filesystem failure handling.
 
 Proposal:
+
 - Add tests simulating `OSError`/`PermissionError` in:
-  - rename command
-  - move-to-trash command
-  - trash cleanup/listing
+    - rename command
+    - move-to-trash command
+    - trash cleanup/listing
 - Verify `Stats` and logs reflect failures correctly.
 
+Implemented:
+
+- Added tests for rename command failure accounting.
+- Added tests for move-to-trash command failure accounting.
+- Added test ensuring command execution stops after the first failure.
+- Added trash move failure-path test.
+
 Files:
+
 - `tests/test_taren.py`
 - `tests/test_trash.py`
 - new test files for command classes if needed
@@ -155,13 +202,16 @@ Files:
 ### 10. Add config validation tests
 
 Why this matters:
+
 - Validation logic should be stable and explicit.
 
 Proposal:
+
 - Add tests for invalid values (non-int cache/trash age, empty wiki URL, invalid collection path).
 - Ensure startup fails early with clear diagnostics.
 
 Files:
+
 - `tests/test_tarenconfig.py`
 - `tests/test_program.py`
 

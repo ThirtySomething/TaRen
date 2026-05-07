@@ -31,5 +31,6 @@ if TYPE_CHECKING:
 
 
 class FileMutationCommand(Protocol):
-    def execute(self, statistics: "Stats") -> None:
-        """Execute mutation and update statistics."""
+    def execute(self, statistics: "Stats") -> bool:
+        """Execute mutation and return success status."""
+        ...

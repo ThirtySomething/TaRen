@@ -34,6 +34,7 @@ class TestStats(unittest.TestCase):
         stats = Stats()
         text = str(stats)
         self.assertIn("0.00%", text)
+        self.assertIn("downloads failed [0]", text)
 
         stats.episodes_total = 10
         stats.episodes_owned = 5

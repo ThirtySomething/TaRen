@@ -29,7 +29,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from fakeconfig import FakeConfig
 from fakeepisode import FakeEpisode
@@ -326,7 +326,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             statistics = Stats()
 
             with patch.object(runner, "_execute_commands") as execute_commands:
-                runner._process_tasks([task], statistics)
+                runner._process_tasks(cast(Any, [task]), statistics)
 
             execute_commands.assert_called_once()
             commands = execute_commands.call_args.args[0]
@@ -342,7 +342,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
-                SimpleNamespace(move_to_trash="old.mp4", skip_rename=True),
+                cast(Any, SimpleNamespace(move_to_trash="old.mp4", skip_rename=True)),
             )
             self.assertEqual(len(commands), 1)
             self.assertIsInstance(commands[0], MoveToTrashCommand)
@@ -350,7 +350,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
-                SimpleNamespace(move_to_trash=None, skip_rename=False),
+                cast(Any, SimpleNamespace(move_to_trash=None, skip_rename=False)),
             )
             self.assertEqual(len(commands), 1)
             self.assertIsInstance(commands[0], RenameFileCommand)
@@ -358,11 +358,50 @@ class TestTaRenRenameProcess(unittest.TestCase):
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
-                SimpleNamespace(move_to_trash="old.mp4", skip_rename=False),
+                cast(Any, SimpleNamespace(move_to_trash="old.mp4", skip_rename=False)),
             )
             self.assertEqual(len(commands), 2)
             self.assertIsInstance(commands[0], MoveToTrashCommand)
             self.assertIsInstance(commands[1], RenameFileCommand)
+
+    def test_execute_commands_stops_after_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            statistics = Stats()
+
+            first_command = MagicMock()
+            first_command.execute.return_value = False
+            second_command = MagicMock()
+            second_command.execute.return_value = True
+
+            runner._execute_commands([first_command, second_command], statistics)
+
+            first_command.execute.assert_called_once_with(statistics)
+            second_command.execute.assert_not_called()
+
+    def test_rename_command_counts_failure_when_os_rename_fails(self) -> None:
+        statistics = Stats()
+        command = RenameFileCommand("/source.mp4", "/destination.mp4")
+
+        with patch("taren.renamefilecommand.os.rename", side_effect=OSError("disk error")):
+            success = command.execute(statistics)
+
+        self.assertFalse(success)
+        self.assertEqual(statistics.downloads_renamed, 0)
+        self.assertEqual(statistics.downloads_failed, 1)
+
+    def test_move_to_trash_command_counts_failure_when_move_fails(self) -> None:
+        statistics = Stats()
+        fake_trash = MagicMock()
+        fake_trash.move.return_value = False
+        command = MoveToTrashCommand(fake_trash, "/file.mp4")
+
+        success = command.execute(statistics)
+
+        self.assertFalse(success)
+        self.assertEqual(statistics.downloads_moved, 0)
+        self.assertEqual(statistics.downloads_failed, 1)
 
 
 if __name__ == "__main__":

@@ -123,7 +123,7 @@ class Trash:
         return filesintrash
 
     ############################################################################
-    def move(self, file: str) -> None:
+    def move(self, file: str) -> bool:
         """
         Move file to trash and modify file date to deletion timestamp
         """
@@ -151,8 +151,13 @@ class Trash:
 
         # Move file to trash
         logging.debug("Move file [%s] to [%s]", file, dst)
-        os.rename(file, dst)
-        # Modify timestamp
-        now: float = time.time()
-        logging.debug("Set access/modified timestamp of [%s] to [%s]", dst, now)
-        os.utime(dst, (now, now))
+        try:
+            os.rename(file, dst)
+            # Modify timestamp
+            now: float = time.time()
+            logging.debug("Set access/modified timestamp of [%s] to [%s]", dst, now)
+            os.utime(dst, (now, now))
+            return True
+        except OSError as exc:
+            logging.error("failed to move file [%s] to trash [%s]: %s", file, dst, exc)
+            return False

@@ -216,7 +216,9 @@ class TaRen:
         """Execute prepared file-mutation commands in order."""
 
         for command in commands:
-            command.execute(statistics)
+            if not command.execute(statistics):
+                logging.error("abort remaining commands for current task due to previous failure")
+                break
 
     ############################################################################
     def _finalize(self, statistics: Stats) -> None:

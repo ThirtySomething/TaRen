@@ -35,10 +35,11 @@ class FakeTrash:
     def init(self) -> bool:
         return self._init_ok
 
-    def move(self, file_path: str) -> None:
+    def move(self, file_path: str) -> bool:
         self.moved.append(os.path.basename(file_path))
         if os.path.exists(file_path):
             os.remove(file_path)
+        return True
 
     def cleanup(self) -> int:
         return 0
