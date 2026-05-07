@@ -99,6 +99,11 @@ class EpisodeList:
             # When episode was successfully parsed, add to list
             if not current_episode.empty:
                 episodes.append(current_episode)
+            else:
+                logger.debug(
+                    "episode_parse: episode_id=%s status=skipped reason=parse_failed",
+                    episode_data[0] if episode_data else "unknown",
+                )
         # Return list of episodes
         episodes.sort()
         return episodes

@@ -175,8 +175,9 @@ in addition to existing minimum checks; added dedicated unit test coverage.
 ### 4.1 Episode Parsing Error Recovery
 
 **File:** `taren/episodelist.py` (line 110)
-**Current State:** Episode.parse() can produce incomplete episode
-**Issue:** Silently skips malformed rows; could log details
+**Status:** ✅ COMPLETED
+**Current State:** Rejected rows are logged with parse context
+**Issue:** Resolved
 
 ```python
 # Current
@@ -191,17 +192,20 @@ else:
                  episode_data[0] if episode_data else "unknown")
 ```
 
-**Effort:** 15 minutes
-**Impact:** Better debugging for data issues
-**Validation:** No behavior change, debug logs only
+**Implementation:** Added debug log for parse-rejected rows with episode id context:
+`episode_parse: episode_id=<value> status=skipped reason=parse_failed`.
+**Effort:** 15 minutes (✅ Completed)
+**Impact:** Better debugging for malformed source rows
+**Validation:** Added unit test for parse-failed row logging; all tests pass
 
 ---
 
 ### 4.2 Cache Filename Collision Prevention Documentation
 
 **File:** `taren/websitecache.py` (line 60)
-**Current State:** Comment explains hash is for collision prevention
-**Issue:** Logic is clear but lacks detail
+**Status:** ✅ COMPLETED
+**Current State:** Comment explains collision scenario and rationale
+**Issue:** Resolved
 
 ```python
 # Current comment
@@ -212,21 +216,26 @@ else:
 # is used with different URLs (e.g., different seasons/shows)
 ```
 
-**Effort:** 5 minutes
-**Impact:** Better documentation
-**Validation:** None needed
+**Implementation:** Expanded cache hash comment to explicitly mention collisions when
+the same cache stem is used with different URLs.
+**Effort:** 5 minutes (✅ Completed)
+**Impact:** Better maintainability and intent clarity
+**Validation:** Documentation-only change
 
 ---
 
 ### 4.3 Test Coverage for Trash Retention Age
 
 **File:** `tests/test_trash.py`
-**Current State:** Trash cleanup logic has mocked filesystem
-**Issue:** Could add real filesystem integration test (optional)
+**Status:** ✅ COMPLETED
+**Current State:** Includes real filesystem retention-age integration test
+**Issue:** Resolved
 
-**Effort:** 30 minutes (optional)
+**Implementation:** Added integration test that creates files with different mtimes and
+verifies cleanup deletes only files older than the configured retention threshold.
+**Effort:** 30 minutes (✅ Completed)
 **Impact:** Validates trash aging logic end-to-end
-**Validation:** New test in test_trash.py
+**Validation:** New test in `test_trash.py`; full suite passes
 
 ---
 
@@ -246,9 +255,9 @@ else:
 
 ### Phase 3: Polish (Optional - 1.5 hours)
 
-7. Episode parsing error recovery logging (15 min)
-8. Cache filename collision prevention docs (5 min)
-9. Trash retention age integration test (30 min)
+7. ✅ Episode parsing error recovery logging (15 min) - COMPLETED
+8. ✅ Cache filename collision prevention docs (5 min) - COMPLETED
+9. ✅ Trash retention age integration test (30 min) - COMPLETED
 
 ---
 

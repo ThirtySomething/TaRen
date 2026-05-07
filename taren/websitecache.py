@@ -57,7 +57,8 @@ class WebSiteCache:
         Default init of variables
         """
         self._cacheage: int = cacheage
-        # Include URL hash in cache filename to prevent collisions
+        # Use URL hash to prevent cache collisions when identical cache stems
+        # are used with different URLs (for example different show pages).
         url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[: TarenDefines.URL_HASH_LENGTH]
         cache_stem: str = Path(cachename).name
         cache_filename: str = f"{cache_stem}_{url_hash}.html"

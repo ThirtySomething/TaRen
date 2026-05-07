@@ -26,6 +26,7 @@ SOFTWARE.
 
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -113,6 +114,27 @@ class TestTrash(unittest.TestCase):
                 trash.cleanup()
 
             self.assertTrue(delete_mock.called)
+
+    def test_cleanup_respects_trash_retention_age_threshold(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            trash.init()
+            trash_dir = Path(tmpdir) / ".trash"
+
+            now = time.time()
+            too_old = trash_dir / "too_old.mp4"
+            too_old.write_text("x", encoding="utf-8")
+            os.utime(too_old, (now - 3 * 86400, now - 3 * 86400))
+
+            still_fresh = trash_dir / "still_fresh.mp4"
+            still_fresh.write_text("x", encoding="utf-8")
+            os.utime(still_fresh, (now - 12 * 3600, now - 12 * 3600))
+
+            deleted = trash.cleanup()
+
+            self.assertEqual(deleted, 1)
+            self.assertFalse(too_old.exists())
+            self.assertTrue(still_fresh.exists())
 
 
 if __name__ == "__main__":

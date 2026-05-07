@@ -62,6 +62,20 @@ class TestEpisodeList(unittest.TestCase):
         self.assertEqual(len(episodes), 1)
         self.assertEqual(episodes[0].episode_id, 124)
 
+    def test_parse_logs_parse_failed_row_details(self) -> None:
+        html = """
+        <table>
+            <tr><td>abc</td><td>BadId</td><td>ARD</td><td>2020</td><td>Inspector</td><td>1</td></tr>
+        </table>
+        """
+        el = EpisodeList("Tatort", "http://example", 1, "ua")
+
+        with patch("taren.episodelist.logger.debug") as debug_log:
+            episodes = el._parse_website(html)
+
+        self.assertEqual(len(episodes), 0)
+        self.assertTrue(any(call.args and "episode_parse: episode_id=%s status=skipped reason=parse_failed" in call.args[0] for call in debug_log.call_args_list))
+
     def test_getters_and_find(self) -> None:
         html = """
         <table>

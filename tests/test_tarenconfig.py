@@ -78,6 +78,24 @@ class TestTarenConfig(unittest.TestCase):
         self.assertTrue(any("taren.http_timeout" in error for error in errors))
         self.assertTrue(any("taren.http_retries" in error for error in errors))
 
+    def test_validate_rejects_http_retries_above_maximum(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            collection_dir = str(Path(tmpdir) / "collection")
+            Path(collection_dir).mkdir()
+            config = TarenConfig("dummy.json", auto_load=False)
+            config.value_set("taren", "collection", collection_dir)
+            config.value_set("taren", "wiki", "https://example.invalid/wiki")
+            config.value_set("taren", "maxcache", "1")
+            config.value_set("taren", "trashage", "0")
+            config.value_set("taren", "http_timeout", "10")
+            config.value_set("taren", "http_retries", "11")
+            config.value_set("logging", "loglevel", "info")
+            config.value_set("logging", "logfile", "TaRen.log")
+
+            errors = config.validate()
+
+        self.assertTrue(any("taren.http_retries must be <= 10" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
