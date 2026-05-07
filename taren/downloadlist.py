@@ -54,7 +54,7 @@ class DownloadList:
         Retrieve list of affected downloads
         """
         # Create search pattern
-        searchpattern: str = "*{}*{}".format(self._pattern, self._extension)
+        searchpattern: str = f"*{self._pattern}*{self._extension}"
         # Apply search pattern on search
         files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()

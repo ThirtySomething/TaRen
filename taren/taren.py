@@ -97,7 +97,7 @@ class TaRen:
         Ensure extension starts with a dot
         """
         if not extension.startswith("."):
-            extension = ".{}".format(extension)
+            extension = f".{extension}"
         return extension
 
     ############################################################################
@@ -106,7 +106,7 @@ class TaRen:
         Ensure searchdir ends with trailing slash
         """
         if not path.endswith(os.sep):
-            path = "{}{}".format(path, os.sep)
+            path = f"{path}{os.sep}"
         return path
 
     ############################################################################
@@ -204,7 +204,7 @@ class TaRen:
         for current_download in downloads_to_process:
             new_fqn: str = os.path.join(
                 self._seen,
-                "{}{}".format(current_download.episode, self._extension),
+                f"{current_download.episode}{self._extension}",
             )
             old_fqn: str = os.path.join(current_download.sourcedir, current_download.filename)
 

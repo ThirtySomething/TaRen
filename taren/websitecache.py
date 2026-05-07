@@ -57,7 +57,7 @@ class WebSiteCache:
         self._cacheage: int = cacheage
         # Include URL hash in cache filename to prevent collisions
         url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[:8]
-        self._cachename: str = "{}_{}.html".format(cachename, url_hash)
+        self._cachename: str = f"{cachename}_{url_hash}.html"
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent
         self._fetch_policy: HttpFetchPolicy = fetch_policy or RequestsHttpFetchPolicy()

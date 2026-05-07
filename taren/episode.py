@@ -89,13 +89,8 @@ class Episode:
         """
         Default string representation of an episode
         """
-        measstring: str = "Tatort - {:04d} - {} - {} - {} - {} - {}".format(
-            self.episode_id,
-            self.episode_name,
-            self.episode_inspectors,
-            self.episode_sequence,
-            self.episode_broadcast,
-            self.episode_year,
+        measstring: str = (
+            f"Tatort - {self.episode_id:04d} - {self.episode_name} - {self.episode_inspectors} - {self.episode_sequence} - {self.episode_broadcast} - {self.episode_year}"
         )
         return measstring
 

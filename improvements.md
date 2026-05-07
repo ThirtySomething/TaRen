@@ -78,8 +78,10 @@ Track practical, high-value improvements identified in the current full code ana
 
 ### Code Style Consistency
 
-- Mixed string formatting (`.format()` vs f-strings) in ~7 locations
-- Status: Noted for future normalization; low priority
+- [x] **Normalize string formatting to f-strings** (6 locations converted)
+    - Files: `taren/taren.py` (3x), `taren/episode.py` (1x), `taren/downloadlist.py` (1x), `taren/websitecache.py` (1x)
+    - Status: Completed
+    - Change: All `.format()` calls converted to f-strings for consistency
 
 ### Documentation
 
