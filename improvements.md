@@ -30,7 +30,7 @@ Track practical, high-value improvements identified in the current full code ana
 
 ### Priority 3
 
-1. Fix minor helper typo in logs.
+1. [x] Fix minor helper typo in logs.
 2. Normalize formatting style in touched files.
 3. Reduce small duplication in stats percentage calculation.
 

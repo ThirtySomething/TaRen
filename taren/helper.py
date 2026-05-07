@@ -42,7 +42,7 @@ class Helper:
             except OSError:
                 logger.error("Creation of the directory [%s] failed, abort", dirname)
         else:
-            logger.debug("Directory [%s] alread exists", dirname)
+            logger.debug("Directory [%s] already exists", dirname)
         return os.path.exists(dirname)
 
     ############################################################################
