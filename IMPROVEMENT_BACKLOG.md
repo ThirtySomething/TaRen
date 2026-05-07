@@ -42,7 +42,7 @@ logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s"
 
 **Effort:** 15 minutes (✅ Completed)
 **Impact:** Reduced verbosity from 12 to 4 debug statements, better semantic grouping
-**Validation:** All 113 tests pass
+**Validation:** All 116 tests pass
 
 ---
 
@@ -57,7 +57,7 @@ logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s"
 - `delete_file(filename: str) -> bool` ✓
 
 **Impact:** Full IDE support, clear method contracts
-**Validation:** All 113 tests pass
+**Validation:** All 116 tests pass
 
 ### 2.3 Standardize Path Handling with pathlib
 
@@ -82,7 +82,7 @@ and `websitecache.py` from `os.path.join/exists` style to `Path` operations whil
 preserving current interfaces and behavior.
 **Effort:** 45 minutes (✅ Completed)
 **Impact:** Clearer intent, safer path manipulation, better cross-platform readability
-**Validation:** All 114 tests pass
+**Validation:** All 116 tests pass
 
 ---
 
@@ -111,7 +111,7 @@ URL_HASH_LENGTH: int = 8
 **Implementation:** Added `URL_HASH_LENGTH: int = 8` to TarenDefines
 **Updated:** `websitecache.py` now uses `TarenDefines.URL_HASH_LENGTH`
 **Impact:** Self-documenting code, easy to adjust hash length globally
-**Validation:** All 113 tests pass
+**Validation:** All 116 tests pass
 
 ---
 
@@ -140,7 +140,7 @@ logger.error("directory_create: path=%s status=failed", ...)
 across targeted files (init, preflight, cache, parsing, task collection/execution, summary).
 **Effort:** 30 minutes (✅ Completed)
 **Impact:** Easier log parsing, machine-readable output, consistent semantics
-**Validation:** All 113 tests pass
+**Validation:** All 116 tests pass
 
 ---
 
@@ -166,7 +166,7 @@ if not (1 <= http_retries <= 10):
 in addition to existing minimum checks; added dedicated unit test coverage.
 **Effort:** 20 minutes (✅ Completed)
 **Impact:** Prevents misconfiguration at startup
-**Validation:** All 114 tests pass
+**Validation:** All 116 tests pass
 
 ---
 
@@ -263,7 +263,7 @@ verifies cleanup deletes only files older than the configured retention threshol
 
 ## Success Criteria
 
-- All 113 existing tests continue to pass
+- All 116 existing tests continue to pass
 - No regressions in error handling paths
 - Type checker (mypy) clean for modified files
 - Code style consistent (Black formatting respected)

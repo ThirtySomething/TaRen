@@ -6,10 +6,10 @@ TaRen steht für `Ta`tort`Ren`amer. Was soll denn das sein?
 
 Aktuelle Analyse-Dokumente auf Root-Ebene:
 
-- [ANALYSIS_INDEX.md](./ANALYSIS_INDEX.md)
-- [ANALYSIS_EXECUTIVE_SUMMARY.md](./ANALYSIS_EXECUTIVE_SUMMARY.md)
-- [CODE_ANALYSIS_QUICK_REFERENCE.md](./CODE_ANALYSIS_QUICK_REFERENCE.md)
-- [COMPREHENSIVE_CODE_ANALYSIS.md](./COMPREHENSIVE_CODE_ANALYSIS.md)
+- [INDEX.md](./INDEX.md)
+- [ANALYSIS_OVERVIEW.md](./ANALYSIS_OVERVIEW.md)
+- [ARCHITECTURE_NOTES.md](./ARCHITECTURE_NOTES.md)
+- [IMPROVEMENT_BACKLOG.md](./IMPROVEMENT_BACKLOG.md)
 - [improvements.md](./improvements.md)
 
 ## Motivation

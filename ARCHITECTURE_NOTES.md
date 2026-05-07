@@ -2,7 +2,7 @@
 
 **Version:** Current (May 2026)
 **Target Python:** 3.11
-**Test Count:** 113 passing
+**Test Count:** 116 passing
 
 ---
 
