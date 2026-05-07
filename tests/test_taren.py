@@ -404,5 +404,183 @@ class TestTaRenRenameProcess(unittest.TestCase):
         self.assertEqual(statistics.downloads_failed, 1)
 
 
+class TestTaRenErrorScenarios(unittest.TestCase):
+    """Test error handling in main workflow scenarios."""
+
+    def _build_config(self, collection_path: str) -> FakeConfig:
+        return FakeConfig(
+            {
+                "taren.collection": collection_path,
+                "taren.pattern": "Tatort",
+                "taren.extension": "mp4",
+                "taren.wiki": "http://example/episodes",
+                "taren.maxcache": "1",
+                "taren.trashage": "1",
+                "taren.trashignore": ".ignore",
+                "taren.wiki_useragent": "ua",
+            }
+        )
+
+    def _setup_collection(self, tmpdir: str):
+        """Create downloads and seen subfolders inside the collection root."""
+        downloads = Path(tmpdir) / "downloads"
+        seen = Path(tmpdir) / "seen"
+        downloads.mkdir(exist_ok=True)
+        seen.mkdir(exist_ok=True)
+        return downloads, seen
+
+    def _dl_mocks(self, downloads_files: list, seen_files: list | None = None):
+        """Return DownloadList side_effect list: first call=downloads dir, second=seen dir."""
+        seen_files = seen_files or []
+        return [
+            SimpleNamespace(get_filenames=lambda f=downloads_files: f),
+            SimpleNamespace(get_filenames=lambda f=seen_files: f),
+        ]
+
+    def test_load_episodes_handles_empty_website_content(self) -> None:
+        """When website returns empty content, should handle gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 0,
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            stats = Stats()
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                result = runner._load_episodes(stats)
+
+            self.assertEqual(stats.episodes_total, 0)
+
+    def test_process_tasks_continues_after_single_command_failure(self) -> None:
+        """When a command fails, subsequent tasks should still be processed."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            stats = Stats()
+
+            # Create two tasks
+            task1 = SimpleNamespace(
+                filename="file1.mp4",
+                episode=FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
+                sourcedir=str(downloads),
+            )
+            task2 = SimpleNamespace(
+                filename="file2.mp4",
+                episode=FakeEpisode("Tatort - 0002 - A - B - C - 2020"),
+                sourcedir=str(downloads),
+            )
+
+            # Mock execute_commands to track calls
+            with patch.object(runner, "_execute_commands") as execute_commands:
+                runner._process_tasks([task1, task2], stats)
+
+            # Both tasks should attempt execution
+            self.assertEqual(execute_commands.call_count, 2)
+
+    def test_collect_tasks_returns_none_when_trash_init_fails(self) -> None:
+        """When trash initialization fails, should return None."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            # Mock trash with failing init
+            fake_trash = SimpleNamespace(init=lambda: False)
+            runner._trash = cast(Any, fake_trash)
+
+            fake_episode_list = SimpleNamespace(
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
+            )
+            stats = Stats()
+
+            with patch("taren.taren.DownloadList", side_effect=self._dl_mocks([])):
+                result = runner._collect_tasks(fake_episode_list, stats)
+
+            self.assertIsNone(result)
+
+    def test_preflight_creates_missing_subfolders(self) -> None:
+        """When subfolders don't exist, preflight should create them."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            result = runner._preflight()
+
+            self.assertTrue(result)
+            self.assertTrue((Path(tmpdir) / "downloads").exists())
+            self.assertTrue((Path(tmpdir) / "seen").exists())
+
+    def test_finalize_tracks_deleted_and_trash_stats(self) -> None:
+        """When finalize is called, should update stats with cleanup results."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            fake_trash = SimpleNamespace(
+                cleanup=lambda: 5,  # 5 files deleted
+                list=lambda: 3,  # 3 files in trash
+            )
+            runner._trash = cast(Any, fake_trash)
+            stats = Stats()
+
+            runner._finalize(stats)
+
+            self.assertEqual(stats.downloads_deleted, 5)
+            self.assertEqual(stats.downloads_trash, 3)
+
+    def test_collect_tasks_skips_episodes_without_match(self) -> None:
+        """When episode matching fails, file should be skipped."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+            (downloads / "unknown_file.mp4").write_bytes(b"123")
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            runner._trash.init()
+
+            fake_episode_list = SimpleNamespace(
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: SimpleNamespace(empty=True),
+            )
+            stats = Stats()
+
+            with patch("taren.taren.DownloadList", side_effect=self._dl_mocks(["unknown_file.mp4"])):
+                tasks = runner._collect_tasks(fake_episode_list, stats)
+
+            self.assertEqual(len(tasks), 0)
+            self.assertEqual(stats.downloads_total, 1)
+
+    def test_process_tasks_increments_episodes_owned_when_already_placed(self) -> None:
+        """When file is already in seen folder with correct name, should increment episodes_owned."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, seen = self._setup_collection(tmpdir)
+            target_name = "Tatort - 0005 - A - B - C - 2020"
+
+            # File is already in correct location
+            (seen / f"{target_name}.mp4").write_bytes(b"123")
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            stats = Stats()
+
+            task = SimpleNamespace(
+                filename=f"{target_name}.mp4",
+                episode=FakeEpisode(target_name),
+                sourcedir=str(seen),
+            )
+
+            runner._process_tasks([task], stats)
+
+            self.assertEqual(stats.episodes_owned, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
