@@ -32,7 +32,7 @@ Track practical, high-value improvements identified in the current full code ana
 
 1. [x] Fix minor helper typo in logs.
 2. [x] Normalize formatting style in touched files.
-3. Reduce small duplication in stats percentage calculation.
+3. [x] Reduce small duplication in stats percentage calculation.
 
 ## Definition Of Done For Priority 1
 

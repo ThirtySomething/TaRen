@@ -53,9 +53,14 @@ class Stats:
         return self.__str__()
 
     ############################################################################
+    def _calculate_owned_percentage(self) -> float:
+        """Calculate episodes owned as percentage of total"""
+        return (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+
+    ############################################################################
     def to_dict(self) -> dict[str, Any]:
         """Convert statistics to dictionary format for JSON serialization"""
-        owned_pct: float = (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+        owned_pct: float = self._calculate_owned_percentage()
         return {
             "episodes_total": self.episodes_total,
             "episodes_owned": self.episodes_owned,
@@ -71,7 +76,7 @@ class Stats:
     ############################################################################
     def __str__(self):
         """Represent statistics as deterministic key-value format"""
-        owned_pct: float = (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+        owned_pct: float = self._calculate_owned_percentage()
         lines = [
             f"episodes_total: {self.episodes_total}",
             f"episodes_owned: {self.episodes_owned} ({owned_pct:.2f}%)",
