@@ -95,6 +95,8 @@ Files:
 
 ### 4. Move from root/global logging calls to module loggers
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - Current `logging.info/debug/error` calls are global and harder to control per module.
@@ -104,6 +106,11 @@ Proposal:
 
 - In each module, define `logger = logging.getLogger(__name__)`.
 - Replace direct `logging.*` calls with `logger.*`.
+
+Implemented:
+
+- Migrated `taren` modules with direct log calls to module-level `logger` usage.
+- Updated affected test patch target from `taren.taren.logging.error` to `taren.taren.logger.error`.
 
 Files:
 
@@ -238,7 +245,7 @@ Files:
 1. File operation hardening and failure accounting (`Stats` + command behavior). Status: Completed (2026-05-05)
 2. Config validation and startup fail-fast path. Status: Completed (2026-05-05)
 3. Failure-path tests for filesystem and config validation. Status: Completed (2026-05-05)
-4. Module logger migration.
+4. Module logger migration. Status: Completed (2026-05-05)
 5. Typing cleanup and helper alias removal.
 6. Cache filename collision improvements.
 7. Stats output restructuring.

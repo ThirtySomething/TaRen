@@ -200,7 +200,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
     def test_rename_process_aborts_when_collection_missing(self) -> None:
         config = self._build_config("/path/that/does/not/exist")
         runner = TaRen(cast(Any, config))
-        with patch("taren.taren.logging.error") as log_error:
+        with patch("taren.taren.logger.error") as log_error:
             runner.rename_process()
         self.assertTrue(log_error.called)
 

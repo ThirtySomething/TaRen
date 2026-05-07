@@ -36,6 +36,8 @@ from taren.exactrepresentationmatchrule import ExactRepresentationMatchRule
 from taren.leadingnumbermatchrule import LeadingNumberMatchRule
 from taren.tatortprefixmatchrule import TatortPrefixMatchRule
 
+logger = logging.getLogger(__name__)
+
 
 class Episode:
     """
@@ -125,18 +127,18 @@ class Episode:
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """
         if len(data_row) < 6:
-            logging.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
+            logger.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
             return
         # Episode number is first element of row
         episode_id_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[0])
         if episode_id_raw is None:
-            logging.warning("skip episode row without valid episode id: %s", data_row)
+            logger.warning("skip episode row without valid episode id: %s", data_row)
             return
         self.episode_id = int(episode_id_raw.group(1))
         # Year of episode
         episode_year_raw: Match[str] | None = re.search(r"([0-9]{4})", data_row[3])
         if episode_year_raw is None:
-            logging.warning("skip episode row without valid episode year: %s", data_row)
+            logger.warning("skip episode row without valid episode year: %s", data_row)
             return
         self.episode_year = int(episode_year_raw.group(1))
         # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp

@@ -30,6 +30,8 @@ import requests
 
 from taren.httpfetchpolicy import HttpFetchPolicy
 
+logger = logging.getLogger(__name__)
+
 
 class RequestsHttpFetchPolicy(HttpFetchPolicy):
     """Default HTTP fetch strategy using requests with retry/timeout policy."""
@@ -41,16 +43,14 @@ class RequestsHttpFetchPolicy(HttpFetchPolicy):
     def fetch(self, url: str, headers: dict[str, str]) -> bytes | None:
         for attempt in range(1, self._retries + 1):
             try:
-                response = requests.get(
-                    url, headers=headers, timeout=self._timeout_seconds
-                )
+                response = requests.get(url, headers=headers, timeout=self._timeout_seconds)
                 response.raise_for_status()
                 return response.content
             except requests.RequestException as e:
                 if attempt == self._retries:
-                    logging.error("Failed to download [%s]: %s", url, e)
+                    logger.error("Failed to download [%s]: %s", url, e)
                     return None
-                logging.warning(
+                logger.warning(
                     "download attempt [%s/%s] failed for [%s]: %s",
                     attempt,
                     self._retries,

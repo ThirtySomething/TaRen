@@ -29,6 +29,8 @@ import os
 
 from taren.stats import Stats
 
+logger = logging.getLogger(__name__)
+
 
 class RenameFileCommand:
     def __init__(self, source_file: str, destination_file: str) -> None:
@@ -36,7 +38,7 @@ class RenameFileCommand:
         self._destination_file: str = destination_file
 
     def execute(self, statistics: Stats) -> bool:
-        logging.info(
+        logger.info(
             "rename from [%s] to [%s] filename",
             self._source_file,
             self._destination_file,
@@ -46,7 +48,7 @@ class RenameFileCommand:
             statistics.downloads_renamed += 1
             return True
         except OSError as exc:
-            logging.error(
+            logger.error(
                 "failed to rename from [%s] to [%s]: %s",
                 self._source_file,
                 self._destination_file,

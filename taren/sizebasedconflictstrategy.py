@@ -29,6 +29,8 @@ import os
 
 from taren.conflictresolutionresult import ConflictResolutionResult
 
+logger = logging.getLogger(__name__)
+
 
 class SizeBasedConflictStrategy:
     """Default conflict strategy based on file size comparison."""
@@ -41,12 +43,12 @@ class SizeBasedConflictStrategy:
         size_new: int = os.stat(new_fqn).st_size
 
         if size_old == size_new:
-            logging.info("file size equal, move file [%s] to trash", new_fqn)
+            logger.info("file size equal, move file [%s] to trash", new_fqn)
             return ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
 
         if size_old > size_new:
-            logging.info("one file smaller than the other one, move file [%s] to trash", new_fqn)
+            logger.info("one file smaller than the other one, move file [%s] to trash", new_fqn)
             return ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
 
-        logging.info("one file smaller than the other one, move file [%s] to trash", old_fqn)
+        logger.info("one file smaller than the other one, move file [%s] to trash", old_fqn)
         return ConflictResolutionResult(move_to_trash=old_fqn, skip_rename=True)

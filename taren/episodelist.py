@@ -34,6 +34,8 @@ from taren.episode import Episode
 from taren.episodesource import EpisodeSource
 from taren.httpfetchpolicy import HttpFetchPolicy
 
+logger = logging.getLogger(__name__)
+
 
 class EpisodeList:
     """
@@ -62,10 +64,10 @@ class EpisodeList:
             fetch_policy=fetch_policy,
         )
         self._episodes: list[Episode] = []
-        logging.debug("pattern [%s]", pattern)
-        logging.debug("url [%s]", url)
-        logging.debug("cachetime [%s]", cachetime)
-        logging.debug("useragent [%s]", useragent)
+        logger.debug("pattern [%s]", pattern)
+        logger.debug("url [%s]", url)
+        logger.debug("cachetime [%s]", cachetime)
+        logger.debug("useragent [%s]", useragent)
 
     ############################################################################
     def _build_list_of_episodes(self, raw_data: list[Tag]) -> list[Episode]:
@@ -78,9 +80,7 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
             if len(table_cells) < 6:
-                logging.debug(
-                    "skip malformed episode table row with [%s] cells", len(table_cells)
-                )
+                logger.debug("skip malformed episode table row with [%s] cells", len(table_cells))
                 continue
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
@@ -101,14 +101,14 @@ class EpisodeList:
         Build internal list about episodes based on website content.
         """
         if not websitecontent.strip():
-            logging.warning("episode list website content is empty")
+            logger.warning("episode list website content is empty")
             return []
         # Parse website using BeautifulSoup
         websitedata: BeautifulSoup = BeautifulSoup(websitecontent, "html.parser")
         # Get table with episodes - there is only one tables
         table = websitedata.find("table")
         if table is None:
-            logging.warning("episode list table not found in website content")
+            logger.warning("episode list table not found in website content")
             return []
         # Get raw episode data from table data row
         rows: list[Tag] = table.find_all("tr")
@@ -154,4 +154,4 @@ class EpisodeList:
         websitecontent: str = self._read_website()
         # Parse website
         self._episodes = self._parse_website(websitecontent)
-        logging.info("total number of episodes [%s]", len(self._episodes))
+        logger.info("total number of episodes [%s]", len(self._episodes))

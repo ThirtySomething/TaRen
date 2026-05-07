@@ -43,6 +43,8 @@ from taren.stats import Stats
 from taren.tarenconfig import TarenConfig
 from taren.trash import Trash
 
+logger = logging.getLogger(__name__)
+
 
 class TaRen:
     """
@@ -73,16 +75,16 @@ class TaRen:
             self._trashage,
             self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE),
         )
-        logging.debug("self._config [%s]", self._config)
-        logging.debug("self._collection [%s]", self._collection)
-        logging.debug("self._downloads [%s]", self._downloads)
-        logging.debug("self._seen [%s]", self._seen)
-        logging.debug("self._pattern [%s]", self._pattern)
-        logging.debug("self._extension [%s]", self._extension)
-        logging.debug("self._url [%s]", self._url)
-        logging.debug("self._cachetime [%s]", self._cachetime)
-        logging.debug("self._trashage [%s]", self._trashage)
-        logging.debug("self._conflict_strategy [%s]", type(self._conflict_strategy).__name__)
+        logger.debug("self._config [%s]", self._config)
+        logger.debug("self._collection [%s]", self._collection)
+        logger.debug("self._downloads [%s]", self._downloads)
+        logger.debug("self._seen [%s]", self._seen)
+        logger.debug("self._pattern [%s]", self._pattern)
+        logger.debug("self._extension [%s]", self._extension)
+        logger.debug("self._url [%s]", self._url)
+        logger.debug("self._cachetime [%s]", self._cachetime)
+        logger.debug("self._trashage [%s]", self._trashage)
+        logger.debug("self._conflict_strategy [%s]", type(self._conflict_strategy).__name__)
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -128,7 +130,7 @@ class TaRen:
 
         # Check collection root exists
         if not os.path.exists(self._collection):
-            logging.error(
+            logger.error(
                 "Collection path [%s] does not exist or not found, abort",
                 self._collection,
             )
@@ -171,7 +173,7 @@ class TaRen:
                     continue
                 downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=sourcedir))
         statistics.downloads_total = total_files
-        logging.info("downloads_to_process [%s]", len(downloads_to_process))
+        logger.info("downloads_to_process [%s]", len(downloads_to_process))
         return downloads_to_process
 
     ############################################################################
@@ -217,7 +219,7 @@ class TaRen:
 
         for command in commands:
             if not command.execute(statistics):
-                logging.error("abort remaining commands for current task due to previous failure")
+                logger.error("abort remaining commands for current task due to previous failure")
                 break
 
     ############################################################################
@@ -231,4 +233,4 @@ class TaRen:
         statistics.downloads_trash = self._trash.list()
 
         # Summary
-        logging.info("summary: %s", statistics)
+        logger.info("summary: %s", statistics)

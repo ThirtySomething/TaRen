@@ -28,6 +28,8 @@ import logging
 import fnmatch
 import os
 
+logger = logging.getLogger(__name__)
+
 
 class DownloadList:
     """
@@ -42,9 +44,9 @@ class DownloadList:
         self._searchdir: str = searchdir
         self._pattern: str = pattern
         self._extension: str = extension
-        logging.debug("searchdir [%s]", self._searchdir)
-        logging.debug("pattern [%s]", self._pattern)
-        logging.debug("extension [%s]", self._extension)
+        logger.debug("searchdir [%s]", self._searchdir)
+        logger.debug("pattern [%s]", self._pattern)
+        logger.debug("extension [%s]", self._extension)
 
     ############################################################################
     def get_filenames(self) -> list[str]:
@@ -57,5 +59,5 @@ class DownloadList:
         files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()
         # Log info about found files
-        logging.info("total number of downloads [%s]", len(files))
+        logger.info("total number of downloads [%s]", len(files))
         return files

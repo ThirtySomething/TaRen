@@ -27,6 +27,8 @@ SOFTWARE.
 import logging
 import os
 
+logger = logging.getLogger(__name__)
+
 
 class Helper:
     ############################################################################
@@ -36,25 +38,25 @@ class Helper:
             try:
                 # Create missing folder
                 os.makedirs(dirname)
-                logging.debug("Directory [%s] created", dirname)
+                logger.debug("Directory [%s] created", dirname)
             except OSError:
-                logging.error("Creation of the directory [%s] failed, abort", dirname)
+                logger.error("Creation of the directory [%s] failed, abort", dirname)
         else:
-            logging.debug("Directory [%s] alread exists", dirname)
+            logger.debug("Directory [%s] alread exists", dirname)
         return os.path.exists(dirname)
 
     ############################################################################
     @staticmethod
     def delete_file(filename: str) -> bool:
         if not os.path.exists(filename):
-            logging.debug("File [%s] does not exist, nothing to delete", filename)
+            logger.debug("File [%s] does not exist, nothing to delete", filename)
             return False
         try:
             os.remove(filename)
-            logging.debug("File [%s] deleted", filename)
+            logger.debug("File [%s] deleted", filename)
             return True
         except OSError:
-            logging.error("Failed to delete file [%s]", filename)
+            logger.error("Failed to delete file [%s]", filename)
             return False
 
     ############################################################################

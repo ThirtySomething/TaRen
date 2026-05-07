@@ -32,6 +32,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from taren.helper import Helper
 
+logger = logging.getLogger(__name__)
+
 
 class Trash:
     """
@@ -49,11 +51,11 @@ class Trash:
         self._trashignore: str = trashignore
         self._trashfolder: str = os.path.join(self._basedir, self._trash)
         self._trashignorefile: str = os.path.join(self._trashfolder, self._trashignore)
-        logging.debug("basedir [%s]", self._basedir)
-        logging.debug("trash [%s]", self._trash)
-        logging.debug("trashage [%s]", self._trashage)
-        logging.debug("trashfolder [%s]", self._trashfolder)
-        logging.debug("trashignore [%s]", self._trashignorefile)
+        logger.debug("basedir [%s]", self._basedir)
+        logger.debug("trash [%s]", self._trash)
+        logger.debug("trashage [%s]", self._trashage)
+        logger.debug("trashfolder [%s]", self._trashfolder)
+        logger.debug("trashignore [%s]", self._trashignorefile)
 
     ############################################################################
     def cleanup(self) -> int:
@@ -66,7 +68,7 @@ class Trash:
         deleted: int = 0
         # Calculate maximum age
         maxage: float = time.time() - self._trashage * 86400
-        logging.info(
+        logger.info(
             "Delete files older than [%s] days from trash [%s]",
             self._trashage,
             self._trashfolder,
@@ -81,7 +83,7 @@ class Trash:
                 if os.path.getmtime(fname) < maxage:
                     # Perform deletion
                     Helper.delete_file(fname)
-                    logging.info("Delete file [%s]", filename)
+                    logger.info("Delete file [%s]", filename)
                     deleted = deleted + 1
         # Create ignore file for media server
         Path(self._trashignorefile).touch()
@@ -103,7 +105,7 @@ class Trash:
         """
         List all files from trah
         """
-        logging.info("List files from trash [%s]", self._trashfolder)
+        logger.info("List files from trash [%s]", self._trashfolder)
         today: datetime = datetime.today()
         filesintrash: int = 0
         # Loop over all in trash
@@ -118,7 +120,7 @@ class Trash:
                 # List file
                 file_mod_time: datetime = datetime.fromtimestamp(os.path.getmtime(fname))
                 age: timedelta = today - file_mod_time
-                logging.info("File [%s|%02d]", filename, age.days)
+                logger.info("File [%s|%02d]", filename, age.days)
                 filesintrash += 1
         return filesintrash
 
@@ -132,11 +134,11 @@ class Trash:
         filenameWithPath, fileExtension = os.path.splitext(file)
         filenameRaw: str = os.path.basename(filenameWithPath)
 
-        logging.debug("File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension)
+        logger.debug("File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension)
 
         # Build search mask for variants
         searchmask: str = filenameRaw + "*" + fileExtension
-        logging.debug("Searchmask [%s]", searchmask)
+        logger.debug("Searchmask [%s]", searchmask)
 
         # Search for existing variants
         dst: str = ""
@@ -150,14 +152,14 @@ class Trash:
             )
 
         # Move file to trash
-        logging.debug("Move file [%s] to [%s]", file, dst)
+        logger.debug("Move file [%s] to [%s]", file, dst)
         try:
             os.rename(file, dst)
             # Modify timestamp
             now: float = time.time()
-            logging.debug("Set access/modified timestamp of [%s] to [%s]", dst, now)
+            logger.debug("Set access/modified timestamp of [%s] to [%s]", dst, now)
             os.utime(dst, (now, now))
             return True
         except OSError as exc:
-            logging.error("failed to move file [%s] to trash [%s]: %s", file, dst, exc)
+            logger.error("failed to move file [%s] to trash [%s]: %s", file, dst, exc)
             return False
