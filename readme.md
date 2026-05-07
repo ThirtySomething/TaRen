@@ -35,7 +35,7 @@ der Sender.
 ### Voraussetzungen
 
 - Damit das Ganze funktioniert, wird [Python 3][python] benötigt - entwickelt
-  und getestet wurde mit Python 3.8.1.
+  und getestet wurde mit Python 3.11.
 - Das Python Modul [Beautiful Soup][beautifulsoup] muss installiert sein.
 - [Logging][logging] wird ebenfalls benötigt.
 - Das Paket [Requests][requests] ist ebenfalls notwendig.
