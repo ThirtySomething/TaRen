@@ -58,8 +58,3 @@ class Helper:
         except OSError:
             logger.error("Failed to delete file [%s]", filename)
             return False
-
-    ############################################################################
-    @staticmethod
-    def ensureDirectory(dirname: str) -> bool:
-        return Helper.ensure_directory(dirname)

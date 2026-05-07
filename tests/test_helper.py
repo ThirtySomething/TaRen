@@ -59,7 +59,7 @@ class TestHelper(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir) / "wrapper-folder"
-            self.assertTrue(Helper.ensureDirectory(str(target)))
+            self.assertTrue(Helper.ensure_directory(str(target)))
 
     def test_delete_file_oserror_branch(self) -> None:
         with (

@@ -26,8 +26,10 @@ SOFTWARE.
 
 from typing import NamedTuple
 
+from taren.episode import Episode
+
 
 class DownloadTask(NamedTuple):
     filename: str
-    episode: object
+    episode: Episode
     sourcedir: str

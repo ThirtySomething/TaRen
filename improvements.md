@@ -124,6 +124,8 @@ Files:
 
 ### 5. Tighten type hints for task and config data
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - `DownloadTask.episode` is typed as `object`, reducing static checks and IDE support.
@@ -133,12 +135,20 @@ Proposal:
 - Type `episode` as `Episode`.
 - Review related APIs for stricter typing consistency.
 
+Implemented:
+
+- Added import of `Episode` to `taren/downloadtask.py`.
+- Changed `DownloadTask.episode` type from `object` to `Episode`.
+- Updated corresponding test to use the proper type.
+
 Files:
 
 - `taren/downloadtask.py`
-- `taren/taren.py`
+- `tests/test_helper.py` (updated alias usage in test)
 
 ### 6. Remove duplicate legacy alias in helper utility
+
+Status: Completed (2026-05-05)
 
 Why this matters:
 
@@ -147,6 +157,12 @@ Why this matters:
 Proposal:
 
 - Remove `ensureDirectory` alias if no external compatibility requirement exists.
+
+Implemented:
+
+- Removed `ensureDirectory()` static method from `taren/helper.py`.
+- Updated test in `tests/test_helper.py` to call `ensure_directory` directly.
+- Verified no other code depends on the camelCase alias.
 
 Files:
 
@@ -246,7 +262,7 @@ Files:
 2. Config validation and startup fail-fast path. Status: Completed (2026-05-05)
 3. Failure-path tests for filesystem and config validation. Status: Completed (2026-05-05)
 4. Module logger migration. Status: Completed (2026-05-05)
-5. Typing cleanup and helper alias removal.
+5. Typing cleanup and helper alias removal. Status: Completed (2026-05-05)
 6. Cache filename collision improvements.
 7. Stats output restructuring.
 
