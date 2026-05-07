@@ -192,7 +192,7 @@ TarenError (base)
 
 ### Optimization Opportunities
 
-- Parallel file processing (currently serial)
+- Parallel file processing (implemented with bounded thread pool)
 - Episode list pagination for large seasons
 - Batch Wikipedia requests (if API available)
 
@@ -337,7 +337,6 @@ TarenError (base)
 
 ### Considered (Not Implemented)
 
-- Parallel file processing (threading/multiprocessing)
 - Batch Wikipedia API requests
 - SQLite episode cache (currently filesystem-based)
 - Web UI for configuration

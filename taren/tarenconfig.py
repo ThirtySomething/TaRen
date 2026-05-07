@@ -88,6 +88,7 @@ class TarenConfig(MDO):
         )
         self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT, "10")
         self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES, "1")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PARALLEL_WORKERS, "4")
         return True
 
     ############################################################################
@@ -143,6 +144,13 @@ class TarenConfig(MDO):
             "taren.http_retries",
             1,
             max_value=10,
+        )
+        _require_int(
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_PARALLEL_WORKERS,
+            "taren.parallel_workers",
+            1,
+            max_value=32,
         )
 
         logfile: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGFILE, "logging.logfile")

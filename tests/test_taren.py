@@ -629,6 +629,67 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             self.assertEqual(stats.episodes_owned, 1)
 
+    def test_process_tasks_aggregates_owned_count_for_multiple_already_placed_tasks(self) -> None:
+        """Multiple already-placed tasks should aggregate owned episodes correctly."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _, seen = self._setup_collection(tmpdir)
+            target_name_1 = "Tatort - 0006 - A - B - C - 2020"
+            target_name_2 = "Tatort - 0007 - A - B - C - 2020"
+
+            (seen / f"{target_name_1}.mp4").write_bytes(b"123")
+            (seen / f"{target_name_2}.mp4").write_bytes(b"123")
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            stats = Stats()
+
+            task_1 = SimpleNamespace(
+                filename=f"{target_name_1}.mp4",
+                episode=FakeEpisode(target_name_1),
+                sourcedir=str(seen),
+            )
+            task_2 = SimpleNamespace(
+                filename=f"{target_name_2}.mp4",
+                episode=FakeEpisode(target_name_2),
+                sourcedir=str(seen),
+            )
+
+            runner._process_tasks([task_1, task_2], stats)
+
+            self.assertEqual(stats.episodes_owned, 2)
+
+    def test_parallel_workers_uses_configured_value_when_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = FakeConfig(
+                {
+                    "taren.collection": tmpdir,
+                    "taren.pattern": "Tatort",
+                    "taren.extension": "mp4",
+                    "taren.wiki": "http://example/episodes",
+                    "taren.maxcache": "1",
+                    "taren.trashage": "1",
+                    "taren.trashignore": ".ignore",
+                    "taren.wiki_useragent": "ua",
+                    "taren.http_timeout": "10",
+                    "taren.http_retries": "1",
+                    "taren.parallel_workers": "2",
+                }
+            )
+
+            with patch("taren.taren.os.cpu_count", return_value=8):
+                runner = TaRen(cast(Any, config))
+
+            self.assertEqual(runner._max_parallel_workers, 2)
+
+    def test_parallel_workers_falls_back_when_key_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+
+            with patch("taren.taren.os.cpu_count", return_value=6):
+                runner = TaRen(cast(Any, config))
+
+            self.assertEqual(runner._max_parallel_workers, 4)
+
 
 if __name__ == "__main__":
     unittest.main()

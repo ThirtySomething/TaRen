@@ -24,7 +24,9 @@ SOFTWARE.
 ******************************************************************************
 """
 
+from concurrent.futures import ThreadPoolExecutor
 import logging
+import os
 from pathlib import Path
 
 from taren.conflictresolutionresult import ConflictResolutionResult
@@ -71,6 +73,7 @@ class TaRen:
         self._trashage: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE))
         self._http_timeout: float = float(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT))
         self._http_retries: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES))
+        self._max_parallel_workers: int = self._determine_parallel_workers()
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
             str(self._collection),
@@ -102,11 +105,42 @@ class TaRen:
             self._http_retries,
         )
         logger.debug(
+            "taren_init: parallel_workers=%s status=ready",
+            self._max_parallel_workers,
+        )
+        logger.debug(
             "taren_init: trash_age_days=%s trash_strategy=%s conflict_strategy=%s status=ready",
             self._trashage,
             type(self._trash).__name__,
             type(self._conflict_strategy).__name__,
         )
+
+    ############################################################################
+    def _calculate_parallel_workers(self) -> int:
+        """Determine conservative automatic worker count for file task parallelism."""
+        cpu_count: int = os.cpu_count() or 1
+        return max(1, min(4, cpu_count))
+
+    ############################################################################
+    def _determine_parallel_workers(self) -> int:
+        """Resolve worker count from config and clamp to a safe runtime range."""
+        auto_workers: int = self._calculate_parallel_workers()
+        try:
+            configured_workers: int = int(
+                self._config.value_get(
+                    TarenDefines.CFG_SECTION_TAREN,
+                    TarenDefines.CFG_KEY_PARALLEL_WORKERS,
+                )
+            )
+        except (KeyError, ValueError, TypeError):
+            logger.debug(
+                "parallel_workers_config: status=fallback reason=missing_or_invalid auto_workers=%s",
+                auto_workers,
+            )
+            return auto_workers
+
+        cpu_count: int = os.cpu_count() or 1
+        return max(1, min(configured_workers, cpu_count, 32))
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -226,21 +260,50 @@ class TaRen:
     def _process_tasks(self, downloads_to_process: list[DownloadTask], statistics: Stats) -> None:
         """Apply rename and conflict handling for prepared tasks."""
 
-        # Process downloads
-        for current_download in downloads_to_process:
-            new_fqn_path: Path = self._seen / f"{current_download.episode}{self._extension}"
-            old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
+        if len(downloads_to_process) <= 1 or self._max_parallel_workers == 1:
+            for current_download in downloads_to_process:
+                task_stats: Stats = self._process_single_task(current_download)
+                self._merge_task_stats(statistics, task_stats)
+            return
 
-            if new_fqn_path == old_fqn_path:
-                # Already processed episode
-                statistics.episodes_owned += 1
-                continue
+        logger.info(
+            "task_processing: mode=parallel workers=%s tasks=%s status=started",
+            self._max_parallel_workers,
+            len(downloads_to_process),
+        )
+        with ThreadPoolExecutor(max_workers=self._max_parallel_workers) as executor:
+            for task_stats in executor.map(self._process_single_task, downloads_to_process):
+                self._merge_task_stats(statistics, task_stats)
 
-            new_fqn: str = str(new_fqn_path)
-            old_fqn: str = str(old_fqn_path)
-            conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
-            commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
-            self._execute_commands(commands, statistics)
+    ############################################################################
+    def _process_single_task(self, current_download: DownloadTask) -> Stats:
+        """Process one download task and return local task statistics."""
+
+        task_stats: Stats = Stats()
+
+        new_fqn_path: Path = self._seen / f"{current_download.episode}{self._extension}"
+        old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
+
+        if new_fqn_path == old_fqn_path:
+            # Already processed episode
+            task_stats.episodes_owned += 1
+            return task_stats
+
+        new_fqn: str = str(new_fqn_path)
+        old_fqn: str = str(old_fqn_path)
+        conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
+        commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
+        self._execute_commands(commands, task_stats)
+        return task_stats
+
+    ############################################################################
+    def _merge_task_stats(self, statistics: Stats, task_stats: Stats) -> None:
+        """Merge local per-task stats into global run statistics."""
+
+        statistics.episodes_owned += task_stats.episodes_owned
+        statistics.downloads_renamed += task_stats.downloads_renamed
+        statistics.downloads_moved += task_stats.downloads_moved
+        statistics.downloads_failed += task_stats.downloads_failed
 
     ############################################################################
     def _build_commands_for_task(

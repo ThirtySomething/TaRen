@@ -66,6 +66,7 @@ class TarenDefines:
     CFG_KEY_WIKI_USERAGENT: str = "wiki_useragent"
     CFG_KEY_HTTP_TIMEOUT: str = "http_timeout"
     CFG_KEY_HTTP_RETRIES: str = "http_retries"
+    CFG_KEY_PARALLEL_WORKERS: str = "parallel_workers"
 
     # ---------------------------------------------------------------------------
     # Cache configuration
