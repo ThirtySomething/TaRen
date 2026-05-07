@@ -62,8 +62,9 @@ logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s"
 ### 2.3 Standardize Path Handling with pathlib
 
 **File:** Multiple (taren/taren.py, taren/trash.py, taren/websitecache.py)
-**Current State:** Mix of string-based `os.path` operations
-**Issue:** Error-prone, harder to test
+**Status:** ✅ COMPLETED
+**Current State:** Core path composition in target files now uses `pathlib.Path`
+**Issue:** Resolved for targeted modules
 
 ```python
 # Current (string-based)
@@ -76,9 +77,12 @@ self._downloads: Path = Path(self._collection) / TarenDefines.FOLDER_DOWNLOADS
 new_fqn: Path = self._seen / f"{current_download.episode}{self._extension}"
 ```
 
-**Effort:** 45 minutes (across 3-4 files)
-**Impact:** Clearer intent, easier path manipulation, cross-platform compatibility
-**Validation:** Full test suite runs green
+**Implementation:** Migrated path composition and file checks in `taren.py`, `trash.py`,
+and `websitecache.py` from `os.path.join/exists` style to `Path` operations while
+preserving current interfaces and behavior.
+**Effort:** 45 minutes (✅ Completed)
+**Impact:** Clearer intent, safer path manipulation, better cross-platform readability
+**Validation:** All 114 tests pass
 
 ---
 
@@ -114,8 +118,9 @@ URL_HASH_LENGTH: int = 8
 ### 3.2 Logging Format Consistency
 
 **File:** Multiple (`taren/taren.py`, `taren/episodelist.py`, `taren/websitecache.py`)
-**Current State:** Mixed logging styles with context
-**Issue:** Inconsistent formatting makes parsing harder
+**Status:** ✅ COMPLETED
+**Current State:** Standardized operation/key-value log format
+**Issue:** Resolved
 
 ```python
 # Mix of formats:
@@ -131,17 +136,20 @@ logger.info("cache_lookup: file=%s age_days=%d status=miss", ...)
 logger.error("directory_create: path=%s status=failed", ...)
 ```
 
-**Effort:** 30 minutes
-**Impact:** Easier log parsing, machine-readable format
-**Validation:** Test log output format
+**Implementation:** Normalized logging to `operation: key=value ... status=<state>`
+across targeted files (init, preflight, cache, parsing, task collection/execution, summary).
+**Effort:** 30 minutes (✅ Completed)
+**Impact:** Easier log parsing, machine-readable output, consistent semantics
+**Validation:** All 113 tests pass
 
 ---
 
 ### 3.3 Configuration Validation Enhancement
 
 **File:** `taren/tarenconfig.py`
-**Current State:** Validates presence and basic types
-**Issue:** Could add range checks for numeric bounds
+**Status:** ✅ COMPLETED
+**Current State:** Validates presence, types, and explicit numeric bounds
+**Issue:** Resolved
 
 ```python
 # Current validates: key exists, is string/int
@@ -154,9 +162,11 @@ if not (1 <= http_retries <= 10):
     errors.append("http_retries must be 1-10 (received: {http_retries})")
 ```
 
-**Effort:** 20 minutes
+**Implementation:** Added upper-bound validation for `http_retries` (must be `<= 10`),
+in addition to existing minimum checks; added dedicated unit test coverage.
+**Effort:** 20 minutes (✅ Completed)
 **Impact:** Prevents misconfiguration at startup
-**Validation:** Add tests for bounds validation
+**Validation:** All 114 tests pass
 
 ---
 
@@ -227,12 +237,12 @@ else:
 1. ✅ Consolidate debug logging in TaRen.**init** (15 min) - COMPLETED
 2. ✅ Add type hints to helper.py (15 min) - COMPLETED
 3. ✅ Extract magic numbers to TarenDefines (10 min) - COMPLETED
-4. Fix logging format consistency (30 min) - can overlap
+4. ✅ Fix logging format consistency (30 min) - COMPLETED
 
 ### Phase 2: Architectural Improvements (1 hour)
 
-5. Migrate to pathlib for path operations (45 min)
-6. Configuration bounds validation (20 min)
+5. ✅ Migrate to pathlib for path operations (45 min) - COMPLETED
+6. ✅ Configuration bounds validation (20 min) - COMPLETED
 
 ### Phase 3: Polish (Optional - 1.5 hours)
 

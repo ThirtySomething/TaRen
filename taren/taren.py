@@ -25,7 +25,7 @@ SOFTWARE.
 """
 
 import logging
-import os
+from pathlib import Path
 
 from taren.conflictresolutionresult import ConflictResolutionResult
 from taren.conflictresolutionstrategy import ConflictResolutionStrategy
@@ -61,9 +61,9 @@ class TaRen:
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        self._collection: str = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
-        self._downloads: str = os.path.join(self._collection, TarenDefines.FOLDER_DOWNLOADS)
-        self._seen: str = os.path.join(self._collection, TarenDefines.FOLDER_SEEN)
+        self._collection: Path = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
+        self._downloads: Path = self._collection / TarenDefines.FOLDER_DOWNLOADS
+        self._seen: Path = self._collection / TarenDefines.FOLDER_SEEN
         self._pattern: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN)
         self._extension: str = self._sanitize_extension(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION))
         self._url: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI)
@@ -73,7 +73,7 @@ class TaRen:
         self._http_retries: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES))
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
-            self._collection,
+            str(self._collection),
             TarenDefines.FOLDER_TRASH,
             self._trashage,
             self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE),
@@ -83,10 +83,30 @@ class TaRen:
     ############################################################################
     def _log_initialization(self) -> None:
         """Log configuration details during initialization."""
-        logger.debug("TaRen configuration: collection=%s, downloads=%s, seen=%s", self._collection, self._downloads, self._seen)
-        logger.debug("Episode matching: pattern=%s, extension=%s, url=%s", self._pattern, self._extension, self._url)
-        logger.debug("Caching: maxcache_days=%s, http_timeout=%s, http_retries=%s", self._cachetime, self._http_timeout, self._http_retries)
-        logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s", self._trashage, type(self._trash).__name__, type(self._conflict_strategy).__name__)
+        logger.debug(
+            "taren_init: collection=%s downloads=%s seen=%s status=ready",
+            self._collection,
+            self._downloads,
+            self._seen,
+        )
+        logger.debug(
+            "taren_init: pattern=%s extension=%s url=%s status=ready",
+            self._pattern,
+            self._extension,
+            self._url,
+        )
+        logger.debug(
+            "taren_init: maxcache_days=%s http_timeout=%s http_retries=%s status=ready",
+            self._cachetime,
+            self._http_timeout,
+            self._http_retries,
+        )
+        logger.debug(
+            "taren_init: trash_age_days=%s trash_strategy=%s conflict_strategy=%s status=ready",
+            self._trashage,
+            type(self._trash).__name__,
+            type(self._conflict_strategy).__name__,
+        )
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -98,13 +118,11 @@ class TaRen:
         return extension
 
     ############################################################################
-    def _sanitize_path(self, path: str) -> str:
+    def _sanitize_path(self, path: str) -> Path:
         """
-        Ensure searchdir ends with trailing slash
+        Normalize configured path into a pathlib.Path instance
         """
-        if not path.endswith(os.sep):
-            path = f"{path}{os.sep}"
-        return path
+        return Path(path)
 
     ############################################################################
     def rename_process(self) -> None:
@@ -131,9 +149,9 @@ class TaRen:
         """Perform required pre-checks before processing."""
 
         # Check collection root exists
-        if not os.path.exists(self._collection):
+        if not self._collection.exists():
             logger.error(
-                "Collection path [%s] does not exist or not found, abort",
+                "preflight_collection: path=%s status=missing",
                 self._collection,
             )
             return False
@@ -141,14 +159,14 @@ class TaRen:
         # Ensure downloads and seen subfolders exist
         if not Helper.ensure_directory(self._downloads):
             logger.error(
-                "Failed to ensure downloads directory [%s], abort",
+                "preflight_directory: path=%s kind=downloads status=failed",
                 self._downloads,
             )
             return False
 
         if not Helper.ensure_directory(self._seen):
             logger.error(
-                "Failed to ensure seen directory [%s], abort",
+                "preflight_directory: path=%s kind=seen status=failed",
                 self._seen,
             )
             return False
@@ -168,7 +186,7 @@ class TaRen:
             self._cachetime,
             ua,
             fetch_policy=fetch_policy,
-            cache_dir=self._collection,
+            cache_dir=str(self._collection),
         )
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
@@ -182,22 +200,26 @@ class TaRen:
         try:
             self._trash.init()
         except FileSystemError as e:
-            logger.error("Cannot initialize trash: %s", e)
+            logger.error("trash_init: status=failed error=%s", e)
             return None
 
         # Scan both downloads/ and seen/ for matching files
         downloads_to_process: list[DownloadTask] = []
         total_files: int = 0
         for sourcedir in (self._downloads, self._seen):
-            filelist: list[str] = DownloadList(sourcedir, self._pattern, self._extension).get_filenames()
+            filelist: list[str] = DownloadList(str(sourcedir), self._pattern, self._extension).get_filenames()
             total_files += len(filelist)
             for current_download in filelist:
                 episode: Episode = episode_list.find_episode(current_download)
                 if episode.empty:
                     continue
-                downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=sourcedir))
+                downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=str(sourcedir)))
         statistics.downloads_total = total_files
-        logger.info("downloads_to_process [%s]", len(downloads_to_process))
+        logger.info(
+            "task_collection: total_files=%s candidates=%s status=ready",
+            total_files,
+            len(downloads_to_process),
+        )
         return downloads_to_process
 
     ############################################################################
@@ -206,17 +228,16 @@ class TaRen:
 
         # Process downloads
         for current_download in downloads_to_process:
-            new_fqn: str = os.path.join(
-                self._seen,
-                f"{current_download.episode}{self._extension}",
-            )
-            old_fqn: str = os.path.join(current_download.sourcedir, current_download.filename)
+            new_fqn_path: Path = self._seen / f"{current_download.episode}{self._extension}"
+            old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
 
-            if new_fqn == old_fqn:
+            if new_fqn_path == old_fqn_path:
                 # Already processed episode
                 statistics.episodes_owned += 1
                 continue
 
+            new_fqn: str = str(new_fqn_path)
+            old_fqn: str = str(old_fqn_path)
             conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
             commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
             self._execute_commands(commands, statistics)
@@ -243,7 +264,7 @@ class TaRen:
 
         for command in commands:
             if not command.execute(statistics):
-                logger.error("abort remaining commands for current task due to previous failure")
+                logger.error("task_execution: status=aborted reason=previous_failure")
                 break
 
     ############################################################################
@@ -257,4 +278,4 @@ class TaRen:
         statistics.downloads_trash = self._trash.list()
 
         # Summary
-        logger.info("summary: %s", statistics)
+        logger.info("run_summary: status=completed details=%s", statistics)

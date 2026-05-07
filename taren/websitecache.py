@@ -28,7 +28,7 @@ import codecs
 from datetime import datetime
 import hashlib
 import logging
-import os
+from pathlib import Path
 
 from taren.helper import Helper
 from taren.httpfetchpolicy import HttpFetchPolicy
@@ -59,15 +59,23 @@ class WebSiteCache:
         self._cacheage: int = cacheage
         # Include URL hash in cache filename to prevent collisions
         url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[: TarenDefines.URL_HASH_LENGTH]
-        cache_filename: str = f"{cachename}_{url_hash}.html"
-        self._cachename: str = os.path.abspath(os.path.join(cache_dir, cache_filename)) if cache_dir else cache_filename
+        cache_stem: str = Path(cachename).name
+        cache_filename: str = f"{cache_stem}_{url_hash}.html"
+        if cache_dir:
+            self._cache_path: Path = Path(cache_dir) / cache_filename
+        else:
+            self._cache_path = Path(cachename).with_name(cache_filename)
+        self._cachename: str = str(self._cache_path)
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent
         self._fetch_policy: HttpFetchPolicy = fetch_policy or RequestsHttpFetchPolicy()
-        logger.debug("cache file [%s]", self._cachename)
-        logger.debug("cacheage [%s]", self._cacheage)
-        logger.debug("websiteurl [%s]", self._websiteurl)
-        logger.debug("useragent [%s]", self._useragent)
+        logger.debug(
+            "cache_init: file=%s max_age_days=%s url=%s useragent=%s status=ready",
+            self._cachename,
+            self._cacheage,
+            self._websiteurl,
+            self._useragent,
+        )
 
     ############################################################################
     def _get_age_in_days(self) -> int:
@@ -75,12 +83,12 @@ class WebSiteCache:
         Determine age in days of cached file
         """
         cacheage: int = 0
-        if os.path.exists(self._cachename):
+        if self._cache_path.exists():
             today: datetime = datetime.today()
-            modified_date: datetime = datetime.fromtimestamp(os.path.getmtime(self._cachename))
+            modified_date: datetime = datetime.fromtimestamp(self._cache_path.stat().st_mtime)
             cacheage = (today - modified_date).days
         logger.info(
-            "cache file [%s] aged [%s] days, maxage [%s] days",
+            "cache_lookup: file=%s age_days=%s max_age_days=%s status=checked",
             self._cachename,
             cacheage,
             self._cacheage,
@@ -92,9 +100,9 @@ class WebSiteCache:
         """
         Read content from cached file
         """
-        with codecs.open(self._cachename, "r", "utf-8") as file:
+        with codecs.open(self._cache_path, "r", "utf-8") as file:
             websitecontent: str = file.read()
-        logger.info("read content from cache file [%s]", self._cachename)
+        logger.info("cache_read: file=%s status=success", self._cachename)
         return websitecontent
 
     ############################################################################
@@ -110,19 +118,15 @@ class WebSiteCache:
             decoded_content: str = websitecontent.decode("utf-8")
         except UnicodeDecodeError as exc:
             logger.error(
-                "failed to decode downloaded content from [%s] as UTF-8 for cache file [%s]: %s",
+                "cache_write: url=%s file=%s status=failed reason=utf8_decode error=%s",
                 self._websiteurl,
                 self._cachename,
                 exc,
             )
             return
-        with codecs.open(self._cachename, "w", "utf-8") as file:
+        with codecs.open(self._cache_path, "w", "utf-8") as file:
             file.write(decoded_content)
-        logger.info(
-            "saved content of [%s] to cache file [%s]",
-            self._websiteurl,
-            self._cachename,
-        )
+        logger.info("cache_write: url=%s file=%s status=success", self._websiteurl, self._cachename)
 
     ############################################################################
     def get_website_from_cache(self) -> str:
@@ -133,11 +137,11 @@ class WebSiteCache:
         """
         if self._get_age_in_days() > self._cacheage:
             Helper.delete_file(self._cachename)
-            logger.info("deleted cache file [%s]", self._cachename)
-        if not os.path.exists(self._cachename):
+            logger.info("cache_eviction: file=%s status=deleted", self._cachename)
+        if not self._cache_path.exists():
             self._write_to_cache()
-        if not os.path.exists(self._cachename):
-            logger.error("cache file [%s] not available, download failed", self._cachename)
+        if not self._cache_path.exists():
+            logger.error("cache_lookup: file=%s status=failed reason=download_unavailable", self._cachename)
             return ""
         content: str = self._read_from_cache()
         return content

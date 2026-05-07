@@ -66,10 +66,13 @@ class EpisodeList:
             cache_dir=cache_dir,
         )
         self._episodes: list[Episode] = []
-        logger.debug("pattern [%s]", pattern)
-        logger.debug("url [%s]", url)
-        logger.debug("cachetime [%s]", cachetime)
-        logger.debug("useragent [%s]", useragent)
+        logger.debug(
+            "episode_list_init: pattern=%s url=%s cache_days=%s useragent=%s status=ready",
+            pattern,
+            url,
+            cachetime,
+            useragent,
+        )
 
     ############################################################################
     def _build_list_of_episodes(self, raw_data: list[Tag]) -> list[Episode]:
@@ -82,7 +85,10 @@ class EpisodeList:
             # Extract all columns as cell
             table_cells: list[Tag] = table_row.find_all("td")
             if len(table_cells) < 6:
-                logger.debug("skip malformed episode table row with [%s] cells", len(table_cells))
+                logger.debug(
+                    "episode_parse: row_cells=%s status=skipped reason=malformed_row",
+                    len(table_cells),
+                )
                 continue
             # Get content of cells
             episode_data: list[str] = [i.text.replace("\n", "") for i in table_cells]
@@ -103,14 +109,14 @@ class EpisodeList:
         Build internal list about episodes based on website content.
         """
         if not websitecontent.strip():
-            logger.warning("episode list website content is empty")
+            logger.warning("episode_parse: status=failed reason=empty_source")
             return []
         # Parse website using BeautifulSoup
         websitedata: BeautifulSoup = BeautifulSoup(websitecontent, "html.parser")
         # Get table with episodes - there is only one tables
         table = websitedata.find("table")
         if table is None:
-            logger.warning("episode list table not found in website content")
+            logger.warning("episode_parse: status=failed reason=table_missing")
             return []
         # Get raw episode data from table data row
         rows: list[Tag] = table.find_all("tr")
@@ -156,4 +162,4 @@ class EpisodeList:
         websitecontent: str = self._read_website()
         # Parse website
         self._episodes = self._parse_website(websitecontent)
-        logger.info("total number of episodes [%s]", len(self._episodes))
+        logger.info("episode_list_fetch: episodes_total=%s status=loaded", len(self._episodes))

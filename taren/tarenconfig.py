@@ -103,7 +103,13 @@ class TarenConfig(MDO):
                 return ""
             return value.strip()
 
-        def _require_int(section: str, key: str, label: str, min_value: int) -> int | None:
+        def _require_int(
+            section: str,
+            key: str,
+            label: str,
+            min_value: int,
+            max_value: int | None = None,
+        ) -> int | None:
             raw_value: str = _require_text(section, key, label)
             if not raw_value:
                 return None
@@ -114,6 +120,9 @@ class TarenConfig(MDO):
                 return None
             if parsed_value < min_value:
                 errors.append(f"{label} must be >= {min_value}")
+                return None
+            if max_value is not None and parsed_value > max_value:
+                errors.append(f"{label} must be <= {max_value}")
                 return None
             return parsed_value
 
@@ -128,7 +137,13 @@ class TarenConfig(MDO):
         wiki_url: str = _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI, "taren.wiki")
         _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT, "taren.wiki_useragent")
         _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT, "taren.http_timeout", 1)
-        _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES, "taren.http_retries", 1)
+        _require_int(
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_HTTP_RETRIES,
+            "taren.http_retries",
+            1,
+            max_value=10,
+        )
 
         logfile: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGFILE, "logging.logfile")
         loglevel: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "logging.loglevel")

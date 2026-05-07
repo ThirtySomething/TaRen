@@ -29,7 +29,9 @@ import logging
 import os
 import time
 from datetime import datetime, timedelta
+
 from pathlib import Path
+
 from taren.helper import Helper
 from taren.tarendefines import FileSystemError
 
@@ -50,8 +52,10 @@ class Trash:
         self._trash: str = trash
         self._trashage: int = trashage
         self._trashignore: str = trashignore
-        self._trashfolder: str = os.path.join(self._basedir, self._trash)
-        self._trashignorefile: str = os.path.join(self._trashfolder, self._trashignore)
+        self._trashfolder_path: Path = Path(self._basedir) / self._trash
+        self._trashignorefile_path: Path = self._trashfolder_path / self._trashignore
+        self._trashfolder: str = str(self._trashfolder_path)
+        self._trashignorefile: str = str(self._trashignorefile_path)
         logger.debug("basedir [%s]", self._basedir)
         logger.debug("trash [%s]", self._trash)
         logger.debug("trashage [%s]", self._trashage)
@@ -64,7 +68,7 @@ class Trash:
         Delete files from trah older than configured age
         """
         # Delete ignore file for media server
-        if os.path.exists(self._trashignorefile):
+        if self._trashignorefile_path.exists():
             Helper.delete_file(self._trashignorefile)
         deleted: int = 0
         # Calculate maximum age
@@ -75,19 +79,18 @@ class Trash:
             self._trashfolder,
         )
         # Loop over all in trash
-        for filename in os.listdir(self._trashfolder):
-            # Build FQN
-            fname: str = os.path.join(self._trashfolder, filename)
+        for trash_file in self._trashfolder_path.iterdir():
+            filename: str = trash_file.name
             # Check only files
-            if os.path.isfile(fname):
+            if trash_file.is_file():
                 # Check age of file
-                if os.path.getmtime(fname) < maxage:
+                if trash_file.stat().st_mtime < maxage:
                     # Perform deletion
-                    Helper.delete_file(fname)
+                    Helper.delete_file(str(trash_file))
                     logger.info("Delete file [%s]", filename)
                     deleted = deleted + 1
         # Create ignore file for media server
-        Path(self._trashignorefile).touch()
+        self._trashignorefile_path.touch()
         return deleted
 
     ############################################################################
@@ -97,10 +100,10 @@ class Trash:
 
         Raises FileSystemError if the trash directory cannot be created.
         """
-        if not Helper.ensure_directory(self._trashfolder):
+        if not Helper.ensure_directory(str(self._trashfolder_path)):
             raise FileSystemError(f"Failed to create trash directory: {self._trashfolder}")
-        if not os.path.exists(self._trashignorefile):
-            Path(self._trashignorefile).touch()
+        if not self._trashignorefile_path.exists():
+            self._trashignorefile_path.touch()
 
     ############################################################################
     def list(self) -> int:
@@ -111,16 +114,15 @@ class Trash:
         today: datetime = datetime.today()
         filesintrash: int = 0
         # Loop over all in trash
-        for filename in os.listdir(self._trashfolder):
-            # Build FQN
-            fname: str = os.path.join(self._trashfolder, filename)
+        for trash_file in self._trashfolder_path.iterdir():
+            filename: str = trash_file.name
             # Check only files
-            if os.path.isfile(fname):
+            if trash_file.is_file():
                 # Ignore marker for media servers
-                if fname == self._trashignorefile:
+                if trash_file == self._trashignorefile_path:
                     continue
                 # List file
-                file_mod_time: datetime = datetime.fromtimestamp(os.path.getmtime(fname))
+                file_mod_time: datetime = datetime.fromtimestamp(trash_file.stat().st_mtime)
                 age: timedelta = today - file_mod_time
                 logger.info("File [%s|%02d]", filename, age.days)
                 filesintrash += 1
@@ -133,35 +135,32 @@ class Trash:
         """
 
         # Extract plain filename and extension from source file
-        filenameWithPath, fileExtension = os.path.splitext(file)
-        filenameRaw: str = os.path.basename(filenameWithPath)
+        file_path: Path = Path(file)
+        filename_raw: str = file_path.stem
+        file_extension: str = file_path.suffix
 
-        logger.debug("File [%s] splittet into [%s] and [%s]", file, filenameRaw, fileExtension)
+        logger.debug("File [%s] splittet into [%s] and [%s]", file, filename_raw, file_extension)
 
         # Build search mask for variants
-        searchmask: str = filenameRaw + "*" + fileExtension
+        searchmask: str = f"{filename_raw}*{file_extension}"
         logger.debug("Searchmask [%s]", searchmask)
 
         # Search for existing variants
-        dst: str = ""
-        dstVariants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
-        if len(dstVariants) == 0:
-            dst = os.path.join(self._trashfolder, (filenameRaw + fileExtension))
+        dst_variants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
+        if len(dst_variants) == 0:
+            dst_path: Path = self._trashfolder_path / f"{filename_raw}{file_extension}"
         else:
-            dst = os.path.join(
-                self._trashfolder,
-                (filenameRaw + "_" + str(len(dstVariants)) + fileExtension),
-            )
+            dst_path = self._trashfolder_path / f"{filename_raw}_{len(dst_variants)}{file_extension}"
 
         # Move file to trash
-        logger.debug("Move file [%s] to [%s]", file, dst)
+        logger.debug("Move file [%s] to [%s]", file, dst_path)
         try:
-            os.rename(file, dst)
+            os.rename(file, str(dst_path))
             # Modify timestamp
             now: float = time.time()
-            logger.debug("Set access/modified timestamp of [%s] to [%s]", dst, now)
-            os.utime(dst, (now, now))
+            logger.debug("Set access/modified timestamp of [%s] to [%s]", dst_path, now)
+            os.utime(dst_path, (now, now))
             return True
         except OSError as exc:
-            logger.error("failed to move file [%s] to trash [%s]: %s", file, dst, exc)
+            logger.error("failed to move file [%s] to trash [%s]: %s", file, dst_path, exc)
             return False
