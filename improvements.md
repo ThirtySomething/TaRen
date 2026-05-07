@@ -1,178 +1,180 @@
-# TaRen Code Analysis - Fresh Snapshot (2026-05-05)
+# TaRen Improvement Proposal (Fresh Analysis)
 
-This report was rebuilt from scratch against the current workspace state.
+Date: 2026-05-05
+Scope: Entire codebase reviewed from current workspace state.
 
-## Current State
+## What Is Working Well
 
-- Project diagnostics are clean for current source files under `taren/`.
-- Team, teamlist, and grouping functionality have been removed from runtime flow and source.
-- Test suite is in place and covers rename flow, parsing guards, cache fallback, helper/trash behavior, and config setup.
+- Clear orchestration flow in `TaRen.rename_process()` with dedicated private steps.
+- Good use of extension points (match rules, conflict strategy, HTTP fetch policy).
+- Useful test suite covering many happy-path scenarios.
+- Null-object style handling for "no episode found" via `Episode.empty_instance()`.
 
----
+## High-Priority Improvements
 
-## Architecture Notes (As-Is)
+### 1. Harden file operations against runtime failures
 
-- `program.py` is a thin composition root (config + logging + single call into `TaRen.rename_process()`).
-- `taren/taren.py` is an orchestration service that coordinates parsing, file discovery, rename decisions, and trash lifecycle.
-- Domain/entity-style classes exist (`Episode`, `Stats`) plus infrastructure services (`WebSiteCache`, `Trash`, `DownloadList`, `TarenConfig`).
-- Data acquisition and parsing are currently coupled in `EpisodeList` (cache read + HTML parse + model construction).
+Why this matters:
+- Rename/delete/move operations can fail (permissions, locked files, missing paths).
+- Current flow can crash mid-run or produce partial processing.
 
----
+Proposal:
+- Wrap filesystem operations in `try/except` and log meaningful context.
+- Let command execution return success/failure or raise controlled domain errors.
+- Track failures in `Stats` and include them in summary output.
 
-## Applicable Design Patterns
+Files:
+- `taren/renamefilecommand.py`
+- `taren/movetotrashcommand.py`
+- `taren/trash.py`
+- `taren/taren.py`
 
-### Implemented Baseline Patterns
+### 2. Add explicit configuration validation at startup
 
-1. Strategy Pattern - Rename Conflict Resolution
-2. Template Method Pattern - Rename Workflow Pipeline
-3. Command Pattern - File System Mutations
-4. Repository/Adapter Pattern - Episode Source Access
-5. Null Object Pattern - Episode Sentinel
+Why this matters:
+- Invalid values (negative cache age, non-integer age values, empty URL, bad paths) are not validated early.
+- Runtime failures appear later and are harder to diagnose.
 
-The five baseline patterns above are implemented and stable.
+Proposal:
+- Add validation step after loading config and before running rename flow.
+- Validate required keys and types (especially integer fields and URL/path fields).
+- Fail fast with one clear error report.
 
----
+Files:
+- `taren/tarenconfig.py`
+- `taren/tarenruntimebuilder.py`
+- `taren/taren.py`
 
-## Fresh Proposals (From-Scratch Pass)
+### 3. Prevent silent mismatch between configured and actual outcomes
 
-### 1. Chain of Responsibility - Episode Filename Matching
+Why this matters:
+- `Stats` increments after commands execute, but command exceptions are not controlled.
+- Result summaries can become misleading if one command fails after previous state changes.
 
-Status:
+Proposal:
+- Introduce command result object or boolean return.
+- Process commands with per-command error handling and deterministic policy:
+  - stop on first failure, or
+  - continue and aggregate errors.
+- Include `downloads_failed` (or similar) in `Stats`.
 
-- Implemented.
+Files:
+- `taren/filemutationcommand.py`
+- `taren/taren.py`
+- `taren/stats.py`
 
-Implementation summary:
+### 4. Move from root/global logging calls to module loggers
 
-- `taren/episode.py` now defines an `EpisodeMatchRule` protocol and rule handlers for each matching strategy.
-- `Episode.matches()` now executes an ordered rule chain and returns on first decisive rule result.
-- Existing matching behavior is preserved while making rule order explicit and extensible.
+Why this matters:
+- Current `logging.info/debug/error` calls are global and harder to control per module.
+- Module loggers improve filtering, testing, and future extensibility.
 
-Where it fits:
+Proposal:
+- In each module, define `logger = logging.getLogger(__name__)`.
+- Replace direct `logging.*` calls with `logger.*`.
 
-- `Episode.matches()` currently runs a hardcoded sequence of matching checks (exact, numeric prefixes, dailymotion token, normalized title).
+Files:
+- Most files under `taren/`, especially:
+- `taren/taren.py`
+- `taren/episodelist.py`
+- `taren/websitecache.py`
+- `taren/trash.py`
 
-Why applicable:
+## Medium-Priority Improvements
 
-- Matching rules are likely to evolve by source/provider and are currently tightly coupled to method order.
+### 5. Tighten type hints for task and config data
 
-Adopted steps:
+Why this matters:
+- `DownloadTask.episode` is typed as `object`, reducing static checks and IDE support.
 
-1. Introduced `EpisodeMatchRule` protocol with `try_match(filename, episode) -> bool | None`.
-2. Moved each existing match branch into one rule object.
-3. Execute rules in order until one returns `True` or `False`.
+Proposal:
+- Type `episode` as `Episode`.
+- Review related APIs for stricter typing consistency.
 
-Observed benefit:
+Files:
+- `taren/downloadtask.py`
+- `taren/taren.py`
 
-- Cleaner extension for new providers without growing a single method into a large conditional chain.
+### 6. Remove duplicate legacy alias in helper utility
 
-### 2. Builder Pattern - Runtime Assembly in Composition Root
+Why this matters:
+- `ensureDirectory` duplicates `ensure_directory` and keeps mixed naming style.
 
-Status:
+Proposal:
+- Remove `ensureDirectory` alias if no external compatibility requirement exists.
 
-- Implemented.
+Files:
+- `taren/helper.py`
 
-Implementation summary:
+### 7. Make cache filename more collision-safe
 
-- `program.py` now defines `TarenRuntimeBuilder` with explicit steps for config, logger, and runner creation.
-- Builder returns a `TarenRuntime` object containing assembled startup/runtime components.
-- Entry point now uses `main()` + builder instead of module-level assembly side effects.
+Why this matters:
+- Cache filename uses only pattern (`{pattern}.html`).
+- Different URLs with same pattern can collide.
 
-Where it fits:
+Proposal:
+- Include a URL hash in cache filename (for example: `<pattern>_<hash>.html`).
+- Optionally persist metadata alongside cache.
 
-- `program.py` currently performs config setup, logging setup, and runtime object creation inline.
+Files:
+- `taren/websitecache.py`
+- `taren/cachedhtmlepisodesource.py`
 
-Why applicable:
+### 8. Improve readability/parsability of summary stats
 
-- Startup concerns (config, logging, runner creation) are cohesive but currently scattered in top-level script code.
+Why this matters:
+- Current multi-line `__str__` formatting is human-readable but less structured.
 
-Adopted steps:
+Proposal:
+- Use deterministic key-value style output.
+- Consider adding `to_dict()` for future JSON output.
 
-1. Added `TarenRuntimeBuilder` with steps for config and logging creation.
-2. Build `TaRen` instance and return `TarenRuntime` (`runner`, `config`, `logger`).
-3. Keep `program.py` as a thin `main()` calling the builder.
+Files:
+- `taren/stats.py`
 
-Observed benefit:
+## Test Coverage Gaps
 
-- Easier testing of startup wiring and cleaner command-line or alternate entrypoint support.
+### 9. Add failure-path tests for file operations
 
-### 3. Policy/Strategy Pattern - HTTP Retrieval Behavior
+Why this matters:
+- Current tests mostly validate successful flows.
+- The highest-risk behavior is around filesystem failure handling.
 
-Status:
+Proposal:
+- Add tests simulating `OSError`/`PermissionError` in:
+  - rename command
+  - move-to-trash command
+  - trash cleanup/listing
+- Verify `Stats` and logs reflect failures correctly.
 
-- Implemented.
+Files:
+- `tests/test_taren.py`
+- `tests/test_trash.py`
+- new test files for command classes if needed
 
-Implementation summary:
+### 10. Add config validation tests
 
-- `taren/websitecache.py` now defines `HttpFetchPolicy` and default `RequestsHttpFetchPolicy`.
-- `RequestsHttpFetchPolicy` encapsulates timeout/retry behavior for HTTP fetches.
-- `WebSiteCache` now accepts an injected fetch policy and delegates network retrieval through it.
-- `CachedHtmlEpisodeSource` / `EpisodeList` accept optional fetch-policy injection and pass it through to cache retrieval.
+Why this matters:
+- Validation logic should be stable and explicit.
 
-Where it fits:
+Proposal:
+- Add tests for invalid values (non-int cache/trash age, empty wiki URL, invalid collection path).
+- Ensure startup fails early with clear diagnostics.
 
-- `WebSiteCache._write_to_cache()` has fixed request behavior (single call, no retry/backoff policy, no timeout configuration path).
+Files:
+- `tests/test_tarenconfig.py`
+- `tests/test_program.py`
 
-Why applicable:
+## Suggested Implementation Order
 
-- Network access rules vary by runtime constraints and should be configurable without changing cache internals.
+1. File operation hardening and failure accounting (`Stats` + command behavior).
+2. Config validation and startup fail-fast path.
+3. Failure-path tests for filesystem and config validation.
+4. Module logger migration.
+5. Typing cleanup and helper alias removal.
+6. Cache filename collision improvements.
+7. Stats output restructuring.
 
-Adopted steps:
+## Practical Outcome
 
-1. Introduced `HttpFetchPolicy` (`fetch(url, headers) -> bytes | None`).
-2. Added `RequestsHttpFetchPolicy` with timeout + retry behavior.
-3. Injected policy into `WebSiteCache` and through `CachedHtmlEpisodeSource` / `EpisodeList`.
-
-Observed benefit:
-
-- Better resilience and clearer control over network behavior in unstable environments.
-
-### 4. Factory Method - File Mutation Command Creation
-
-Status:
-
-- Implemented.
-
-Implementation summary:
-
-- `taren/taren.py` now provides `_build_commands_for_task(...)` as explicit factory method for file-mutation commands.
-- `_process_tasks()` now delegates command object construction to that method.
-- Command creation policy is now isolated from task orchestration logic.
-
-Where it fits:
-
-- `TaRen._process_tasks()` still directly constructs concrete command objects.
-
-Why applicable:
-
-- Command creation logic is now centralized enough to extract and support variants (dry-run commands, audit commands, rollback-capable commands).
-
-Adopted steps:
-
-1. Added `_build_commands_for_task(...) -> list[FileMutationCommand]` in `TaRen`.
-2. Moved direct `MoveToTrashCommand` / `RenameFileCommand` construction into that method.
-3. Added unit coverage for command factory variants.
-
-Observed benefit:
-
-- Keeps `_process_tasks()` focused on orchestration and prepares cleaner dry-run extensions.
-
----
-
-## Priority Order for Proposed Patterns
-
-All proposed patterns in this report are now implemented.
-
----
-
-## Recommendation
-
-Continue making incremental improvements in small, test-backed commits.
-
----
-
-## Structural Convention Update
-
-- Completed: each class/protocol/helper now resides in its own lowercase-named file across source and tests.
-- Runtime startup classes were split out of `program.py` into dedicated modules (`tarenruntime.py`, `tarenruntimebuilder.py`).
-- Cache HTTP abstractions were split so `WebSiteCache` is now the only class in `taren/websitecache.py`.
-- Test helper doubles were moved into dedicated files under `tests/` and reused via imports.
+Applying the first three items will deliver the largest reliability gain with the lowest architectural risk. The remaining items are quality improvements that will reduce maintenance cost and improve confidence over time.
