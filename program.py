@@ -28,6 +28,7 @@ import logging
 import platform
 import sys
 
+from taren.tarendefines import ConfigurationError
 from taren.tarenruntime import TarenRuntime
 from taren.tarenruntimebuilder import TarenRuntimeBuilder
 
@@ -35,7 +36,7 @@ from taren.tarenruntimebuilder import TarenRuntimeBuilder
 def main() -> None:
     try:
         runtime: TarenRuntime = TarenRuntimeBuilder().build()
-    except ValueError as exc:
+    except ConfigurationError as exc:
         logging.error("startup aborted: %s", exc)
         raise SystemExit(1) from exc
 

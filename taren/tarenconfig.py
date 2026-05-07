@@ -86,6 +86,8 @@ class TarenConfig(MDO):
             TarenDefines.CFG_KEY_WIKI_USERAGENT,
             "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0",
         )
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT, "10")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES, "1")
         return True
 
     ############################################################################
@@ -125,6 +127,8 @@ class TarenConfig(MDO):
         _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE, "taren.trashignore")
         wiki_url: str = _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI, "taren.wiki")
         _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT, "taren.wiki_useragent")
+        _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT, "taren.http_timeout", 1)
+        _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES, "taren.http_retries", 1)
 
         logfile: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGFILE, "logging.logfile")
         loglevel: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "logging.loglevel")

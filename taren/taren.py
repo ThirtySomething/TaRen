@@ -37,9 +37,10 @@ from taren.filemutationcommand import FileMutationCommand
 from taren.movetotrashcommand import MoveToTrashCommand
 from taren.renamefilecommand import RenameFileCommand
 from taren.helper import Helper
+from taren.requestshttpfetchpolicy import RequestsHttpFetchPolicy
 from taren.sizebasedconflictstrategy import SizeBasedConflictStrategy
-from taren.tarendefines import TarenDefines
 from taren.stats import Stats
+from taren.tarendefines import FileSystemError, TarenDefines
 from taren.tarenconfig import TarenConfig
 from taren.trash import Trash
 
@@ -68,6 +69,8 @@ class TaRen:
         self._url: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI)
         self._cachetime: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_MAXCACHE))
         self._trashage: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE))
+        self._http_timeout: float = float(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT))
+        self._http_retries: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES))
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
             self._collection,
@@ -84,6 +87,8 @@ class TaRen:
         logger.debug("self._url [%s]", self._url)
         logger.debug("self._cachetime [%s]", self._cachetime)
         logger.debug("self._trashage [%s]", self._trashage)
+        logger.debug("self._http_timeout [%s]", self._http_timeout)
+        logger.debug("self._http_retries [%s]", self._http_retries)
         logger.debug("self._conflict_strategy [%s]", type(self._conflict_strategy).__name__)
 
     ############################################################################
@@ -148,7 +153,8 @@ class TaRen:
 
         # Get list of episodes from web page
         ua: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT)
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua)
+        fetch_policy = RequestsHttpFetchPolicy(timeout_seconds=self._http_timeout, retries=self._http_retries)
+        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua, fetch_policy=fetch_policy)
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
         return episode_list
@@ -158,7 +164,10 @@ class TaRen:
         """Collect downloads that can be processed with known episode metadata."""
 
         # Check for trash
-        if not self._trash.init():
+        try:
+            self._trash.init()
+        except FileSystemError as e:
+            logger.error("Cannot initialize trash: %s", e)
             return None
 
         # Scan both downloads/ and seen/ for matching files

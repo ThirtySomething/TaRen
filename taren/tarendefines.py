@@ -64,3 +64,26 @@ class TarenDefines:
     CFG_KEY_TRASHIGNORE: str = "trashignore"
     CFG_KEY_WIKI: str = "wiki"
     CFG_KEY_WIKI_USERAGENT: str = "wiki_useragent"
+    CFG_KEY_HTTP_TIMEOUT: str = "http_timeout"
+    CFG_KEY_HTTP_RETRIES: str = "http_retries"
+
+
+# Exception hierarchy for TaRen
+class TarenError(Exception):
+    """Base exception for all TaRen errors."""
+    pass
+
+
+class NetworkError(TarenError):
+    """Raised when a network operation fails."""
+    pass
+
+
+class FileSystemError(TarenError):
+    """Raised when a file system operation fails."""
+    pass
+
+
+class ConfigurationError(TarenError):
+    """Raised when configuration is invalid."""
+    pass

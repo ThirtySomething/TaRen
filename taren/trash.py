@@ -31,6 +31,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from taren.helper import Helper
+from taren.tarendefines import FileSystemError
 
 logger = logging.getLogger(__name__)
 
@@ -90,15 +91,16 @@ class Trash:
         return deleted
 
     ############################################################################
-    def init(self) -> bool:
+    def init(self) -> None:
         """
         Ensure existence of the trash folder and the trashignore marker file
+
+        Raises FileSystemError if the trash directory cannot be created.
         """
         if not Helper.ensure_directory(self._trashfolder):
-            return False
+            raise FileSystemError(f"Failed to create trash directory: {self._trashfolder}")
         if not os.path.exists(self._trashignorefile):
             Path(self._trashignorefile).touch()
-        return True
 
     ############################################################################
     def list(self) -> int:

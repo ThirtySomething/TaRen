@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 import os
+from taren.tarendefines import FileSystemError
 
 
 class FakeTrash:
@@ -32,8 +33,9 @@ class FakeTrash:
         self._init_ok = init_ok
         self.moved: list[str] = []
 
-    def init(self) -> bool:
-        return self._init_ok
+    def init(self) -> None:
+        if not self._init_ok:
+            raise FileSystemError("trash initialization failed (mock)")
 
     def move(self, file_path: str) -> bool:
         self.moved.append(os.path.basename(file_path))

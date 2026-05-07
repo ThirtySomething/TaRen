@@ -26,6 +26,7 @@ SOFTWARE.
 
 import logging
 
+from taren.tarendefines import ConfigurationError
 from taren.tarendefines import TarenDefines
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
@@ -48,7 +49,7 @@ class TarenRuntimeBuilder:
         if not errors:
             return
         validation_message: str = "Invalid configuration:\n- " + "\n- ".join(errors)
-        raise ValueError(validation_message)
+        raise ConfigurationError(validation_message)
 
     def build_logger(self, config: TarenConfig) -> logging.Logger:
         # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig

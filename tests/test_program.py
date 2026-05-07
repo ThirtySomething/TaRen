@@ -31,6 +31,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import program
+from taren.tarendefines import ConfigurationError
 from taren.tarendefines import TarenDefines
 import taren.tarenruntimebuilder as tarenruntimebuilder
 
@@ -52,6 +53,8 @@ class TestProgramBuilder(unittest.TestCase):
             ("taren", "trashignore"): ".ignore",
             ("taren", "wiki"): "https://example.invalid/wiki",
             ("taren", "wiki_useragent"): "agent",
+            ("taren", "http_timeout"): "10",
+            ("taren", "http_retries"): "1",
         }
 
         config_instance = MagicMock()
@@ -104,7 +107,7 @@ class TestProgramBuilder(unittest.TestCase):
         runner.rename_process.assert_called_once_with()
 
     def test_main_fails_fast_on_invalid_configuration(self) -> None:
-        with patch.object(program.TarenRuntimeBuilder, "build", side_effect=ValueError("invalid config")):
+        with patch.object(program.TarenRuntimeBuilder, "build", side_effect=ConfigurationError("invalid config")):
             with self.assertRaises(SystemExit) as exit_context:
                 program.main()
         self.assertEqual(exit_context.exception.code, 1)
@@ -115,7 +118,7 @@ class TestProgramBuilder(unittest.TestCase):
 
         builder = tarenruntimebuilder.TarenRuntimeBuilder("TaRen.json")
         with patch.object(builder, "build_config", return_value=config_instance):
-            with self.assertRaises(ValueError):
+            with self.assertRaises(ConfigurationError):
                 builder.build()
 
 

@@ -39,6 +39,7 @@ from taren.movetotrashcommand import MoveToTrashCommand
 from taren.renamefilecommand import RenameFileCommand
 from taren.stats import Stats
 from taren.taren import TaRen
+from taren.tarendefines import FileSystemError
 
 
 class TestTaRenRenameProcess(unittest.TestCase):
@@ -53,6 +54,8 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 "taren.trashage": "1",
                 "taren.trashignore": ".ignore",
                 "taren.wiki_useragent": "ua",
+                "taren.http_timeout": "10",
+                "taren.http_retries": "1",
             }
         )
 
@@ -418,6 +421,8 @@ class TestTaRenErrorScenarios(unittest.TestCase):
                 "taren.trashage": "1",
                 "taren.trashignore": ".ignore",
                 "taren.wiki_useragent": "ua",
+                "taren.http_timeout": "10",
+                "taren.http_retries": "1",
             }
         )
 
@@ -456,6 +461,35 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             self.assertEqual(stats.episodes_total, 0)
 
+    def test_load_episodes_uses_configured_http_fetch_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._setup_collection(tmpdir)
+            config = FakeConfig(
+                {
+                    "taren.collection": tmpdir,
+                    "taren.pattern": "Tatort",
+                    "taren.extension": "mp4",
+                    "taren.wiki": "http://example/episodes",
+                    "taren.maxcache": "1",
+                    "taren.trashage": "1",
+                    "taren.trashignore": ".ignore",
+                    "taren.wiki_useragent": "ua",
+                    "taren.http_timeout": "17",
+                    "taren.http_retries": "3",
+                }
+            )
+            runner = TaRen(cast(Any, config))
+            stats = Stats()
+
+            fake_episode_list = SimpleNamespace(get_episodes=lambda: None, get_episode_count=lambda: 0)
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list) as episode_list_cls:
+                runner._load_episodes(stats)
+
+            _, kwargs = episode_list_cls.call_args
+            fetch_policy = kwargs["fetch_policy"]
+            self.assertEqual(fetch_policy._timeout_seconds, 17.0)
+            self.assertEqual(fetch_policy._retries, 3)
+
     def test_process_tasks_continues_after_single_command_failure(self) -> None:
         """When a command fails, subsequent tasks should still be processed."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -491,7 +525,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             runner = TaRen(cast(Any, config))
 
             # Mock trash with failing init
-            fake_trash = SimpleNamespace(init=lambda: False)
+            fake_trash = SimpleNamespace(init=lambda: (_ for _ in ()).throw(FileSystemError("trash init failed")))
             runner._trash = cast(Any, fake_trash)
 
             fake_episode_list = SimpleNamespace(

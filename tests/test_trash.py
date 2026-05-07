@@ -31,6 +31,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from taren.helper import Helper
+from taren.tarendefines import FileSystemError
 from taren.trash import Trash
 
 
@@ -38,20 +39,27 @@ class TestTrash(unittest.TestCase):
     def test_init_creates_trash_folder_and_ignore_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
+            trash.init()  # Should not raise
             self.assertTrue((Path(tmpdir) / ".trash").is_dir())
             self.assertTrue((Path(tmpdir) / ".trash" / ".ignore").exists())
 
     def test_init_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
-            self.assertTrue(trash.init())
+            trash.init()  # Should not raise
+            trash.init()  # Should not raise
+
+    def test_init_raises_on_directory_creation_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            with patch("taren.trash.Helper.ensure_directory", return_value=False):
+                with self.assertRaises(FileSystemError):
+                    trash.init()
 
     def test_move_and_variant_naming(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
+            trash.init()
 
             src = Path(tmpdir) / "file.mp4"
             src.write_text("first", encoding="utf-8")
@@ -66,7 +74,7 @@ class TestTrash(unittest.TestCase):
     def test_move_returns_false_when_rename_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
+            trash.init()
 
             src = Path(tmpdir) / "file.mp4"
             src.write_text("first", encoding="utf-8")
@@ -77,7 +85,7 @@ class TestTrash(unittest.TestCase):
     def test_cleanup_and_list(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
+            trash.init()
             trash_dir = Path(tmpdir) / ".trash"
 
             old_file = trash_dir / "old.mp4"
@@ -97,7 +105,7 @@ class TestTrash(unittest.TestCase):
     def test_cleanup_deletes_ignore_file_when_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             trash = Trash(tmpdir, ".trash", 1, ".ignore")
-            self.assertTrue(trash.init())
+            trash.init()
             ignore_path = Path(tmpdir) / ".trash" / ".ignore"
             ignore_path.write_text("x", encoding="utf-8")
 
