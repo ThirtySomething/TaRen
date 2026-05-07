@@ -78,18 +78,15 @@ class TaRen:
             self._trashage,
             self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE),
         )
-        logger.debug("self._config [%s]", self._config)
-        logger.debug("self._collection [%s]", self._collection)
-        logger.debug("self._downloads [%s]", self._downloads)
-        logger.debug("self._seen [%s]", self._seen)
-        logger.debug("self._pattern [%s]", self._pattern)
-        logger.debug("self._extension [%s]", self._extension)
-        logger.debug("self._url [%s]", self._url)
-        logger.debug("self._cachetime [%s]", self._cachetime)
-        logger.debug("self._trashage [%s]", self._trashage)
-        logger.debug("self._http_timeout [%s]", self._http_timeout)
-        logger.debug("self._http_retries [%s]", self._http_retries)
-        logger.debug("self._conflict_strategy [%s]", type(self._conflict_strategy).__name__)
+        self._log_initialization()
+
+    ############################################################################
+    def _log_initialization(self) -> None:
+        """Log configuration details during initialization."""
+        logger.debug("TaRen configuration: collection=%s, downloads=%s, seen=%s", self._collection, self._downloads, self._seen)
+        logger.debug("Episode matching: pattern=%s, extension=%s, url=%s", self._pattern, self._extension, self._url)
+        logger.debug("Caching: maxcache_days=%s, http_timeout=%s, http_retries=%s", self._cachetime, self._http_timeout, self._http_retries)
+        logger.debug("Trash: age_threshold=%s days, strategy=%s, conflict_resolution=%s", self._trashage, type(self._trash).__name__, type(self._conflict_strategy).__name__)
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
