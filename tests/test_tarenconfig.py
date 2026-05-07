@@ -56,6 +56,7 @@ class TestTarenConfig(unittest.TestCase):
             config.value_set("taren", "http_timeout", "10")
             config.value_set("taren", "http_retries", "2")
             config.value_set("taren", "parallel_workers", "4")
+            config.value_set("taren", "episode_cache_db", "episodes.sqlite3")
             config.value_set("logging", "loglevel", "info")
             config.value_set("logging", "logfile", "TaRen.log")
 
@@ -70,6 +71,7 @@ class TestTarenConfig(unittest.TestCase):
         config.value_set("taren", "http_timeout", "0")
         config.value_set("taren", "http_retries", "0")
         config.value_set("taren", "parallel_workers", "0")
+        config.value_set("taren", "episode_cache_db", "")
 
         errors = config.validate()
 
@@ -80,6 +82,7 @@ class TestTarenConfig(unittest.TestCase):
         self.assertTrue(any("taren.http_timeout" in error for error in errors))
         self.assertTrue(any("taren.http_retries" in error for error in errors))
         self.assertTrue(any("taren.parallel_workers" in error for error in errors))
+        self.assertTrue(any("taren.episode_cache_db" in error for error in errors))
 
     def test_validate_rejects_http_retries_above_maximum(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -93,6 +96,7 @@ class TestTarenConfig(unittest.TestCase):
             config.value_set("taren", "http_timeout", "10")
             config.value_set("taren", "http_retries", "11")
             config.value_set("taren", "parallel_workers", "4")
+            config.value_set("taren", "episode_cache_db", "episodes.sqlite3")
             config.value_set("logging", "loglevel", "info")
             config.value_set("logging", "logfile", "TaRen.log")
 
@@ -112,12 +116,33 @@ class TestTarenConfig(unittest.TestCase):
             config.value_set("taren", "http_timeout", "10")
             config.value_set("taren", "http_retries", "2")
             config.value_set("taren", "parallel_workers", "64")
+            config.value_set("taren", "episode_cache_db", "episodes.sqlite3")
             config.value_set("logging", "loglevel", "info")
             config.value_set("logging", "logfile", "TaRen.log")
 
             errors = config.validate()
 
         self.assertTrue(any("taren.parallel_workers must be <= 32" in error for error in errors))
+
+    def test_validate_rejects_episode_cache_db_with_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            collection_dir = str(Path(tmpdir) / "collection")
+            Path(collection_dir).mkdir()
+            config = TarenConfig("dummy.json", auto_load=False)
+            config.value_set("taren", "collection", collection_dir)
+            config.value_set("taren", "wiki", "https://example.invalid/wiki")
+            config.value_set("taren", "maxcache", "1")
+            config.value_set("taren", "trashage", "0")
+            config.value_set("taren", "http_timeout", "10")
+            config.value_set("taren", "http_retries", "2")
+            config.value_set("taren", "parallel_workers", "4")
+            config.value_set("taren", "episode_cache_db", "cache/episodes.sqlite3")
+            config.value_set("logging", "loglevel", "info")
+            config.value_set("logging", "logfile", "TaRen.log")
+
+            errors = config.validate()
+
+        self.assertTrue(any("taren.episode_cache_db must be a filename without path" in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -34,6 +34,7 @@ from taren.conflictresolutionstrategy import ConflictResolutionStrategy
 from taren.downloadlist import DownloadList
 from taren.downloadtask import DownloadTask
 from taren.episode import Episode
+from taren.episodefilecache import EpisodeFileCache
 from taren.episodelist import EpisodeList
 from taren.filemutationcommand import FileMutationCommand
 from taren.movetotrashcommand import MoveToTrashCommand
@@ -73,6 +74,8 @@ class TaRen:
         self._trashage: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE))
         self._http_timeout: float = float(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT))
         self._http_retries: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES))
+        self._episode_cache_db: str = self._determine_episode_cache_db_path()
+        self._episode_file_cache: EpisodeFileCache = EpisodeFileCache(self._episode_cache_db)
         self._max_parallel_workers: int = self._determine_parallel_workers()
         self._conflict_strategy: ConflictResolutionStrategy = conflict_strategy or SizeBasedConflictStrategy()
         self._trash: Trash = Trash(
@@ -103,6 +106,10 @@ class TaRen:
             self._cachetime,
             self._http_timeout,
             self._http_retries,
+        )
+        logger.debug(
+            "taren_init: episode_cache_db=%s status=ready",
+            self._episode_cache_db,
         )
         logger.debug(
             "taren_init: parallel_workers=%s status=ready",
@@ -141,6 +148,25 @@ class TaRen:
 
         cpu_count: int = os.cpu_count() or 1
         return max(1, min(configured_workers, cpu_count, 32))
+
+    ############################################################################
+    def _determine_episode_cache_db_path(self) -> str:
+        """Resolve sqlite cache DB path from config with backwards-compatible fallback."""
+        try:
+            db_name = self._config.value_get(
+                TarenDefines.CFG_SECTION_TAREN,
+                TarenDefines.CFG_KEY_EPISODE_CACHE_DB,
+            )
+        except (KeyError, TypeError):
+            db_name = TarenDefines.DEFAULT_EPISODE_CACHE_DB
+
+        if not isinstance(db_name, str) or not db_name.strip():
+            db_name = TarenDefines.DEFAULT_EPISODE_CACHE_DB
+
+        db_path: Path = Path(db_name)
+        if db_path.is_absolute():
+            return str(db_path)
+        return str(self._collection / db_path)
 
     ############################################################################
     def _sanitize_extension(self, extension: str) -> str:
@@ -205,6 +231,12 @@ class TaRen:
             )
             return False
 
+        try:
+            self._episode_file_cache.initialize()
+        except OSError as exc:
+            logger.error("episode_cache_init: db=%s status=failed error=%s", self._episode_cache_db, exc)
+            return False
+
         return True
 
     ############################################################################
@@ -238,6 +270,11 @@ class TaRen:
             return None
 
         # Scan both downloads/ and seen/ for matching files
+        try:
+            self._episode_file_cache.reconcile(str(self._downloads), str(self._seen), self._extension)
+        except OSError as exc:
+            logger.error("episode_cache_reconcile: db=%s status=failed error=%s", self._episode_cache_db, exc)
+
         downloads_to_process: list[DownloadTask] = []
         total_files: int = 0
         for sourcedir in (self._downloads, self._seen):

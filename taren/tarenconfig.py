@@ -89,6 +89,7 @@ class TarenConfig(MDO):
         self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_TIMEOUT, "10")
         self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_HTTP_RETRIES, "1")
         self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PARALLEL_WORKERS, "4")
+        self.add(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EPISODE_CACHE_DB, TarenDefines.DEFAULT_EPISODE_CACHE_DB)
         return True
 
     ############################################################################
@@ -152,6 +153,11 @@ class TarenConfig(MDO):
             1,
             max_value=32,
         )
+        episode_cache_db: str = _require_text(
+            TarenDefines.CFG_SECTION_TAREN,
+            TarenDefines.CFG_KEY_EPISODE_CACHE_DB,
+            "taren.episode_cache_db",
+        )
 
         logfile: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGFILE, "logging.logfile")
         loglevel: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "logging.loglevel")
@@ -170,5 +176,8 @@ class TarenConfig(MDO):
 
         if logfile and os.path.basename(logfile) != logfile:
             errors.append("logging.logfile must be a filename without path")
+
+        if episode_cache_db and os.path.basename(episode_cache_db) != episode_cache_db:
+            errors.append("taren.episode_cache_db must be a filename without path")
 
         return errors

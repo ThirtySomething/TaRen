@@ -67,6 +67,12 @@ class TarenDefines:
     CFG_KEY_HTTP_TIMEOUT: str = "http_timeout"
     CFG_KEY_HTTP_RETRIES: str = "http_retries"
     CFG_KEY_PARALLEL_WORKERS: str = "parallel_workers"
+    CFG_KEY_EPISODE_CACHE_DB: str = "episode_cache_db"
+
+    # ---------------------------------------------------------------------------
+    # Runtime defaults
+    # ---------------------------------------------------------------------------
+    DEFAULT_EPISODE_CACHE_DB: str = "episodes.sqlite3"
 
     # ---------------------------------------------------------------------------
     # Cache configuration
