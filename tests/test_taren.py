@@ -551,6 +551,20 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             self.assertTrue((Path(tmpdir) / "downloads").exists())
             self.assertTrue((Path(tmpdir) / "seen").exists())
 
+    def test_preflight_aborts_when_subfolder_creation_fails(self) -> None:
+        """When required subfolders cannot be created, preflight should fail fast."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            with patch("taren.taren.Helper.ensure_directory", side_effect=[False, True]) as ensure_dir:
+                with patch("taren.taren.logger.error") as log_error:
+                    result = runner._preflight()
+
+            self.assertFalse(result)
+            ensure_dir.assert_called_once_with(runner._downloads)
+            self.assertTrue(log_error.called)
+
     def test_finalize_tracks_deleted_and_trash_stats(self) -> None:
         """When finalize is called, should update stats with cleanup results."""
         with tempfile.TemporaryDirectory() as tmpdir:

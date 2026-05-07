@@ -142,8 +142,19 @@ class TaRen:
             return False
 
         # Ensure downloads and seen subfolders exist
-        Helper.ensure_directory(self._downloads)
-        Helper.ensure_directory(self._seen)
+        if not Helper.ensure_directory(self._downloads):
+            logger.error(
+                "Failed to ensure downloads directory [%s], abort",
+                self._downloads,
+            )
+            return False
+
+        if not Helper.ensure_directory(self._seen):
+            logger.error(
+                "Failed to ensure seen directory [%s], abort",
+                self._seen,
+            )
+            return False
 
         return True
 

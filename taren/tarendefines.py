@@ -71,19 +71,23 @@ class TarenDefines:
 # Exception hierarchy for TaRen
 class TarenError(Exception):
     """Base exception for all TaRen errors."""
+
     pass
 
 
 class NetworkError(TarenError):
     """Raised when a network operation fails."""
+
     pass
 
 
 class FileSystemError(TarenError):
     """Raised when a file system operation fails."""
+
     pass
 
 
 class ConfigurationError(TarenError):
     """Raised when configuration is invalid."""
+
     pass
