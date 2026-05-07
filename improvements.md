@@ -9,7 +9,7 @@ Track practical, high-value improvements identified in the current full code ana
 ## Current Baseline
 
 - Compile check: clean
-- Unit/integration tests (`unittest discover`): 109 passed
+- Unit/integration tests (`unittest discover`): 111 passed
 - Architecture: solid and modular
 - Main risk area: operational edge-case handling
 
@@ -19,14 +19,14 @@ Track practical, high-value improvements identified in the current full code ana
 
 1. [x] Fail-fast preflight when `downloads/` or `seen/` cannot be created.
 2. [x] Prevent fallback matches on empty episode names.
-3. Ensure runtime logger configuration is idempotent.
+3. [x] Ensure runtime logger configuration is idempotent.
 4. Handle UTF-8 decode failures in website cache writes with explicit error logging.
 
 ### Priority 2
 
 1. Add tests for invalid UTF-8 responses.
 2. [x] Add tests for concrete preflight directory creation failures.
-3. Add tests for repeated runtime build logger behavior.
+3. [x] Add tests for repeated runtime build logger behavior.
 
 ### Priority 3
 
