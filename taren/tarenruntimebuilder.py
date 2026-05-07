@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 import logging
+import os
 
 from taren.tarendefines import ConfigurationError
 from taren.tarendefines import TarenDefines
@@ -55,11 +56,28 @@ class TarenRuntimeBuilder:
         # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
         logger_setup: logging.Logger = logging.getLogger()
         loglevel: str = config.value_get("logging", "loglevel").upper()
+        logfile: str = config.value_get("logging", "logfile")
+
+        # Ensure idempotent logger setup: remove stale file handlers for same logfile
+        target_logfile: str = os.path.abspath(logfile)
+        handlers_to_remove: list[logging.Handler] = []
+        for handler in logger_setup.handlers:
+            if isinstance(handler, logging.FileHandler):
+                handler_path = getattr(handler, "baseFilename", None)
+                if handler_path and os.path.abspath(handler_path) == target_logfile:
+                    handlers_to_remove.append(handler)
+        for handler in handlers_to_remove:
+            logger_setup.removeHandler(handler)
+            handler.close()
+
         logger_setup.setLevel(loglevel)
-        logger_handler: logging.FileHandler = logging.FileHandler(config.value_get("logging", "logfile"), "w", "utf-8")
+        logger_handler: logging.FileHandler = self._create_file_handler(logfile)
         logger_handler.setFormatter(logging.Formatter(config.value_get("logging", "logstring")))
         logger_setup.addHandler(logger_handler)
         return logger_setup
+
+    def _create_file_handler(self, logfile: str) -> logging.FileHandler:
+        return logging.FileHandler(logfile, "w", "utf-8")
 
     def build_runner(self, config: TarenConfig) -> TaRen:
         return TaRen(config)

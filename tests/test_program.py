@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 import unittest
+import logging
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -73,14 +74,15 @@ class TestProgramBuilder(unittest.TestCase):
                 return_value=logger_instance,
             ),
             patch(
-                "taren.tarenruntimebuilder.logging.FileHandler",
-                return_value=handler_instance,
-            ) as file_handler_cls,
-            patch(
                 "taren.tarenruntimebuilder.logging.Formatter",
                 return_value=formatter_instance,
             ) as formatter_cls,
             patch("taren.tarenruntimebuilder.TaRen", return_value=runner_instance) as taren_cls,
+            patch.object(
+                tarenruntimebuilder.TarenRuntimeBuilder,
+                "_create_file_handler",
+                return_value=handler_instance,
+            ) as create_handler,
         ):
             runtime = tarenruntimebuilder.TarenRuntimeBuilder(f"{TarenDefines.PROGRAM_NAME}.json").build()
 
@@ -88,7 +90,7 @@ class TestProgramBuilder(unittest.TestCase):
         config_instance.save.assert_called_once_with()
         config_instance.validate.assert_called_once_with()
         logger_instance.setLevel.assert_called_once_with("INFO")
-        file_handler_cls.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.log", "w", "utf-8")
+        create_handler.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.log")
         formatter_cls.assert_called_once_with("%(message)s")
         handler_instance.setFormatter.assert_called_once_with(formatter_instance)
         logger_instance.addHandler.assert_called_once_with(handler_instance)
@@ -120,6 +122,83 @@ class TestProgramBuilder(unittest.TestCase):
         with patch.object(builder, "build_config", return_value=config_instance):
             with self.assertRaises(ConfigurationError):
                 builder.build()
+
+    def test_build_logger_removes_existing_file_handler_for_same_logfile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_path = str(Path(tmpdir) / "TaRen.log")
+
+            config_instance = MagicMock()
+            config_instance.value_get.side_effect = lambda section, key: {
+                ("logging", "loglevel"): "info",
+                ("logging", "logfile"): log_path,
+                ("logging", "logstring"): "%(message)s",
+            }[(section, key)]
+
+            logger_instance = MagicMock()
+            stale_handler = MagicMock(spec=logging.FileHandler)
+            stale_handler.baseFilename = log_path
+            other_handler = MagicMock(spec=logging.StreamHandler)
+            logger_instance.handlers = [stale_handler, other_handler]
+            new_handler = MagicMock(spec=logging.FileHandler)
+
+            with (
+                patch("taren.tarenruntimebuilder.logging.getLogger", return_value=logger_instance),
+                patch.object(
+                    tarenruntimebuilder.TarenRuntimeBuilder,
+                    "_create_file_handler",
+                    return_value=new_handler,
+                ),
+            ):
+                builder = tarenruntimebuilder.TarenRuntimeBuilder("TaRen.json")
+                builder.build_logger(config_instance)
+
+            logger_instance.removeHandler.assert_called_once_with(stale_handler)
+            stale_handler.close.assert_called_once_with()
+            logger_instance.addHandler.assert_called_once_with(new_handler)
+
+    def test_build_logger_idempotent_on_repeated_calls(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_path = str(Path(tmpdir) / "TaRen.log")
+
+            config_instance = MagicMock()
+            config_instance.value_get.side_effect = lambda section, key: {
+                ("logging", "loglevel"): "info",
+                ("logging", "logfile"): log_path,
+                ("logging", "logstring"): "%(message)s",
+            }[(section, key)]
+
+            logger_instance = MagicMock()
+            logger_instance.handlers = []
+
+            first_handler = MagicMock(spec=logging.FileHandler)
+            first_handler.baseFilename = log_path
+            second_handler = MagicMock(spec=logging.FileHandler)
+            second_handler.baseFilename = log_path
+
+            def add_handler(handler):
+                logger_instance.handlers.append(handler)
+
+            def remove_handler(handler):
+                logger_instance.handlers.remove(handler)
+
+            logger_instance.addHandler.side_effect = add_handler
+            logger_instance.removeHandler.side_effect = remove_handler
+
+            with (
+                patch("taren.tarenruntimebuilder.logging.getLogger", return_value=logger_instance),
+                patch(
+                    "taren.tarenruntimebuilder.TarenRuntimeBuilder._create_file_handler",
+                    side_effect=[first_handler, second_handler],
+                ),
+            ):
+                builder = tarenruntimebuilder.TarenRuntimeBuilder("TaRen.json")
+                builder.build_logger(config_instance)
+                builder.build_logger(config_instance)
+
+            file_handlers = [h for h in logger_instance.handlers if isinstance(h, logging.FileHandler)]
+            self.assertEqual(len(file_handlers), 1)
+            self.assertIs(file_handlers[0], second_handler)
+            first_handler.close.assert_called_once_with()
 
 
 if __name__ == "__main__":
