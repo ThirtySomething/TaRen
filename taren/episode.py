@@ -62,6 +62,8 @@ class Episode:
         """
         self.empty: bool = True
         self.episode_broadcast: str = ""
+        self.episode_broadcast_date: str = ""
+        self.episode_cast: str = ""
         self.episode_id: int = 0
         self.episode_inspectors: str = ""
         self.episode_name: str = ""
@@ -101,6 +103,8 @@ class Episode:
         """
         for current_invalid_character in Episode._invalid_characters:
             self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, " ").strip()
+            self.episode_broadcast_date = self.episode_broadcast_date.replace(current_invalid_character, " ").strip()
+            self.episode_cast = self.episode_cast.replace(current_invalid_character, " ").strip()
             self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, " ").strip()
             self.episode_name = self.episode_name.replace(current_invalid_character, " ").strip()
             self.episode_sequence = self.episode_sequence.replace(current_invalid_character, "-").strip()
@@ -144,6 +148,11 @@ class Episode:
         self.episode_broadcast = data_row[2].strip()
         # Get sequence number and strip alternative numbering.
         self.episode_sequence = re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
+        # Optional metadata columns from extended source rows
+        if len(data_row) > 6:
+            self.episode_broadcast_date = data_row[6].strip()
+        if len(data_row) > 7:
+            self.episode_cast = data_row[7].strip()
         # Strip invalid characters
         self._strip_invalid_characters()
         # Mark as not empty

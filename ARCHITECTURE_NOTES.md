@@ -340,14 +340,12 @@ TarenError (base)
 - Batch Wikipedia API requests
 - SQLite episode cache (currently filesystem-based)
 - Web UI for configuration
-- Episode metadata enrichment (broadcast date, cast)
 
 ### Likely Candidates
 
-1. Pathlib migration (cleaner path ops)
-2. Debug logging consolidation
-3. Configuration bounds validation
-4. Type annotation completion
+1. Batch Wikipedia API requests
+2. Web UI for configuration
+3. Episode metadata enrichment usage in output/reporting
 
 ---
 

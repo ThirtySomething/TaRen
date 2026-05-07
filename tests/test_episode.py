@@ -96,6 +96,40 @@ class TestEpisode(unittest.TestCase):
         self.assertEqual(episode.episode_year, 2020)
         self.assertEqual(episode.episode_sequence, "1")
 
+    def test_parse_populates_optional_metadata_columns(self) -> None:
+        episode = Episode()
+        episode.parse(
+            [
+                "123",
+                "Folge",
+                "ARD",
+                "2020",
+                "Inspector",
+                "1",
+                "1993-10-17",
+                "Actor A, Actor B",
+            ]
+        )
+        self.assertEqual(episode.episode_broadcast_date, "1993-10-17")
+        self.assertEqual(episode.episode_cast, "Actor A, Actor B")
+
+    def test_parse_strips_invalid_characters_from_optional_metadata(self) -> None:
+        episode = Episode()
+        episode.parse(
+            [
+                "123",
+                "Folge",
+                "ARD",
+                "2020",
+                "Inspector",
+                "1",
+                "1993/10/17",
+                "Actor: A | Actor? B",
+            ]
+        )
+        self.assertEqual(episode.episode_broadcast_date, "1993 10 17")
+        self.assertEqual(episode.episode_cast, "Actor  A   Actor  B")
+
     def test_matches_uses_multiple_patterns(self) -> None:
         episode = Episode()
         episode.episode_id = 123
