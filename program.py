@@ -33,7 +33,11 @@ from taren.tarenruntimebuilder import TarenRuntimeBuilder
 
 
 def main() -> None:
-    runtime: TarenRuntime = TarenRuntimeBuilder().build()
+    try:
+        runtime: TarenRuntime = TarenRuntimeBuilder().build()
+    except ValueError as exc:
+        logging.error("startup aborted: %s", exc)
+        raise SystemExit(1) from exc
 
     logging.debug("startup")
 

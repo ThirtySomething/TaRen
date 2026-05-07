@@ -43,6 +43,13 @@ class TarenRuntimeBuilder:
         config.save()
         return config
 
+    def validate_config(self, config: TarenConfig) -> None:
+        errors: list[str] = config.validate()
+        if not errors:
+            return
+        validation_message: str = "Invalid configuration:\n- " + "\n- ".join(errors)
+        raise ValueError(validation_message)
+
     def build_logger(self, config: TarenConfig) -> logging.Logger:
         # Setup logging for dealing with UTF-8, unfortunately not available for basicConfig
         logger_setup: logging.Logger = logging.getLogger()
@@ -58,6 +65,7 @@ class TarenRuntimeBuilder:
 
     def build(self) -> TarenRuntime:
         config: TarenConfig = self.build_config()
+        self.validate_config(config)
         logger: logging.Logger = self.build_logger(config)
         runner: TaRen = self.build_runner(config)
         return TarenRuntime(config=config, logger=logger, runner=runner)

@@ -25,6 +25,8 @@ SOFTWARE.
 """
 
 import unittest
+from pathlib import Path
+import tempfile
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -35,14 +37,26 @@ import taren.tarenruntimebuilder as tarenruntimebuilder
 
 class TestProgramBuilder(unittest.TestCase):
     def test_runtime_builder_builds_config_logger_and_runner(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            collection_dir = str(Path(tmpdir) / "collection")
+            Path(collection_dir).mkdir()
         config_values = {
             ("logging", "loglevel"): "info",
             ("logging", "logfile"): f"{TarenDefines.PROGRAM_NAME}.log",
             ("logging", "logstring"): "%(message)s",
+            ("taren", "collection"): collection_dir,
+            ("taren", "extension"): "mp4",
+            ("taren", "maxcache"): "1",
+            ("taren", "pattern"): "Tatort",
+            ("taren", "trashage"): "1",
+            ("taren", "trashignore"): ".ignore",
+            ("taren", "wiki"): "https://example.invalid/wiki",
+            ("taren", "wiki_useragent"): "agent",
         }
 
         config_instance = MagicMock()
         config_instance.value_get.side_effect = lambda section, key: config_values[(section, key)]
+        config_instance.validate.return_value = []
 
         logger_instance = MagicMock()
         handler_instance = MagicMock()
@@ -69,6 +83,7 @@ class TestProgramBuilder(unittest.TestCase):
 
         config_cls.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.json")
         config_instance.save.assert_called_once_with()
+        config_instance.validate.assert_called_once_with()
         logger_instance.setLevel.assert_called_once_with("INFO")
         file_handler_cls.assert_called_once_with(f"{TarenDefines.PROGRAM_NAME}.log", "w", "utf-8")
         formatter_cls.assert_called_once_with("%(message)s")
@@ -87,6 +102,21 @@ class TestProgramBuilder(unittest.TestCase):
             program.main()
 
         runner.rename_process.assert_called_once_with()
+
+    def test_main_fails_fast_on_invalid_configuration(self) -> None:
+        with patch.object(program.TarenRuntimeBuilder, "build", side_effect=ValueError("invalid config")):
+            with self.assertRaises(SystemExit) as exit_context:
+                program.main()
+        self.assertEqual(exit_context.exception.code, 1)
+
+    def test_runtime_builder_fails_fast_when_config_validation_fails(self) -> None:
+        config_instance = MagicMock()
+        config_instance.validate.return_value = ["bad value"]
+
+        builder = tarenruntimebuilder.TarenRuntimeBuilder("TaRen.json")
+        with patch.object(builder, "build_config", return_value=config_instance):
+            with self.assertRaises(ValueError):
+                builder.build()
 
 
 if __name__ == "__main__":

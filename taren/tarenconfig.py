@@ -28,6 +28,7 @@ import os
 import sys
 from importlib import import_module
 from pathlib import Path
+from urllib.parse import urlparse
 
 from taren.tarendefines import TarenDefines
 
@@ -86,3 +87,61 @@ class TarenConfig(MDO):
             "TaRen/0.0 (https://github.com/ThirtySomething/TaRen/) generic-library/0.0",
         )
         return True
+
+    ############################################################################
+    def validate(self) -> list[str]:
+        """Validate loaded configuration values and return a list of errors."""
+
+        errors: list[str] = []
+
+        def _require_text(section: str, key: str, label: str) -> str:
+            value = self.value_get(section, key)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"{label} must be a non-empty string")
+                return ""
+            return value.strip()
+
+        def _require_int(section: str, key: str, label: str, min_value: int) -> int | None:
+            raw_value: str = _require_text(section, key, label)
+            if not raw_value:
+                return None
+            try:
+                parsed_value: int = int(raw_value)
+            except ValueError:
+                errors.append(f"{label} must be an integer")
+                return None
+            if parsed_value < min_value:
+                errors.append(f"{label} must be >= {min_value}")
+                return None
+            return parsed_value
+
+        loglevel_allowed: set[str] = {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"}
+
+        collection: str = _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION, "taren.collection")
+        _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION, "taren.extension")
+        _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_MAXCACHE, "taren.maxcache", 1)
+        _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN, "taren.pattern")
+        _require_int(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE, "taren.trashage", 0)
+        _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE, "taren.trashignore")
+        wiki_url: str = _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI, "taren.wiki")
+        _require_text(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT, "taren.wiki_useragent")
+
+        logfile: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGFILE, "logging.logfile")
+        loglevel: str = _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGLEVEL, "logging.loglevel")
+        _require_text(TarenDefines.CFG_SECTION_LOGGING, TarenDefines.CFG_KEY_LOGSTRING, "logging.logstring")
+
+        if collection and not os.path.isdir(collection):
+            errors.append(f"taren.collection does not exist or is not a directory: {collection}")
+
+        if wiki_url:
+            parsed_url = urlparse(wiki_url)
+            if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+                errors.append(f"taren.wiki must be a valid http(s) URL: {wiki_url}")
+
+        if loglevel and loglevel.upper() not in loglevel_allowed:
+            errors.append(f"logging.loglevel must be one of: {', '.join(sorted(loglevel_allowed))}")
+
+        if logfile and os.path.basename(logfile) != logfile:
+            errors.append("logging.logfile must be a filename without path")
+
+        return errors

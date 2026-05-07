@@ -43,6 +43,8 @@ Files:
 
 ### 2. Add explicit configuration validation at startup
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - Invalid values (negative cache age, non-integer age values, empty URL, bad paths) are not validated early.
@@ -53,6 +55,14 @@ Proposal:
 - Add validation step after loading config and before running rename flow.
 - Validate required keys and types (especially integer fields and URL/path fields).
 - Fail fast with one clear error report.
+
+Implemented:
+
+- Added `TarenConfig.validate()` with checks for required string values.
+- Added numeric bounds/type checks for `taren.maxcache` and `taren.trashage`.
+- Added URL validation for `taren.wiki` and level validation for `logging.loglevel`.
+- Startup now aborts early via `TarenRuntimeBuilder.validate_config(...)` before logger/runner creation.
+- `program.main()` now exits with status code 1 on invalid configuration.
 
 Files:
 
@@ -201,6 +211,8 @@ Files:
 
 ### 10. Add config validation tests
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - Validation logic should be stable and explicit.
@@ -210,6 +222,12 @@ Proposal:
 - Add tests for invalid values (non-int cache/trash age, empty wiki URL, invalid collection path).
 - Ensure startup fails early with clear diagnostics.
 
+Implemented:
+
+- Added `TarenConfig.validate()` tests for valid and invalid value scenarios.
+- Added runtime-builder fail-fast test when validation fails.
+- Added entrypoint test asserting startup exits non-zero on invalid configuration.
+
 Files:
 
 - `tests/test_tarenconfig.py`
@@ -217,9 +235,9 @@ Files:
 
 ## Suggested Implementation Order
 
-1. File operation hardening and failure accounting (`Stats` + command behavior).
-2. Config validation and startup fail-fast path.
-3. Failure-path tests for filesystem and config validation.
+1. File operation hardening and failure accounting (`Stats` + command behavior). Status: Completed (2026-05-05)
+2. Config validation and startup fail-fast path. Status: Completed (2026-05-05)
+3. Failure-path tests for filesystem and config validation. Status: Completed (2026-05-05)
 4. Module logger migration.
 5. Typing cleanup and helper alias removal.
 6. Cache filename collision improvements.
