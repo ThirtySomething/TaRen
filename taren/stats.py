@@ -24,6 +24,8 @@ SOFTWARE.
 ******************************************************************************
 """
 
+from typing import Any
+
 
 class Stats:
     """
@@ -51,17 +53,33 @@ class Stats:
         return self.__str__()
 
     ############################################################################
+    def to_dict(self) -> dict[str, Any]:
+        """Convert statistics to dictionary format for JSON serialization"""
+        owned_pct: float = (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+        return {
+            "episodes_total": self.episodes_total,
+            "episodes_owned": self.episodes_owned,
+            "episodes_owned_percent": owned_pct,
+            "downloads_total": self.downloads_total,
+            "downloads_renamed": self.downloads_renamed,
+            "downloads_moved": self.downloads_moved,
+            "downloads_deleted": self.downloads_deleted,
+            "downloads_failed": self.downloads_failed,
+            "downloads_trash": self.downloads_trash,
+        }
+
+    ############################################################################
     def __str__(self):
-        """Represent statistics as string"""
-        owned_pct: float = (100 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
-        return "\n episodes total [{}],\n episodes owned [{}/{:3.2f}%],\n downloads deleted [{}],\n downloads failed [{}],\n downloads moved [{}],\n downloads renamed [{}],\n downloads total [{}],\n downloads trash [{}]".format(
-            self.episodes_total,
-            self.episodes_owned,
-            owned_pct,
-            self.downloads_deleted,
-            self.downloads_failed,
-            self.downloads_moved,
-            self.downloads_renamed,
-            self.downloads_total,
-            self.downloads_trash,
-        )
+        """Represent statistics as deterministic key-value format"""
+        owned_pct: float = (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
+        lines = [
+            f"episodes_total: {self.episodes_total}",
+            f"episodes_owned: {self.episodes_owned} ({owned_pct:.2f}%)",
+            f"downloads_total: {self.downloads_total}",
+            f"downloads_renamed: {self.downloads_renamed}",
+            f"downloads_moved: {self.downloads_moved}",
+            f"downloads_deleted: {self.downloads_deleted}",
+            f"downloads_failed: {self.downloads_failed}",
+            f"downloads_trash: {self.downloads_trash}",
+        ]
+        return "\n".join(lines)

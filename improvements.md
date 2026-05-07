@@ -196,6 +196,8 @@ Files:
 
 ### 8. Improve readability/parsability of summary stats
 
+Status: Completed (2026-05-05)
+
 Why this matters:
 
 - Current multi-line `__str__` formatting is human-readable but less structured.
@@ -205,9 +207,18 @@ Proposal:
 - Use deterministic key-value style output.
 - Consider adding `to_dict()` for future JSON output.
 
+Implemented:
+
+- Restructured `__str__()` to use deterministic key-value format (one stat per line).
+- Example output: `episodes_total: 10`, `episodes_owned: 5 (50.00%)`
+- Added `to_dict()` method that returns dict of all stats for JSON serialization.
+- Returns: episodes_total, episodes_owned, episodes_owned_percent, downloads_total, downloads_renamed, downloads_moved, downloads_deleted, downloads_failed, downloads_trash
+- Updated test assertion to match new format.
+
 Files:
 
 - `taren/stats.py`
+- `tests/test_stats.py`
 
 ## Test Coverage Gaps
 
@@ -273,7 +284,7 @@ Files:
 4. Module logger migration. Status: Completed (2026-05-05)
 5. Typing cleanup and helper alias removal. Status: Completed (2026-05-05)
 6. Cache filename collision improvements. Status: Completed (2026-05-05)
-7. Stats output restructuring.
+7. Stats output restructuring. Status: Completed (2026-05-05)
 
 ## Practical Outcome
 
