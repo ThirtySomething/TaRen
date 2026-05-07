@@ -103,8 +103,18 @@ class WebSiteCache:
         websitecontent: bytes | None = self._fetch_policy.fetch(self._websiteurl, headers)
         if websitecontent is None:
             return
+        try:
+            decoded_content: str = websitecontent.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            logger.error(
+                "failed to decode downloaded content from [%s] as UTF-8 for cache file [%s]: %s",
+                self._websiteurl,
+                self._cachename,
+                exc,
+            )
+            return
         with codecs.open(self._cachename, "w", "utf-8") as file:
-            file.write(websitecontent.decode("utf-8"))
+            file.write(decoded_content)
         logger.info(
             "saved content of [%s] to cache file [%s]",
             self._websiteurl,

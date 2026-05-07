@@ -121,6 +121,27 @@ class TestWebsiteCache(unittest.TestCase):
             self.assertEqual(policy.calls[0][0], "http://example")
             self.assertEqual(policy.calls[0][1], {"User-Agent": "ua"})
 
+    def test_write_to_cache_handles_invalid_utf8_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = str(Path(tmpdir) / "invalid_utf8")
+            policy = FakePolicy(b"\xff\xfe\xfa")
+            cache = WebSiteCache(base, "http://example", 1, "ua", fetch_policy=policy)
+
+            with patch("taren.websitecache.logger.error") as log_error:
+                cache._write_to_cache()
+
+            self.assertFalse(Path(cache._cachename).exists())
+            self.assertTrue(log_error.called)
+
+    def test_get_website_from_cache_returns_empty_when_decode_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = str(Path(tmpdir) / "decode_fail")
+            policy = FakePolicy(b"\xff\xfe\xfa")
+            cache = WebSiteCache(base, "http://example", 1, "ua", fetch_policy=policy)
+
+            self.assertEqual(cache.get_website_from_cache(), "")
+            self.assertFalse(Path(cache._cachename).exists())
+
     def test_requests_http_fetch_policy_retries(self) -> None:
         policy = RequestsHttpFetchPolicy(timeout_seconds=0.5, retries=2)
         requests_exception = Exception("boom")
