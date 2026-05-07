@@ -139,6 +139,16 @@ PYTHONIOENCODING="utf-8"
 
 gesetzt sein.
 
+Für den Start unter Linux/macOS:
+
+```shell
+chmod +x ./runme.sh
+./runme.sh
+```
+
+`runme.sh` ist ein Bash-Skript. Wird es versehentlich mit `sh ./runme.sh` gestartet,
+wechselt es automatisch auf Bash und läuft dort weiter.
+
 ## ToDos
 
 - ~~Verwendung einer INI Datei zur einfachen Konfiguration~~ Done

@@ -39,6 +39,7 @@ class CachedHtmlEpisodeSource(EpisodeSource):
         cachetime: int,
         useragent: str,
         fetch_policy: HttpFetchPolicy | None = None,
+        cache_dir: str | None = None,
     ) -> None:
         self._cache: WebSiteCache = WebSiteCache(
             pattern,
@@ -46,6 +47,7 @@ class CachedHtmlEpisodeSource(EpisodeSource):
             cachetime,
             useragent,
             fetch_policy=fetch_policy,
+            cache_dir=cache_dir,
         )
 
     def fetch(self) -> str:

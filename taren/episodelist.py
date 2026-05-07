@@ -51,6 +51,7 @@ class EpisodeList:
         useragent: str,
         fetch_policy: HttpFetchPolicy | None = None,
         episode_source: EpisodeSource | None = None,
+        cache_dir: str | None = None,
     ) -> None:
         self._pattern: str = pattern
         self._url: str = url
@@ -62,6 +63,7 @@ class EpisodeList:
             cachetime,
             useragent,
             fetch_policy=fetch_policy,
+            cache_dir=cache_dir,
         )
         self._episodes: list[Episode] = []
         logger.debug("pattern [%s]", pattern)

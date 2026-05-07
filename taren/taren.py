@@ -162,7 +162,14 @@ class TaRen:
         # Get list of episodes from web page
         ua: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI_USERAGENT)
         fetch_policy = RequestsHttpFetchPolicy(timeout_seconds=self._http_timeout, retries=self._http_retries)
-        episode_list: EpisodeList = EpisodeList(self._pattern, self._url, self._cachetime, ua, fetch_policy=fetch_policy)
+        episode_list: EpisodeList = EpisodeList(
+            self._pattern,
+            self._url,
+            self._cachetime,
+            ua,
+            fetch_policy=fetch_policy,
+            cache_dir=self._collection,
+        )
         episode_list.get_episodes()
         statistics.episodes_total = episode_list.get_episode_count()
         return episode_list

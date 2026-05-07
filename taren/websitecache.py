@@ -51,6 +51,7 @@ class WebSiteCache:
         cacheage: int,
         useragent: str,
         fetch_policy: HttpFetchPolicy | None = None,
+        cache_dir: str | None = None,
     ) -> None:
         """
         Default init of variables
@@ -58,7 +59,8 @@ class WebSiteCache:
         self._cacheage: int = cacheage
         # Include URL hash in cache filename to prevent collisions
         url_hash: str = hashlib.md5(websiteurl.encode()).hexdigest()[: TarenDefines.URL_HASH_LENGTH]
-        self._cachename: str = f"{cachename}_{url_hash}.html"
+        cache_filename: str = f"{cachename}_{url_hash}.html"
+        self._cachename: str = os.path.abspath(os.path.join(cache_dir, cache_filename)) if cache_dir else cache_filename
         self._websiteurl: str = websiteurl
         self._useragent: str = useragent
         self._fetch_policy: HttpFetchPolicy = fetch_policy or RequestsHttpFetchPolicy()
