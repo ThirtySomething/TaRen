@@ -28,7 +28,7 @@ import logging
 import platform
 import sys
 
-from taren.tarendefines import ConfigurationError
+from taren.configurationerror import ConfigurationError
 from taren.tarenruntime import TarenRuntime
 from taren.tarenruntimebuilder import TarenRuntimeBuilder
 

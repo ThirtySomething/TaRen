@@ -11,7 +11,7 @@ set "ENV_NAME=.venv"
 @REM Set name of python environment list exported by pip freeze > %REQ_NAME%
 set "REQ_NAME=requirements.txt"
 @REM Get name of script to start
-set "SCRIPT=%~nx1"
+set "SCRIPT=%~1"
 @REM Set default name of script to run
 set "DEF_SCRIPT=program.py"
 @REM ***************************************************************************
@@ -20,24 +20,26 @@ set "DEF_SCRIPT=program.py"
 @REM Get startup path of script
 set "PATH_BASE=%~dp0"
 @REM Set FQN of environment
-set "PATH_ENVIRONMENT=%PATH_BASE%\%ENV_NAME%"
+set "PATH_ENVIRONMENT=%PATH_BASE%%ENV_NAME%"
+set "PATH_ACTIVATE=%PATH_ENVIRONMENT%\Scripts\activate.bat"
+set "PATH_PYTHON=%PATH_ENVIRONMENT%\Scripts\python.exe"
 @REM ***************************************************************************
 @REM * Check environment for existence
 @REM ***************************************************************************
 if not exist "%PATH_ENVIRONMENT%" (
     @REM Create environment
     echo.Create missing environment [%ENV_NAME%]
-    python -m venv %ENV_NAME%
+    python -m venv "%PATH_ENVIRONMENT%"
     @REM Activate environment
     if ""=="%VIRTUAL_ENV%" (
         echo.Initial activation of environment [%ENV_NAME%]
-        call ./%ENV_NAME%/Scripts/activate.bat
+        if exist "%PATH_ACTIVATE%" call "%PATH_ACTIVATE%"
     )
     @REM Install required modules
     if exist "%REQ_NAME%" (
         echo.Install required modules in [%REQ_NAME%] to [%ENV_NAME%]
-        type %REQ_NAME%
-        pip install -r %REQ_NAME%
+        type "%REQ_NAME%"
+        "%PATH_PYTHON%" -m pip install -r "%REQ_NAME%"
     ) else (
         echo.List of required modules [%REQ_NAME%] not found
     )
@@ -47,7 +49,7 @@ if not exist "%PATH_ENVIRONMENT%" (
 @REM ***************************************************************************
 if ""=="%VIRTUAL_ENV%" (
     echo.Activate environment [%ENV_NAME%]
-    call ./%ENV_NAME%/Scripts/activate.bat
+    if exist "%PATH_ACTIVATE%" call "%PATH_ACTIVATE%"
 )
 @REM ***************************************************************************
 @REM * Handle special commands or determine script to run
@@ -57,17 +59,19 @@ if "%SCRIPT%"=="tests" (
     python -m unittest discover -s tests -p "test_*.py"
 ) else (
     @REM If no name is passed, set default value
-    if ""=="%SCRIPT%" (
+    if "%SCRIPT%"=="" (
+        echo.No script name passed, set default [%DEF_SCRIPT%]
         set "SCRIPT=%DEF_SCRIPT%"
     )
+    set "SCRIPT_PATH=%PATH_BASE%!SCRIPT!"
     @REM ***************************************************************************
     @REM * Execute script
     @REM ***************************************************************************
-    if exist "%SCRIPT%" (
-        echo.Execute script [%SCRIPT%]
-        python %SCRIPT%
+    if exist "!SCRIPT_PATH!" (
+        echo.Execute script [!SCRIPT!]
+        "%PATH_PYTHON%" "!SCRIPT_PATH!"
     ) else (
-        echo.Script [%SCRIPT%] not found :-()
+        echo.Script [!SCRIPT!] not found :-()
     )
 )
 endlocal
