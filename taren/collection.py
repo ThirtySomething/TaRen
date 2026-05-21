@@ -153,16 +153,6 @@ class Collection:
         return self._trash
 
     ############################################################################
-    def get_processing_sources(self) -> tuple[Path, Path, Path]:
-        """
-        Get source folders that are scanned for matching episode files.
-
-        Returns:
-            Tuple of (downloads_path, seen_path, unseen_path)
-        """
-        return self._downloads, self._seen, self._unseen
-
-    ############################################################################
     def get_download_source_path(self) -> Path:
         """
         Get the downloads folder as the only processing input source.
@@ -180,34 +170,7 @@ class Collection:
         Returns:
             Tuple of (downloads_path, seen_path, unseen_path) as strings
         """
-        downloads_path, seen_path, unseen_path = self.get_processing_sources()
-        return str(downloads_path), str(seen_path), str(unseen_path)
-
-    ############################################################################
-    def collect_matching_files(self, pattern: str, extension: str) -> tuple[int, list[tuple[str, str]]]:
-        """
-        Collect matching filenames from collection processing sources.
-
-        Args:
-            pattern: Filename pattern to match
-            extension: File extension filter
-
-        Returns:
-            Tuple of (total files in scanned sources, list of (source_dir, filename))
-        """
-        total_files: int = 0
-        matches: list[tuple[str, str]] = []
-
-        for sourcedir in self.get_processing_sources():
-            if not sourcedir.exists():
-                logger.debug("collection_scan_skipped: path=%s status=missing", sourcedir)
-                continue
-            filelist: list[str] = DownloadList(str(sourcedir), pattern, extension).get_filenames()
-            total_files += len(filelist)
-            for filename in filelist:
-                matches.append((str(sourcedir), filename))
-
-        return total_files, matches
+        return str(self._downloads), str(self._seen), str(self._unseen)
 
     ############################################################################
     def collect_download_matching_files(self, pattern: str, extension: str) -> tuple[int, list[tuple[str, str]]]:
