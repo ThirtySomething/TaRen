@@ -42,10 +42,10 @@ def main() -> None:
 
     logging.debug("startup")
 
-    logging.info("Running TaRen with the following settings:")
-    logging.info(runtime.config)
     logging.info("Operating system: [%s]", platform.uname())
     logging.info("Python version: [%s]", sys.version)
+    logging.info("Running TaRen with the following settings:")
+    logging.info(runtime.config)
 
     # Start magic process :D
     runtime.runner.rename_process()
