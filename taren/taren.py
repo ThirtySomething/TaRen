@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -179,6 +180,25 @@ class TaRen:
         return Path(path)
 
     ############################################################################
+    def _compute_fingerprint(self, file_path: Path) -> str:
+        """
+        Compute SHA-1 fingerprint of file (size + head + tail).
+
+        This matches the fingerprinting logic in EpisodeFileCache for cache lookups.
+        """
+        hasher = hashlib.sha1()
+        size = file_path.stat().st_size
+        hasher.update(str(size).encode("utf-8"))
+        with file_path.open("rb") as handle:
+            head = handle.read(65536)
+            hasher.update(head)
+            if size > 65536:
+                handle.seek(max(0, size - 65536))
+                tail = handle.read(65536)
+                hasher.update(tail)
+        return hasher.hexdigest()
+
+    ############################################################################
     def rename_process(self) -> None:
         """
         Controls the complete process:
@@ -266,6 +286,26 @@ class TaRen:
         downloads_to_process: list[DownloadTask] = []
         total_files, matches = self._collection_manager.collect_download_matching_files(self._pattern, self._extension)
         for sourcedir, current_download in matches:
+            # Fast duplicate detection: check cache for existing copies
+            download_path = Path(sourcedir) / current_download
+            if download_path.exists():
+                try:
+                    fingerprint = self._compute_fingerprint(download_path)
+                    existing = self._episode_file_cache.find_existing_by_fingerprint(fingerprint, download_path.stat().st_size)
+                    if existing:
+                        logger.info(
+                            "task_skip_duplicate: filename=%s reason=exists_in_cache existing_path=%s",
+                            current_download,
+                            existing,
+                        )
+                        continue
+                except (OSError, IOError) as exc:
+                    logger.warning(
+                        "task_fingerprint_failed: filename=%s error=%s status=fallback",
+                        current_download,
+                        exc,
+                    )
+
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
                 continue

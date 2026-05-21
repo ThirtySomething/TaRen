@@ -88,6 +88,36 @@ class EpisodeFileCache:
             )
             conn.commit()
 
+    def find_existing_by_fingerprint(self, fingerprint: str, size_bytes: int) -> str | None:
+        """
+        Find an existing file copy in seen or unseen folders by fingerprint.
+
+        This enables fast duplicate detection: if a download file matches a file
+        already in seen or unseen (same size and fingerprint), we can skip it.
+
+        Args:
+            fingerprint: SHA-1 fingerprint (size + head + tail)
+            size_bytes: File size in bytes
+
+        Returns:
+            Path to existing file if found in seen or unseen, None otherwise
+        """
+        try:
+            with sqlite3.connect(self._db_path) as conn:
+                cursor = conn.execute(
+                    """
+                    SELECT path FROM episode_file_cache
+                    WHERE fingerprint = ? AND size_bytes = ?
+                      AND folder_state IN ('seen', 'unseen')
+                    LIMIT 1
+                    """,
+                    (fingerprint, size_bytes),
+                )
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except sqlite3.DatabaseError:
+            return None
+
     def _update_row(self, conn: sqlite3.Connection, row_id: int, row: dict[str, object], marker: str) -> None:
         """
         Update an existing cache row with new file metadata.
