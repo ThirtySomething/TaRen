@@ -153,16 +153,6 @@ class Collection:
         return self._trash
 
     ############################################################################
-    def get_download_source_path(self) -> Path:
-        """
-        Get the downloads folder as the only processing input source.
-
-        Returns:
-            Downloads folder path
-        """
-        return self._downloads
-
-    ############################################################################
     def get_reconcile_paths(self) -> tuple[str, str, str]:
         """
         Get source folder paths used for cache reconciliation.
