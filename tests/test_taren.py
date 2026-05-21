@@ -207,6 +207,26 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             self.assertTrue((downloads / old_name).exists())
 
+    def test_rename_process_aborts_when_cache_init_fails(self) -> None:
+        # When episode cache initialization fails during _preflight()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, _, _ = self._setup_collection(tmpdir)
+            old_name = "Tatort_source.mp4"
+            (downloads / old_name).write_bytes(b"123")
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            # Mock the episode_file_cache.initialize() to raise OSError
+            with patch.object(runner._episode_file_cache, "initialize", side_effect=OSError("disk error")):
+                with patch("taren.taren.logger.error") as log_error:
+                    runner.rename_process()
+
+                # Verify error was logged and process aborted
+                self.assertTrue(log_error.called)
+                # The file should not be processed (still exists in downloads)
+                self.assertTrue((downloads / old_name).exists())
+
     def test_rename_process_skips_download_without_episode_match(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             old_name = "Tatort_source.mp4"
