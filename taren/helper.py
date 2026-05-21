@@ -25,7 +25,7 @@ SOFTWARE.
 """
 
 import logging
-import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -34,25 +34,24 @@ class Helper:
     ############################################################################
     @staticmethod
     def ensure_directory(dirname: str) -> bool:
-        if not os.path.exists(dirname):
-            try:
-                # Create missing folder
-                os.makedirs(dirname)
-                logger.debug("Directory [%s] created", dirname)
-            except OSError:
-                logger.error("Creation of the directory [%s] failed, abort", dirname)
-        else:
-            logger.debug("Directory [%s] already exists", dirname)
-        return os.path.exists(dirname)
+        path = Path(dirname)
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            logger.debug("Directory [%s] created", dirname)
+            return True
+        except OSError:
+            logger.error("Creation of the directory [%s] failed, abort", dirname)
+            return False
 
     ############################################################################
     @staticmethod
     def delete_file(filename: str) -> bool:
-        if not os.path.exists(filename):
+        path = Path(filename)
+        if not path.exists():
             logger.debug("File [%s] does not exist, nothing to delete", filename)
             return False
         try:
-            os.remove(filename)
+            path.unlink()
             logger.debug("File [%s] deleted", filename)
             return True
         except OSError:
