@@ -83,7 +83,7 @@ class TaRen:
             str(self._collection),
             TarenDefines.FOLDER_TRASH,
             self._trashage,
-            self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE),
+            trash_ignore,
         )
         self._log_initialization()
 
