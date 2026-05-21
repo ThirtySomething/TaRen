@@ -36,6 +36,7 @@ from taren.downloadtask import DownloadTask
 from taren.episode import Episode
 from taren.episodefilecache import EpisodeFileCache
 from taren.episodelist import EpisodeList
+from taren.filesystemerror import FileSystemError
 from taren.filefingerprint import FileFingerprint
 from taren.filemutationcommand import FileMutationCommand
 from taren.movetotrashcommand import MoveToTrashCommand
@@ -44,7 +45,7 @@ from taren.helper import Helper
 from taren.requestshttpfetchpolicy import RequestsHttpFetchPolicy
 from taren.sizebasedconflictstrategy import SizeBasedConflictStrategy
 from taren.stats import Stats
-from taren.tarendefines import FileSystemError, TarenDefines
+from taren.tarendefines import TarenDefines
 from taren.tarenconfig import TarenConfig
 from taren.trash import Trash
 

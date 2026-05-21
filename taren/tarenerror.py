@@ -24,28 +24,8 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import os
 
-from taren.filesystemerror import FileSystemError
+class TarenError(Exception):
+    """Base exception for all TaRen errors."""
 
-
-class FakeTrash:
-    def __init__(self, init_ok: bool = True) -> None:
-        self._init_ok = init_ok
-        self.moved: list[str] = []
-
-    def init(self) -> None:
-        if not self._init_ok:
-            raise FileSystemError("trash initialization failed (mock)")
-
-    def move(self, file_path: str) -> bool:
-        self.moved.append(os.path.basename(file_path))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        return True
-
-    def cleanup(self) -> int:
-        return 0
-
-    def list(self) -> int:
-        return 0
+    pass

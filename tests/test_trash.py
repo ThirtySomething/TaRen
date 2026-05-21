@@ -32,8 +32,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from taren.filesystemerror import FileSystemError
 from taren.helper import Helper
-from taren.tarendefines import FileSystemError
 from taren.trash import Trash
 
 

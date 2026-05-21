@@ -33,7 +33,8 @@ from unittest.mock import MagicMock, patch
 
 import program
 import taren.tarenruntimebuilder as tarenruntimebuilder
-from taren.tarendefines import ConfigurationError, TarenDefines
+from taren.configurationerror import ConfigurationError
+from taren.tarendefines import TarenDefines
 
 
 class TestProgramBuilder(unittest.TestCase):

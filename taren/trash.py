@@ -32,8 +32,8 @@ from datetime import datetime, timedelta
 
 from pathlib import Path
 
+from taren.filesystemerror import FileSystemError
 from taren.helper import Helper
-from taren.tarendefines import FileSystemError
 
 logger = logging.getLogger(__name__)
 

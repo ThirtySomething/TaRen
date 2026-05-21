@@ -79,37 +79,3 @@ class TarenDefines:
     # Cache configuration
     # ---------------------------------------------------------------------------
     URL_HASH_LENGTH: int = 8  # Length of MD5 hash used in cache filename
-
-
-# Exception hierarchy for TaRen
-class TarenError(Exception):
-    """Base exception for all TaRen errors."""
-
-    pass
-
-
-class NetworkError(TarenError):
-    """Raised when a network operation fails."""
-
-    pass
-
-
-class FileSystemError(TarenError):
-    """Raised when a file system operation fails."""
-
-    pass
-
-
-class ConfigurationError(TarenError):
-    """Raised when configuration is invalid."""
-
-    pass
-
-
-__all__ = [
-    "TarenDefines",
-    "TarenError",
-    "NetworkError",
-    "FileSystemError",
-    "ConfigurationError",
-]

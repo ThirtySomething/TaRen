@@ -25,50 +25,60 @@ SOFTWARE.
 """
 
 import unittest
+from types import SimpleNamespace
 
-from fakeepisode import FakeEpisode
-from taren.exactrepresentationmatchrule import ExactRepresentationMatchRule
+from taren.leadingnumbermatchrule import LeadingNumberMatchRule
 
 
-class TestExactRepresentationMatchRule(unittest.TestCase):
+class TestLeadingNumberMatchRule(unittest.TestCase):
     def setUp(self) -> None:
-        self.rule = ExactRepresentationMatchRule()
+        self.rule = LeadingNumberMatchRule()
 
-    def test_exact_match_success(self) -> None:
-        # When episode string representation matches filename exactly
-        episode = FakeEpisode("Test Episode")
-        filename = "Test Episode"
+    def test_leading_number_match_success(self) -> None:
+        # When filename starts with valid episode ID
+        episode = SimpleNamespace(episode_id=123)
+        filename = "0123 Test Episode"
         result = self.rule.try_match(filename, episode)
         self.assertTrue(result)
 
-    def test_exact_match_failure_different_case(self) -> None:
-        # When case differs, should not match
-        episode = FakeEpisode("Test Episode")
-        filename = "test episode"
+    def test_leading_number_no_match_different_id(self) -> None:
+        # When leading number doesn't match episode ID
+        episode = SimpleNamespace(episode_id=123)
+        filename = "0456 Test Episode"
+        result = self.rule.try_match(filename, episode)
+        self.assertFalse(result)
+
+    def test_leading_number_no_number_in_filename(self) -> None:
+        # When filename doesn't start with 4-digit number
+        episode = SimpleNamespace(episode_id=123)
+        filename = "Test 0123 Episode"
         result = self.rule.try_match(filename, episode)
         self.assertIsNone(result)
 
-    def test_exact_match_failure_partial(self) -> None:
-        # When only partial match, should not match
-        episode = FakeEpisode("Test Episode")
-        filename = "Test"
+    def test_leading_number_less_than_4_digits(self) -> None:
+        # When leading number is less than 4 digits
+        episode = SimpleNamespace(episode_id=123)
+        filename = "123 Test Episode"
         result = self.rule.try_match(filename, episode)
         self.assertIsNone(result)
 
-    def test_exact_match_empty_strings(self) -> None:
-        # When both are empty
-        episode = FakeEpisode("")
-        filename = ""
+    def test_leading_number_without_space(self) -> None:
+        # When leading number not followed by space
+        episode = SimpleNamespace(episode_id=123)
+        filename = "0123Test Episode"
+        result = self.rule.try_match(filename, episode)
+        self.assertIsNone(result)
+
+    def test_leading_number_zero_id(self) -> None:
+        # When episode ID is 0
+        episode = SimpleNamespace(episode_id=0)
+        filename = "0000 Test Episode"
         result = self.rule.try_match(filename, episode)
         self.assertTrue(result)
 
-    def test_exact_match_with_special_characters(self) -> None:
-        # When episode name has special characters
-        episode = FakeEpisode("Test - Episode (2023)")
-        filename = "Test - Episode (2023)"
+    def test_leading_number_large_id(self) -> None:
+        # When episode ID is large
+        episode = SimpleNamespace(episode_id=9999)
+        filename = "9999 Test Episode"
         result = self.rule.try_match(filename, episode)
         self.assertTrue(result)
-
-
-if __name__ == "__main__":
-    unittest.main()
