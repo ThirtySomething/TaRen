@@ -43,7 +43,8 @@ class EpisodeFileCache:
         self._db_path: str = db_path
 
     def initialize(self) -> None:
-        with sqlite3.connect(self._db_path) as conn:
+        conn = sqlite3.connect(self._db_path)
+        try:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS episode_file_cache (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +62,8 @@ class EpisodeFileCache:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_dev_inode ON episode_file_cache(dev, inode)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_fingerprint ON episode_file_cache(fingerprint, size_bytes)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_state ON episode_file_cache(folder_state)")
+        finally:
+            conn.close()
 
     def reconcile(self, downloads_dir: str, seen_dir: str, unseen_dir: str, extension: str) -> None:
         self.initialize()
@@ -70,7 +73,8 @@ class EpisodeFileCache:
         observed.extend(self._scan(unseen_dir, "unseen", normalized_ext))
 
         current_seen_marker: str = datetime.utcnow().isoformat(timespec="microseconds")
-        with sqlite3.connect(self._db_path) as conn:
+        conn = sqlite3.connect(self._db_path)
+        try:
             conn.execute("BEGIN")
             for row in observed:
                 if self._upsert_by_inode(conn, row, current_seen_marker):
@@ -116,6 +120,8 @@ class EpisodeFileCache:
                 (current_seen_marker, downloads_like, seen_like, unseen_like, current_seen_marker),
             )
             conn.commit()
+        finally:
+            conn.close()
 
     def find_existing_by_fingerprint(self, fingerprint: str, size_bytes: int) -> str | None:
         """
@@ -132,7 +138,8 @@ class EpisodeFileCache:
             Path to existing file if found in seen or unseen, None otherwise
         """
         try:
-            with sqlite3.connect(self._db_path) as conn:
+            conn = sqlite3.connect(self._db_path)
+            try:
                 cursor = conn.execute(
                     """
                     SELECT path FROM episode_file_cache
@@ -144,6 +151,8 @@ class EpisodeFileCache:
                 )
                 result = cursor.fetchone()
                 return result[0] if result else None
+            finally:
+                conn.close()
         except sqlite3.DatabaseError as exc:
             logger.warning(
                 "cache_lookup_failed: fingerprint=%s size=%s error=%s",
