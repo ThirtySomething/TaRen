@@ -124,7 +124,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             self.assertFalse(old_path.exists())
             self.assertTrue(new_path.exists())
-            self.assertIn(old_name, fake_trash.moved)
+            self.assertIn(f"{target_label}.mp4", fake_trash.moved)
 
     def test_rename_process_skips_when_already_in_seen(self) -> None:
         """File already in seen/ with correct name is counted as owned, not re-processed."""
@@ -315,7 +315,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertFalse(old_path.exists())
             self.assertTrue(unseen_path.exists())
             self.assertFalse((seen / f"{target_label}.mp4").exists())
-            self.assertIn(old_name, fake_trash.moved)
+            self.assertIn(f"{target_label}.mp4", fake_trash.moved)
 
     def test_rename_process_uses_template_pipeline_methods(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -371,14 +371,17 @@ class TestTaRenRenameProcess(unittest.TestCase):
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
 
+            # Download going to trash: renamed to normalized name first, then trashed
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
                 cast(Any, SimpleNamespace(move_to_trash="old.mp4", skip_rename=True)),
             )
-            self.assertEqual(len(commands), 1)
-            self.assertIsInstance(commands[0], MoveToTrashCommand)
+            self.assertEqual(len(commands), 2)
+            self.assertIsInstance(commands[0], RenameFileCommand)
+            self.assertIsInstance(commands[1], MoveToTrashCommand)
 
+            # No conflict: download renamed to destination
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
@@ -387,10 +390,11 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertEqual(len(commands), 1)
             self.assertIsInstance(commands[0], RenameFileCommand)
 
+            # Existing file trashed (already normalized), download renamed to destination
             commands = runner._build_commands_for_task(
                 "old.mp4",
                 "new.mp4",
-                cast(Any, SimpleNamespace(move_to_trash="old.mp4", skip_rename=False)),
+                cast(Any, SimpleNamespace(move_to_trash="existing.mp4", skip_rename=False)),
             )
             self.assertEqual(len(commands), 2)
             self.assertIsInstance(commands[0], MoveToTrashCommand)

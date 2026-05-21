@@ -332,7 +332,16 @@ class TaRen:
 
         commands: list[FileMutationCommand] = []
         if conflict_result.move_to_trash is not None:
-            commands.append(MoveToTrashCommand(self._trash, conflict_result.move_to_trash))
+            trash_path = conflict_result.move_to_trash
+            if trash_path == old_fqn:
+                # Download is going to trash: normalize its filename first so trash
+                # contains identifiable names.  Keep the original file extension.
+                normalized_name = Path(new_fqn).stem + Path(old_fqn).suffix
+                normalized_path = str(Path(old_fqn).parent / normalized_name)
+                if normalized_path != old_fqn:
+                    commands.append(RenameFileCommand(old_fqn, normalized_path))
+                trash_path = normalized_path
+            commands.append(MoveToTrashCommand(self._trash, trash_path))
         if not conflict_result.skip_rename:
             commands.append(RenameFileCommand(old_fqn, new_fqn))
         return commands

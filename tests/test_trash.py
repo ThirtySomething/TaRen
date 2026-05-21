@@ -69,8 +69,8 @@ class TestTrash(unittest.TestCase):
             src.write_text("second", encoding="utf-8")
             trash.move(str(src))
 
-            self.assertTrue((Path(tmpdir) / ".trash" / "file.mp4").exists())
-            self.assertTrue((Path(tmpdir) / ".trash" / "file_1.mp4").exists())
+            self.assertTrue((Path(tmpdir) / ".trash" / "file_01.mp4").exists())
+            self.assertTrue((Path(tmpdir) / ".trash" / "file_02.mp4").exists())
 
     def test_move_returns_false_when_rename_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

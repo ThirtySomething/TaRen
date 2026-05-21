@@ -147,10 +147,8 @@ class Trash:
 
         # Search for existing variants
         dst_variants: list[str] = fnmatch.filter(os.listdir(self._trashfolder), searchmask)
-        if len(dst_variants) == 0:
-            dst_path: Path = self._trashfolder_path / f"{filename_raw}{file_extension}"
-        else:
-            dst_path = self._trashfolder_path / f"{filename_raw}_{len(dst_variants)}{file_extension}"
+        counter: int = len(dst_variants) + 1
+        dst_path: Path = self._trashfolder_path / f"{filename_raw}_{counter:02d}{file_extension}"
 
         # Move file to trash
         logger.debug("Move file [%s] to [%s]", file, dst_path)
