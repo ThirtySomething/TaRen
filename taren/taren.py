@@ -24,7 +24,7 @@ SOFTWARE.
 ******************************************************************************
 """
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import logging
 import os
@@ -332,8 +332,13 @@ class TaRen:
             len(downloads_to_process),
         )
         with ThreadPoolExecutor(max_workers=self._max_parallel_workers) as executor:
-            for _ in executor.map(self._process_single_task, downloads_to_process):
-                pass
+            futures = {executor.submit(self._process_single_task, task): task for task in downloads_to_process}
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as exc:
+                    task = futures[future]
+                    logger.error("task_failed: file=%s error=%s", task.filename, exc)
 
     ############################################################################
     def _process_single_task(self, current_download: DownloadTask) -> None:
