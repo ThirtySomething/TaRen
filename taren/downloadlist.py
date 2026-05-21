@@ -27,6 +27,7 @@ SOFTWARE.
 import logging
 import fnmatch
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -59,5 +60,10 @@ class DownloadList:
         files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
         files.sort()
         # Log info about found files
-        logger.info("total number of downloads [%s]", len(files))
+        logger.info(
+            "collection_scan: folder=%s path=%s matched_files=%s",
+            Path(self._searchdir).name,
+            self._searchdir,
+            len(files),
+        )
         return files

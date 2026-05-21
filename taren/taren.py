@@ -29,9 +29,9 @@ import logging
 import os
 from pathlib import Path
 
+from taren.collection import Collection
 from taren.conflictresolutionresult import ConflictResolutionResult
 from taren.conflictresolutionstrategy import ConflictResolutionStrategy
-from taren.downloadlist import DownloadList
 from taren.downloadtask import DownloadTask
 from taren.episode import Episode
 from taren.episodefilecache import EpisodeFileCache
@@ -64,9 +64,10 @@ class TaRen:
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        self._collection: Path = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
-        self._downloads: Path = self._collection / TarenDefines.FOLDER_DOWNLOADS
-        self._seen: Path = self._collection / TarenDefines.FOLDER_SEEN
+        collection_root: Path = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
+        trash_ignore: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE)
+        self._collection_manager: Collection = Collection(collection_root, trash_ignore=trash_ignore)
+        self._collection: Path = collection_root
         self._pattern: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN)
         self._extension: str = self._sanitize_extension(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION))
         self._url: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI)
@@ -92,8 +93,8 @@ class TaRen:
         logger.debug(
             "taren_init: collection=%s downloads=%s seen=%s status=ready",
             self._collection,
-            self._downloads,
-            self._seen,
+            self._collection_manager.get_downloads_path(),
+            self._collection_manager.get_seen_path(),
         )
         logger.debug(
             "taren_init: pattern=%s extension=%s url=%s status=ready",
@@ -216,18 +217,11 @@ class TaRen:
             )
             return False
 
-        # Ensure downloads and seen subfolders exist
-        if not Helper.ensure_directory(self._downloads):
+        # Initialize collection folder structure
+        if not self._collection_manager.initialize():
             logger.error(
-                "preflight_directory: path=%s kind=downloads status=failed",
-                self._downloads,
-            )
-            return False
-
-        if not Helper.ensure_directory(self._seen):
-            logger.error(
-                "preflight_directory: path=%s kind=seen status=failed",
-                self._seen,
+                "preflight_collection_init: path=%s status=failed",
+                self._collection,
             )
             return False
 
@@ -270,22 +264,19 @@ class TaRen:
             return None
 
         # Scan both downloads/ and seen/ for matching files
+        downloads_path, seen_path, unseen_path = self._collection_manager.get_reconcile_paths()
         try:
-            self._episode_file_cache.reconcile(str(self._downloads), str(self._seen), self._extension)
+            self._episode_file_cache.reconcile(downloads_path, seen_path, unseen_path, self._extension)
         except OSError as exc:
             logger.error("episode_cache_reconcile: db=%s status=failed error=%s", self._episode_cache_db, exc)
 
         downloads_to_process: list[DownloadTask] = []
-        total_files: int = 0
-        for sourcedir in (self._downloads, self._seen):
-            filelist: list[str] = DownloadList(str(sourcedir), self._pattern, self._extension).get_filenames()
-            total_files += len(filelist)
-            for current_download in filelist:
-                episode: Episode = episode_list.find_episode(current_download)
-                if episode.empty:
-                    continue
-                downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=str(sourcedir)))
-        statistics.downloads_total = total_files
+        total_files, matches = self._collection_manager.collect_matching_files(self._pattern, self._extension)
+        for sourcedir, current_download in matches:
+            episode: Episode = episode_list.find_episode(current_download)
+            if episode.empty:
+                continue
+            downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=sourcedir))
         logger.info(
             "task_collection: total_files=%s candidates=%s status=ready",
             total_files,
@@ -299,8 +290,7 @@ class TaRen:
 
         if len(downloads_to_process) <= 1 or self._max_parallel_workers == 1:
             for current_download in downloads_to_process:
-                task_stats: Stats = self._process_single_task(current_download)
-                self._merge_task_stats(statistics, task_stats)
+                self._process_single_task(current_download)
             return
 
         logger.info(
@@ -309,38 +299,25 @@ class TaRen:
             len(downloads_to_process),
         )
         with ThreadPoolExecutor(max_workers=self._max_parallel_workers) as executor:
-            for task_stats in executor.map(self._process_single_task, downloads_to_process):
-                self._merge_task_stats(statistics, task_stats)
+            for _ in executor.map(self._process_single_task, downloads_to_process):
+                pass
 
     ############################################################################
-    def _process_single_task(self, current_download: DownloadTask) -> Stats:
-        """Process one download task and return local task statistics."""
+    def _process_single_task(self, current_download: DownloadTask) -> None:
+        """Process one download task."""
 
-        task_stats: Stats = Stats()
-
-        new_fqn_path: Path = self._seen / f"{current_download.episode}{self._extension}"
+        new_fqn_path: Path = self._collection_manager.get_seen_path() / f"{current_download.episode}{self._extension}"
         old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
 
         if new_fqn_path == old_fqn_path:
-            # Already processed episode
-            task_stats.episodes_owned += 1
-            return task_stats
+            # Already processed episode - already in seen folder
+            return
 
         new_fqn: str = str(new_fqn_path)
         old_fqn: str = str(old_fqn_path)
         conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
         commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
-        self._execute_commands(commands, task_stats)
-        return task_stats
-
-    ############################################################################
-    def _merge_task_stats(self, statistics: Stats, task_stats: Stats) -> None:
-        """Merge local per-task stats into global run statistics."""
-
-        statistics.episodes_owned += task_stats.episodes_owned
-        statistics.downloads_renamed += task_stats.downloads_renamed
-        statistics.downloads_moved += task_stats.downloads_moved
-        statistics.downloads_failed += task_stats.downloads_failed
+        self._execute_commands(commands, Stats())
 
     ############################################################################
     def _build_commands_for_task(
@@ -371,11 +348,32 @@ class TaRen:
     def _finalize(self, statistics: Stats) -> None:
         """Finalize processing by handling trash maintenance and summary logging."""
 
-        # Cleanup trash
-        statistics.downloads_deleted = self._trash.cleanup()
+        # Maintain trash folder before counting collection state.
+        self._trash.cleanup()
+        self._trash.list()
 
-        # List trash
-        statistics.downloads_trash = self._trash.list()
+        # Populate collection statistics
+        collection_counts = self._collection_manager.get_counts()
+        statistics.collection_downloads = collection_counts["downloads"]
+        statistics.collection_seen = collection_counts["seen"]
+        statistics.collection_unseen = collection_counts["unseen"]
+        statistics.collection_trash = collection_counts["trash"]
+
+        # Update episodes_owned to reflect collection content
+        statistics.update_episodes_owned_from_collection()
+
+        # Log collection summary
+        self._collection_manager.log_summary()
 
         # Summary
         logger.info("run_summary: status=completed details=%s", statistics)
+
+    ############################################################################
+    def get_collection_manager(self) -> Collection:
+        """
+        Get the collection manager to query collection contents.
+
+        Returns:
+            Collection manager instance for accessing downloads, seen, trash, and unseen items
+        """
+        return self._collection_manager

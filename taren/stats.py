@@ -29,23 +29,24 @@ from typing import Any
 
 class Stats:
     """
-    Statistic object, contains counter for
-    - Episodes total
-    - Episodes owned
-    - Downloads deleted
-    - Downloads in trash
+    Statistic object, contains collection-based counters for
+    - Downloads count
+    - Seen count and percentage
+    - Unseen count and percentage
+    - Trash count
+    - Episodes total and owned
     """
 
     ############################################################################
     def __init__(self) -> None:
-        self.downloads_deleted: int = 0
-        self.downloads_failed: int = 0
-        self.downloads_moved: int = 0
-        self.downloads_renamed: int = 0
-        self.downloads_total: int = 0
-        self.downloads_trash: int = 0
-        self.episodes_owned: int = 0
+        # Collection counts (after processing)
+        self.collection_downloads: int = 0
+        self.collection_seen: int = 0
+        self.collection_unseen: int = 0
+        self.collection_trash: int = 0
+        # Episode counts
         self.episodes_total: int = 0
+        self.episodes_owned: int = 0
 
     ############################################################################
     def __repr__(self):
@@ -53,38 +54,74 @@ class Stats:
         return self.__str__()
 
     ############################################################################
-    def _calculate_owned_percentage(self) -> float:
+    def _calculate_episodes_owned_percentage(self) -> float:
         """Calculate episodes owned as percentage of total"""
         return (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
 
     ############################################################################
+    def _calculate_seen_percentage(self) -> float:
+        """Calculate seen items as percentage of downloads"""
+        return (100.0 / self.collection_downloads * self.collection_seen) if self.collection_downloads else 0.0
+
+    ############################################################################
+    def _calculate_unseen_percentage(self) -> float:
+        """Calculate unseen items as percentage of downloads"""
+        return (100.0 / self.collection_downloads * self.collection_unseen) if self.collection_downloads else 0.0
+
+    ############################################################################
+    def _calculate_trash_percentage(self) -> float:
+        """Calculate trash items as percentage of downloads"""
+        return (100.0 / self.collection_downloads * self.collection_trash) if self.collection_downloads else 0.0
+
+    ############################################################################
+    def update_episodes_owned_from_collection(self) -> None:
+        """
+        Update episodes_owned to be the sum of collection_seen and collection_unseen.
+        This ensures that episodes_owned represents all episodes actually in the collection.
+        """
+        self.episodes_owned = self.collection_seen + self.collection_unseen
+
+    ############################################################################
     def to_dict(self) -> dict[str, Any]:
         """Convert statistics to dictionary format for JSON serialization"""
-        owned_pct: float = self._calculate_owned_percentage()
+        episodes_owned_pct: float = self._calculate_episodes_owned_percentage()
+        seen_pct: float = self._calculate_seen_percentage()
+        unseen_pct: float = self._calculate_unseen_percentage()
+        trash_pct: float = self._calculate_trash_percentage()
+
         return {
-            "episodes_total": self.episodes_total,
-            "episodes_owned": self.episodes_owned,
-            "episodes_owned_percent": owned_pct,
-            "downloads_total": self.downloads_total,
-            "downloads_renamed": self.downloads_renamed,
-            "downloads_moved": self.downloads_moved,
-            "downloads_deleted": self.downloads_deleted,
-            "downloads_failed": self.downloads_failed,
-            "downloads_trash": self.downloads_trash,
+            "collection": {
+                "downloads": self.collection_downloads,
+                "seen": self.collection_seen,
+                "seen_percent": seen_pct,
+                "unseen": self.collection_unseen,
+                "unseen_percent": unseen_pct,
+                "trash": self.collection_trash,
+                "trash_percent": trash_pct,
+            },
+            "episodes": {
+                "total": self.episodes_total,
+                "owned": self.episodes_owned,
+                "owned_percent": episodes_owned_pct,
+            },
         }
 
     ############################################################################
     def __str__(self):
-        """Represent statistics as deterministic key-value format"""
-        owned_pct: float = self._calculate_owned_percentage()
+        """Represent statistics as deterministic key-value format focused on collection state"""
+        episodes_owned_pct: float = self._calculate_episodes_owned_percentage()
+        seen_pct: float = self._calculate_seen_percentage()
+        unseen_pct: float = self._calculate_unseen_percentage()
+        trash_pct: float = self._calculate_trash_percentage()
+
         lines = [
+            "=== COLLECTION STATUS ===",
+            f"downloads: {self.collection_downloads}",
+            f"seen: {self.collection_seen} ({seen_pct:.2f}%)",
+            f"unseen: {self.collection_unseen} ({unseen_pct:.2f}%)",
+            f"trash: {self.collection_trash} ({trash_pct:.2f}%)",
+            "=== EPISODES STATUS ===",
             f"episodes_total: {self.episodes_total}",
-            f"episodes_owned: {self.episodes_owned} ({owned_pct:.2f}%)",
-            f"downloads_total: {self.downloads_total}",
-            f"downloads_renamed: {self.downloads_renamed}",
-            f"downloads_moved: {self.downloads_moved}",
-            f"downloads_deleted: {self.downloads_deleted}",
-            f"downloads_failed: {self.downloads_failed}",
-            f"downloads_trash: {self.downloads_trash}",
+            f"episodes_owned: {self.episodes_owned} ({episodes_owned_pct:.2f}%)",
         ]
         return "\n".join(lines)

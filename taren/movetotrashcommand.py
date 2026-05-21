@@ -35,7 +35,5 @@ class MoveToTrashCommand:
 
     def execute(self, statistics: Stats) -> bool:
         if self._trash.move(self._file_path):
-            statistics.downloads_moved += 1
             return True
-        statistics.downloads_failed += 1
         return False

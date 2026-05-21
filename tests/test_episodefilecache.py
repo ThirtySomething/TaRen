@@ -23,8 +23,10 @@ class TestEpisodeFileCache(unittest.TestCase):
             root = Path(tmpdir)
             downloads = root / "downloads"
             seen = root / "seen"
+            unseen = root / "unseen"
             downloads.mkdir()
             seen.mkdir()
+            unseen.mkdir()
 
             file_in_downloads = downloads / "Tatort_test.mp4"
             file_in_downloads.write_bytes(b"abc123")
@@ -32,11 +34,11 @@ class TestEpisodeFileCache(unittest.TestCase):
             db_path = str(root / "episodes.sqlite3")
             cache = EpisodeFileCache(db_path)
             cache.initialize()
-            cache.reconcile(str(downloads), str(seen), ".mp4")
+            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
             moved_path = seen / file_in_downloads.name
             file_in_downloads.rename(moved_path)
-            cache.reconcile(str(downloads), str(seen), ".mp4")
+            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
             with sqlite3.connect(db_path) as conn:
                 rows = conn.execute("SELECT path, folder_state FROM episode_file_cache ORDER BY id").fetchall()
@@ -50,8 +52,10 @@ class TestEpisodeFileCache(unittest.TestCase):
             root = Path(tmpdir)
             downloads = root / "downloads"
             seen = root / "seen"
+            unseen = root / "unseen"
             downloads.mkdir()
             seen.mkdir()
+            unseen.mkdir()
 
             cache_file = downloads / "Tatort_delete_me.mp4"
             cache_file.write_bytes(b"abc123")
@@ -59,16 +63,42 @@ class TestEpisodeFileCache(unittest.TestCase):
             db_path = str(root / "episodes.sqlite3")
             cache = EpisodeFileCache(db_path)
             cache.initialize()
-            cache.reconcile(str(downloads), str(seen), ".mp4")
+            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
             cache_file.unlink()
-            cache.reconcile(str(downloads), str(seen), ".mp4")
+            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
             with sqlite3.connect(db_path) as conn:
                 state = conn.execute("SELECT folder_state FROM episode_file_cache LIMIT 1").fetchone()
 
             self.assertIsNotNone(state)
             self.assertEqual(state[0], "missing")
+
+    def test_reconcile_tracks_files_in_unseen_folder(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            downloads = root / "downloads"
+            seen = root / "seen"
+            unseen = root / "unseen"
+            downloads.mkdir()
+            seen.mkdir()
+            unseen.mkdir()
+
+            unseen_file = unseen / "Tatort_unseen.mp4"
+            unseen_file.write_bytes(b"abc123")
+
+            db_path = str(root / "episodes.sqlite3")
+            cache = EpisodeFileCache(db_path)
+            cache.initialize()
+            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
+
+            with sqlite3.connect(db_path) as conn:
+                row = conn.execute("SELECT path, folder_state FROM episode_file_cache LIMIT 1").fetchone()
+
+            self.assertIsNotNone(row)
+            assert row is not None
+            self.assertEqual(row[0], str(unseen_file.resolve()))
+            self.assertEqual(row[1], "unseen")
 
 
 if __name__ == "__main__":

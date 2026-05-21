@@ -38,6 +38,7 @@ class TarenDefines:
     # ---------------------------------------------------------------------------
     FOLDER_DOWNLOADS: str = "downloads"
     FOLDER_SEEN: str = "seen"
+    FOLDER_UNSEEN: str = "unseen"
     FOLDER_TRASH: str = ".trash"
 
     # ---------------------------------------------------------------------------

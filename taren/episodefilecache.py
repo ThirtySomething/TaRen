@@ -31,11 +31,12 @@ class EpisodeFileCache:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_fingerprint ON episode_file_cache(fingerprint, size_bytes)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_state ON episode_file_cache(folder_state)")
 
-    def reconcile(self, downloads_dir: str, seen_dir: str, extension: str) -> None:
+    def reconcile(self, downloads_dir: str, seen_dir: str, unseen_dir: str, extension: str) -> None:
         self.initialize()
         normalized_ext: str = extension if extension.startswith(".") else f".{extension}"
         observed = self._scan(downloads_dir, "downloads", normalized_ext)
         observed.extend(self._scan(seen_dir, "seen", normalized_ext))
+        observed.extend(self._scan(unseen_dir, "unseen", normalized_ext))
 
         current_seen_marker: str = datetime.utcnow().isoformat(timespec="microseconds")
         with sqlite3.connect(self._db_path) as conn:
@@ -73,14 +74,15 @@ class EpisodeFileCache:
 
             downloads_like = f"{Path(downloads_dir).resolve()}{os.sep}%"
             seen_like = f"{Path(seen_dir).resolve()}{os.sep}%"
+            unseen_like = f"{Path(unseen_dir).resolve()}{os.sep}%"
             conn.execute(
                 """
                 UPDATE episode_file_cache
                 SET folder_state = 'missing', last_seen_at = ?
-                WHERE (path LIKE ? OR path LIKE ?)
+                WHERE (path LIKE ? OR path LIKE ? OR path LIKE ?)
                   AND last_seen_at <> ?
                 """,
-                (current_seen_marker, downloads_like, seen_like, current_seen_marker),
+                (current_seen_marker, downloads_like, seen_like, unseen_like, current_seen_marker),
             )
             conn.commit()
 

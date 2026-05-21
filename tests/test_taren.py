@@ -68,14 +68,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
         seen.mkdir(exist_ok=True)
         return downloads, seen
 
-    def _dl_mocks(self, downloads_files: list, seen_files: list | None = None):
-        """Return DownloadList side_effect list: first call=downloads dir, second=seen dir."""
-        seen_files = seen_files or []
-        return [
-            SimpleNamespace(get_filenames=lambda f=downloads_files: f),
-            SimpleNamespace(get_filenames=lambda f=seen_files: f),
-        ]
-
     def test_rename_process_equal_size_conflict(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0001 - A - B - C - 2020"
@@ -97,10 +89,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -128,10 +117,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -158,13 +144,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch(
-                    "taren.taren.DownloadList",
-                    side_effect=self._dl_mocks([], [old_name]),
-                ),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertTrue(seen_path.exists())
@@ -191,10 +171,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
@@ -224,10 +201,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             runner = TaRen(cast(Any, config))
             setattr(runner, "_trash", FakeTrash(init_ok=False))
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertTrue((downloads / old_name).exists())
@@ -250,10 +224,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertTrue(old_path.exists())
@@ -279,10 +250,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
             fake_trash = FakeTrash()
             setattr(runner, "_trash", fake_trash)
 
-            with (
-                patch("taren.taren.EpisodeList", return_value=fake_episode_list),
-                patch("taren.taren.DownloadList", side_effect=self._dl_mocks([old_name])),
-            ):
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
 
             self.assertEqual(len(strategy.calls), 1)
@@ -392,8 +360,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
             success = command.execute(statistics)
 
         self.assertFalse(success)
-        self.assertEqual(statistics.downloads_renamed, 0)
-        self.assertEqual(statistics.downloads_failed, 1)
 
     def test_move_to_trash_command_counts_failure_when_move_fails(self) -> None:
         statistics = Stats()
@@ -404,8 +370,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
         success = command.execute(statistics)
 
         self.assertFalse(success)
-        self.assertEqual(statistics.downloads_moved, 0)
-        self.assertEqual(statistics.downloads_failed, 1)
 
 
 class TestTaRenErrorScenarios(unittest.TestCase):
@@ -434,14 +398,6 @@ class TestTaRenErrorScenarios(unittest.TestCase):
         downloads.mkdir(exist_ok=True)
         seen.mkdir(exist_ok=True)
         return downloads, seen
-
-    def _dl_mocks(self, downloads_files: list, seen_files: list | None = None):
-        """Return DownloadList side_effect list: first call=downloads dir, second=seen dir."""
-        seen_files = seen_files or []
-        return [
-            SimpleNamespace(get_filenames=lambda f=downloads_files: f),
-            SimpleNamespace(get_filenames=lambda f=seen_files: f),
-        ]
 
     def test_load_episodes_handles_empty_website_content(self) -> None:
         """When website returns empty content, should handle gracefully."""
@@ -535,8 +491,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             )
             stats = Stats()
 
-            with patch("taren.taren.DownloadList", side_effect=self._dl_mocks([])):
-                result = runner._collect_tasks(fake_episode_list, stats)
+            result = runner._collect_tasks(fake_episode_list, stats)
 
             self.assertIsNone(result)
 
@@ -558,18 +513,27 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
 
-            with patch("taren.taren.Helper.ensure_directory", side_effect=[False, True]) as ensure_dir:
+            with patch.object(runner._collection_manager, "initialize", return_value=False) as init_collection:
                 with patch("taren.taren.logger.error") as log_error:
                     result = runner._preflight()
 
             self.assertFalse(result)
-            ensure_dir.assert_called_once_with(runner._downloads)
+            init_collection.assert_called_once_with()
             self.assertTrue(log_error.called)
 
-    def test_finalize_tracks_deleted_and_trash_stats(self) -> None:
-        """When finalize is called, should update stats with cleanup results."""
+    def test_finalize_updates_collection_counts(self) -> None:
+        """When finalize is called, should update collection/episodes stats."""
         with tempfile.TemporaryDirectory() as tmpdir:
             downloads, seen = self._setup_collection(tmpdir)
+            (downloads / "Tatort_source_1.mp4").write_bytes(b"123")
+            (downloads / "Tatort_source_2.mp4").write_bytes(b"123")
+            (seen / "Tatort - 0001 - A - B - C - 2020.mp4").write_bytes(b"123")
+            unseen = Path(tmpdir) / "unseen"
+            unseen.mkdir(exist_ok=True)
+            (unseen / "Tatort_pending.mp4").write_bytes(b"123")
+            trash = Path(tmpdir) / ".trash"
+            trash.mkdir(exist_ok=True)
+            (trash / "old.mp4").write_bytes(b"123")
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
 
@@ -582,14 +546,17 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             runner._finalize(stats)
 
-            self.assertEqual(stats.downloads_deleted, 5)
-            self.assertEqual(stats.downloads_trash, 3)
+            self.assertEqual(stats.collection_downloads, 2)
+            self.assertEqual(stats.collection_seen, 1)
+            self.assertEqual(stats.collection_unseen, 1)
+            self.assertEqual(stats.collection_trash, 1)
+            self.assertEqual(stats.episodes_owned, 2)
 
     def test_collect_tasks_skips_episodes_without_match(self) -> None:
         """When episode matching fails, file should be skipped."""
         with tempfile.TemporaryDirectory() as tmpdir:
             downloads, seen = self._setup_collection(tmpdir)
-            (downloads / "unknown_file.mp4").write_bytes(b"123")
+            (downloads / "Tatort_unknown_file.mp4").write_bytes(b"123")
 
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
@@ -601,14 +568,12 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             )
             stats = Stats()
 
-            with patch("taren.taren.DownloadList", side_effect=self._dl_mocks(["unknown_file.mp4"])):
-                tasks = runner._collect_tasks(fake_episode_list, stats)
+            tasks = runner._collect_tasks(fake_episode_list, stats)
 
             self.assertEqual(len(tasks), 0)
-            self.assertEqual(stats.downloads_total, 1)
 
-    def test_process_tasks_increments_episodes_owned_when_already_placed(self) -> None:
-        """When file is already in seen folder with correct name, should increment episodes_owned."""
+    def test_process_tasks_does_not_increment_episodes_owned_when_already_placed(self) -> None:
+        """Owned episodes are derived at finalize stage from collection counts."""
         with tempfile.TemporaryDirectory() as tmpdir:
             downloads, seen = self._setup_collection(tmpdir)
             target_name = "Tatort - 0005 - A - B - C - 2020"
@@ -628,10 +593,10 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             runner._process_tasks([task], stats)
 
-            self.assertEqual(stats.episodes_owned, 1)
+            self.assertEqual(stats.episodes_owned, 0)
 
-    def test_process_tasks_aggregates_owned_count_for_multiple_already_placed_tasks(self) -> None:
-        """Multiple already-placed tasks should aggregate owned episodes correctly."""
+    def test_process_tasks_does_not_aggregate_owned_count_for_multiple_already_placed_tasks(self) -> None:
+        """Owned episodes are derived at finalize stage from collection counts."""
         with tempfile.TemporaryDirectory() as tmpdir:
             _, seen = self._setup_collection(tmpdir)
             target_name_1 = "Tatort - 0006 - A - B - C - 2020"
@@ -657,7 +622,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             runner._process_tasks([task_1, task_2], stats)
 
-            self.assertEqual(stats.episodes_owned, 2)
+            self.assertEqual(stats.episodes_owned, 0)
 
     def test_parallel_workers_uses_configured_value_when_valid(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

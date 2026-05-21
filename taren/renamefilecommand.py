@@ -45,7 +45,6 @@ class RenameFileCommand:
         )
         try:
             os.rename(self._source_file, self._destination_file)
-            statistics.downloads_renamed += 1
             return True
         except OSError as exc:
             logger.error(
@@ -54,5 +53,4 @@ class RenameFileCommand:
                 self._destination_file,
                 exc,
             )
-            statistics.downloads_failed += 1
             return False
