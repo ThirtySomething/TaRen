@@ -153,19 +153,27 @@ class Episode:
         return int(episode_year_raw.group(1))
 
     ############################################################################
+    @staticmethod
+    def _remove_parenthesized_text(text: str, pattern: str | None = None) -> str:
+        """Remove text fragments enclosed in parentheses using a configurable pattern."""
+        if pattern is None:
+            pattern = r"\([^)]*\)"
+        return re.sub(pattern, "", text).strip()
+
+    ############################################################################
     def _extract_episode_name(self, data_row: list[str]) -> str:
         """Extract and normalize episode name."""
-        return re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
+        return self._remove_parenthesized_text(data_row[1].strip(), r"\(Folge [0-9]+(.)+\)")
 
     ############################################################################
     def _extract_episode_inspectors(self, data_row: list[str]) -> str:
         """Extract and normalize inspector information."""
-        return re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
+        return self._remove_parenthesized_text(data_row[4].strip(), r"\(Gastauftritt(.)+\)")
 
     ############################################################################
     def _extract_episode_sequence(self, data_row: list[str]) -> str:
         """Extract and normalize episode sequence value."""
-        return re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
+        return self._remove_parenthesized_text(data_row[5].strip(), r"(\(\s*[0-9]*\)*)")
 
     ############################################################################
     def parse(self, data_row: list[str]) -> None:
