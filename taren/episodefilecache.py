@@ -26,7 +26,7 @@ SOFTWARE.
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sqlite3
 
@@ -72,7 +72,7 @@ class EpisodeFileCache:
         observed.extend(self._scan(seen_dir, "seen", normalized_ext))
         observed.extend(self._scan(unseen_dir, "unseen", normalized_ext))
 
-        current_seen_marker: str = datetime.utcnow().isoformat(timespec="microseconds")
+        current_seen_marker: str = datetime.now(timezone.utc).isoformat(timespec="microseconds")
         conn = sqlite3.connect(self._db_path)
         try:
             conn.execute("BEGIN")
