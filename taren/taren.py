@@ -373,7 +373,8 @@ class TaRen:
         old_fqn: str = str(old_fqn_path)
         conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, str(conflict_check_path))
         commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
-        self._execute_commands(commands)
+        if not self._execute_commands(commands):
+            logger.warning("task_processing_incomplete: file=%s", current_download.filename)
 
     ############################################################################
     def _build_commands_for_task(
@@ -401,13 +402,17 @@ class TaRen:
         return commands
 
     ############################################################################
-    def _execute_commands(self, commands: list[FileMutationCommand]) -> None:
-        """Execute prepared file-mutation commands in order."""
+    def _execute_commands(self, commands: list[FileMutationCommand]) -> bool:
+        """Execute prepared file-mutation commands in order.
+
+        Returns True if all commands succeeded, else False.
+        """
 
         for command in commands:
             if not command.execute():
                 logger.error("task_execution: status=aborted reason=previous_failure")
-                break
+                return False
+        return True
 
     ############################################################################
     def _finalize(self, statistics: Stats) -> None:
