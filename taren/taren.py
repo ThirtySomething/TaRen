@@ -260,50 +260,80 @@ class TaRen:
         return episode_list
 
     ############################################################################
-    def _collect_tasks(self, episode_list: EpisodeList, statistics: Stats) -> list[DownloadTask] | None:
-        """Collect downloads that can be processed with known episode metadata."""
+    def _initialize_trash(self) -> bool:
+        """Initialize trash folder and marker file."""
 
-        # Check for trash
         try:
             self._trash.init()
-        except FileSystemError as e:
-            logger.error("trash_init: status=failed error=%s", e)
-            return None
+            return True
+        except FileSystemError as exc:
+            logger.error("trash_init: status=failed error=%s", exc)
+            return False
 
-        # Scan both downloads/ and seen/ for matching files
+    ############################################################################
+    def _reconcile_episode_cache(self) -> None:
+        """Reconcile episode file cache with current collection state."""
+
         downloads_path, seen_path, unseen_path = self._collection_manager.get_reconcile_paths()
         try:
             self._episode_file_cache.reconcile(downloads_path, seen_path, unseen_path, self._extension)
         except OSError as exc:
             logger.error("episode_cache_reconcile: db=%s status=failed error=%s", self._episode_cache_db, exc)
 
+    ############################################################################
+    def _should_skip_duplicate(self, download_path: Path, filename: str) -> bool:
+        """Return True when a download is already present in cache by fingerprint."""
+
+        if not download_path.exists():
+            return False
+
+        try:
+            fingerprint = self._compute_fingerprint(download_path)
+            existing = self._episode_file_cache.find_existing_by_fingerprint(fingerprint, download_path.stat().st_size)
+            if existing:
+                logger.info(
+                    "task_skip_duplicate: filename=%s reason=exists_in_cache existing_path=%s",
+                    filename,
+                    existing,
+                )
+                return True
+        except OSError as exc:
+            logger.warning(
+                "task_fingerprint_failed: filename=%s error=%s status=fallback",
+                filename,
+                exc,
+            )
+
+        return False
+
+    ############################################################################
+    def _build_download_tasks(self, episode_list: EpisodeList) -> tuple[int, list[DownloadTask]]:
+        """Build processable download tasks with known episode metadata."""
+
         downloads_to_process: list[DownloadTask] = []
         total_files, matches = self._collection_manager.collect_download_matching_files(self._pattern, self._extension)
         for sourcedir, current_download in matches:
-            # Fast duplicate detection: check cache for existing copies
             download_path = Path(sourcedir) / current_download
-            if download_path.exists():
-                try:
-                    fingerprint = self._compute_fingerprint(download_path)
-                    existing = self._episode_file_cache.find_existing_by_fingerprint(fingerprint, download_path.stat().st_size)
-                    if existing:
-                        logger.info(
-                            "task_skip_duplicate: filename=%s reason=exists_in_cache existing_path=%s",
-                            current_download,
-                            existing,
-                        )
-                        continue
-                except (OSError, IOError) as exc:
-                    logger.warning(
-                        "task_fingerprint_failed: filename=%s error=%s status=fallback",
-                        current_download,
-                        exc,
-                    )
+            if self._should_skip_duplicate(download_path, current_download):
+                continue
 
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
                 continue
+
             downloads_to_process.append(DownloadTask(filename=current_download, episode=episode, sourcedir=sourcedir))
+
+        return total_files, downloads_to_process
+
+    ############################################################################
+    def _collect_tasks(self, episode_list: EpisodeList, statistics: Stats) -> list[DownloadTask] | None:
+        """Collect downloads that can be processed with known episode metadata."""
+
+        if not self._initialize_trash():
+            return None
+
+        self._reconcile_episode_cache()
+        total_files, downloads_to_process = self._build_download_tasks(episode_list)
         logger.info(
             "task_collection: total_files=%s candidates=%s status=ready",
             total_files,
