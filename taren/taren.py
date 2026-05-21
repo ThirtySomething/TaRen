@@ -330,9 +330,13 @@ class TaRen:
             for future in as_completed(futures):
                 try:
                     future.result()
-                except Exception as exc:
+                except (OSError, IOError, FileNotFoundError) as exc:
                     task = futures[future]
                     logger.error("task_failed: file=%s error=%s", task.filename, exc)
+                except Exception as exc:
+                    task = futures[future]
+                    logger.exception("task_unexpected_error: file=%s error=%s", task.filename, exc)
+                    raise
 
     ############################################################################
     def _process_single_task(self, current_download: DownloadTask) -> None:
