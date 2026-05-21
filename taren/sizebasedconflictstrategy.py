@@ -42,12 +42,8 @@ class SizeBasedConflictStrategy:
         size_old: int = os.stat(old_fqn).st_size
         size_new: int = os.stat(new_fqn).st_size
 
-        if size_old == size_new:
+        if size_old >= size_new:
             logger.info("size_equal: trashing existing [%s]", new_fqn)
-            return ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
-
-        if size_old > size_new:
-            logger.info("download_larger: trashing existing [%s]", new_fqn)
             return ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
 
         logger.info("download_smaller: trashing download [%s]", old_fqn)

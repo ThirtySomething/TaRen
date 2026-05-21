@@ -93,7 +93,7 @@ class TaRen:
         """Log configuration details during initialization."""
         logger.debug(
             "taren_init: collection=%s downloads=%s seen=%s status=ready",
-            self._collection,
+            self._collection_manager.get_collection_path(),
             self._collection_manager.get_downloads_path(),
             self._collection_manager.get_seen_path(),
         )

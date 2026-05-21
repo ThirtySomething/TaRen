@@ -40,8 +40,12 @@ class TarenRuntimeBuilder:
         self._config_file: str = config_file
 
     def build_config(self) -> TarenConfig:
+        save_config: bool = False
+        if not os.path.isfile(self._config_file):
+            save_config = True
         config: TarenConfig = TarenConfig(self._config_file)
-        config.save()
+        if save_config:
+            config.save()
         return config
 
     def validate_config(self, config: TarenConfig) -> None:

@@ -53,10 +53,6 @@ class EpisodeList:
         episode_source: EpisodeSource | None = None,
         cache_dir: str | None = None,
     ) -> None:
-        self._pattern: str = pattern
-        self._url: str = url
-        self._cachetime: int = cachetime
-        self._useragent: str = useragent
         self._episode_source: EpisodeSource = episode_source or CachedHtmlEpisodeSource(
             pattern,
             url,
