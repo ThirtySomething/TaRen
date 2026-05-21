@@ -65,7 +65,7 @@ class TaRen:
         conflict_strategy: ConflictResolutionStrategy | None = None,
     ) -> None:
         self._config: TarenConfig = config
-        collection_root: Path = self._sanitize_path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
+        collection_root: Path = Path(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_COLLECTION))
         trash_ignore: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHIGNORE)
         self._collection_manager: Collection = Collection(collection_root, trash_ignore=trash_ignore)
         self._collection: Path = collection_root
@@ -173,12 +173,6 @@ class TaRen:
     ############################################################################
 
     ############################################################################
-    def _sanitize_path(self, path: str) -> Path:
-        """
-        Normalize configured path into a pathlib.Path instance
-        """
-        return Path(path)
-
     ############################################################################
     def _compute_fingerprint(self, file_path: Path) -> str:
         """
