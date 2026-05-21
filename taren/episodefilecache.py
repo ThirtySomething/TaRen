@@ -172,6 +172,15 @@ class EpisodeFileCache:
             row: File metadata dict containing path, folder_state, size_bytes, mtime_ns, dev, inode, fingerprint
             marker: Current seen marker timestamp
         """
+        # Ensure we won't violate the UNIQUE constraint on `path` when
+        # updating this row to a new path that might already exist in
+        # another row. Remove any other rows that have the same path but
+        # a different id to merge/replace them.
+        conn.execute(
+            "DELETE FROM episode_file_cache WHERE path = ? AND id <> ?",
+            (row["path"], row_id),
+        )
+
         conn.execute(
             """
             UPDATE episode_file_cache
