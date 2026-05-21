@@ -54,12 +54,13 @@ class Collection:
             trash_ignore: Marker filename to exclude from trash counters
         """
         self._root: Path = root_path
-        self._trash_ignore: str = trash_ignore
+        self._ignorefile: str = trash_ignore
         self._downloads: Path = self._root / TarenDefines.FOLDER_DOWNLOADS
         self._seen: Path = self._root / TarenDefines.FOLDER_SEEN
         self._unseen: Path = self._root / TarenDefines.FOLDER_UNSEEN
         self._trash: Path = self._root / TarenDefines.FOLDER_TRASH
-        self._seen_ignore_path: Path = self._seen / self._trash_ignore
+        self._seen_ignore_path: Path = self._seen / self._ignorefile
+        self._trash_ignore_path: Path = self._trash / self._ignorefile
         logger.debug(
             "collection_init: root=%s downloads=%s seen=%s unseen=%s trash=%s trash_ignore=%s",
             self._root,
@@ -67,7 +68,7 @@ class Collection:
             self._seen,
             self._unseen,
             self._trash,
-            self._trash_ignore,
+            self._ignorefile,
         )
 
     ############################################################################
@@ -99,6 +100,11 @@ class Collection:
         if not self._seen_ignore_path.exists():
             self._seen_ignore_path.touch()
             logger.debug("collection_seen_ignore_ready: path=%s", self._seen_ignore_path)
+
+        # Ensure ignore marker exists in trash folder so media indexers can skip it.
+        if not self._trash_ignore_path.exists():
+            self._trash_ignore_path.touch()
+            logger.debug("collection_trash_ignore_ready: path=%s", self._trash_ignore_path)
 
         return True
 
@@ -245,7 +251,7 @@ class Collection:
         Returns:
             List of filenames in seen folder (excluding ignore marker), sorted alphabetically
         """
-        excluded = {self._trash_ignore, ".seenignore"}
+        excluded = {self._ignorefile}
         return self._list_folder(self._seen, "seen", excluded)
 
     ############################################################################
@@ -256,7 +262,7 @@ class Collection:
         Returns:
             List of filenames in trash folder (excluding ignore marker), sorted alphabetically
         """
-        excluded = {self._trash_ignore, ".trashignore"}
+        excluded = {self._ignorefile}
         return self._list_folder(self._trash, "trash", excluded)
 
     ############################################################################
