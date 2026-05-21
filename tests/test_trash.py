@@ -26,6 +26,7 @@ SOFTWARE.
 
 import os
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -114,6 +115,40 @@ class TestTrash(unittest.TestCase):
                 trash.cleanup()
 
             self.assertTrue(delete_mock.called)
+
+    def test_concurrent_move_produces_distinct_variant_names(self) -> None:
+        """Two parallel move() calls must not overwrite each other's trash entry."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trash = Trash(tmpdir, ".trash", 1, ".ignore")
+            trash.init()
+            trash_dir = Path(tmpdir) / ".trash"
+
+            src_a = Path(tmpdir) / "file.mp4"
+            src_b = Path(tmpdir) / "file2.mp4"
+            src_a.write_text("aaa", encoding="utf-8")
+            src_b.write_text("bbb", encoding="utf-8")
+
+            barrier = threading.Barrier(2)
+
+            def move_a() -> None:
+                barrier.wait()
+                trash.move(str(src_a))
+
+            def move_b() -> None:
+                barrier.wait()
+                trash.move(str(src_b))
+
+            t1 = threading.Thread(target=move_a)
+            t2 = threading.Thread(target=move_b)
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+
+            # Both files must end up in trash under distinct names
+            trashed = [f.name for f in trash_dir.iterdir() if f.is_file() and f.name != ".ignore"]
+            self.assertEqual(len(trashed), 2)
+            self.assertEqual(len(set(trashed)), 2)
 
     def test_cleanup_respects_trash_retention_age_threshold(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
