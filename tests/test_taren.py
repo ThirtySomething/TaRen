@@ -519,5 +519,81 @@ class TestTaRenRenameProcess(unittest.TestCase):
         self.assertFalse(success)
 
 
+class TestTaRenBoundaryConditions(unittest.TestCase):
+    """Test TC3: Boundary conditions in TaRen processing."""
+
+    def _build_config(self, collection_path: str) -> FakeConfig:
+        return FakeConfig(
+            {
+                "taren.collection": collection_path,
+                "taren.pattern": "Tatort",
+                "taren.extension": "mp4",
+                "taren.wiki": "http://example/episodes",
+                "taren.maxcache": "1",
+                "taren.trashage": "1",
+                "taren.trashignore": ".ignore",
+                "taren.wiki_useragent": "ua",
+                "taren.http_timeout": "10",
+                "taren.http_retries": "1",
+                "taren.episode_cache_db": "episodes.sqlite3",
+            }
+        )
+
+    def _setup_collection(self, tmpdir: str):
+        """Create downloads, seen and unseen subfolders inside the collection root."""
+        downloads = Path(tmpdir) / "downloads"
+        seen = Path(tmpdir) / "seen"
+        unseen = Path(tmpdir) / "unseen"
+        downloads.mkdir(exist_ok=True)
+        seen.mkdir(exist_ok=True)
+        unseen.mkdir(exist_ok=True)
+        return downloads, seen, unseen
+
+    def test_rename_process_handles_empty_episode_list(self) -> None:
+        # When episode source returns no episodes
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, _, _ = self._setup_collection(tmpdir)
+            old_name = "Tatort_source.mp4"
+            (downloads / old_name).write_bytes(b"123")
+
+            from taren.episode import Episode
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 0,
+                find_episode=lambda _: Episode.empty_instance(),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            # File should remain in downloads since there are no episodes to match against
+            self.assertTrue((downloads / old_name).exists())
+
+    def test_rename_process_handles_zero_length_download_folder(self) -> None:
+        # When downloads folder is empty (no files to process)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            downloads, _, _ = self._setup_collection(tmpdir)
+            # Deliberately don't create any files in downloads folder
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 3,
+                find_episode=lambda _: FakeEpisode("Tatort - 0001 - A - B - C - 2020"),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            # Process completes without error even with empty downloads
+            self.assertEqual(len(list(downloads.iterdir())), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
