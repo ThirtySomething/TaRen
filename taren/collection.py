@@ -270,26 +270,6 @@ class Collection:
         return self._list_folder(self._unseen, "unseen")
 
     ############################################################################
-    def get_counts(self) -> dict[str, int]:
-        """
-        Get counts of items in all collection categories.
-
-        Returns:
-            Dictionary with counts: {downloads, seen, unseen, trash}
-        """
-        downloads = self.get_downloads()
-        seen = self.get_seen()
-        unseen = self.get_unseen()
-        trash = self.get_trash()
-
-        return {
-            "downloads": len(downloads),
-            "seen": len(seen),
-            "unseen": len(unseen),
-            "trash": len(trash),
-        }
-
-    ############################################################################
     def get_stats(self) -> dict[str, Any]:
         """
         Get detailed statistics of the collection.
@@ -316,6 +296,16 @@ class Collection:
                 "trash": trash,
             },
         }
+
+    ############################################################################
+    def get_counts(self) -> dict[str, int]:
+        """
+        Get counts of items in all collection categories.
+
+        Returns:
+            Dictionary with counts: {downloads, seen, unseen, trash}
+        """
+        return self.get_stats()["counts"]
 
     ############################################################################
     def log_summary(self) -> None:
