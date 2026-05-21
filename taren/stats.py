@@ -49,11 +49,6 @@ class Stats:
         self.episodes_owned: int = 0
 
     ############################################################################
-    def __repr__(self):
-        """Represent statistics as string"""
-        return self.__str__()
-
-    ############################################################################
     def _calculate_episodes_owned_percentage(self) -> float:
         """Calculate episodes owned as percentage of total"""
         return (100.0 / self.episodes_total * self.episodes_owned) if self.episodes_total else 0.0
