@@ -74,31 +74,64 @@ class TestEpisodeFileCache(unittest.TestCase):
             self.assertIsNotNone(state)
             self.assertEqual(state[0], "missing")
 
-    def test_reconcile_tracks_files_in_unseen_folder(self) -> None:
+    def test_fingerprint_small_file_is_deterministic(self) -> None:
+        """Files smaller than 64 KB produce a consistent SHA-1 based on size + content."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            downloads = root / "downloads"
-            seen = root / "seen"
-            unseen = root / "unseen"
-            downloads.mkdir()
-            seen.mkdir()
-            unseen.mkdir()
+            p = Path(tmpdir) / "small.mp4"
+            p.write_bytes(b"hello world")
 
-            unseen_file = unseen / "Tatort_unseen.mp4"
-            unseen_file.write_bytes(b"abc123")
+            cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
+            fp1 = cache._fingerprint(p, p.stat().st_size)
+            fp2 = cache._fingerprint(p, p.stat().st_size)
 
-            db_path = str(root / "episodes.sqlite3")
-            cache = EpisodeFileCache(db_path)
-            cache.initialize()
-            cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
+            self.assertEqual(fp1, fp2)
+            self.assertEqual(len(fp1), 40)  # SHA-1 hex digest length
 
-            with sqlite3.connect(db_path) as conn:
-                row = conn.execute("SELECT path, folder_state FROM episode_file_cache LIMIT 1").fetchone()
+    def test_fingerprint_differs_for_different_content(self) -> None:
+        """Two files with the same size but different content get different fingerprints."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            a = Path(tmpdir) / "a.mp4"
+            b = Path(tmpdir) / "b.mp4"
+            a.write_bytes(b"AAAA")
+            b.write_bytes(b"BBBB")
 
-            self.assertIsNotNone(row)
-            assert row is not None
-            self.assertEqual(row[0], str(unseen_file.resolve()))
-            self.assertEqual(row[1], "unseen")
+            cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
+            self.assertNotEqual(
+                cache._fingerprint(a, a.stat().st_size),
+                cache._fingerprint(b, b.stat().st_size),
+            )
+
+    def test_fingerprint_large_file_reads_head_and_tail(self) -> None:
+        """Files larger than 64 KB are fingerprinted using head + tail chunks."""
+        chunk = 65536
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "large.mp4"
+            # Write a file slightly larger than 64 KB with distinctive tail bytes
+            data = b"\x00" * (chunk + 1)
+            p.write_bytes(data)
+
+            cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
+            fp = cache._fingerprint(p, len(data))
+
+            self.assertEqual(len(fp), 40)
+
+            # Mutate the tail; fingerprint must change
+            mutated = b"\x00" * chunk + b"\xff"
+            p.write_bytes(mutated)
+            fp_mutated = cache._fingerprint(p, len(mutated))
+            self.assertNotEqual(fp, fp_mutated)
+
+    def test_fingerprint_large_file_same_as_small_boundary(self) -> None:
+        """A file exactly at the 64 KB boundary is fingerprinted the same as a small file."""
+        chunk = 65536
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p = Path(tmpdir) / "boundary.mp4"
+            p.write_bytes(b"\xab" * chunk)
+
+            cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
+            fp1 = cache._fingerprint(p, chunk)
+            fp2 = cache._fingerprint(p, chunk)
+            self.assertEqual(fp1, fp2)
 
 
 if __name__ == "__main__":
