@@ -1,9 +1,9 @@
-import hashlib
 import os
 from datetime import datetime
 from pathlib import Path
 import sqlite3
 
+from taren.filefingerprint import FileFingerprint
 from taren.helper import Helper
 
 
@@ -206,13 +206,6 @@ class EpisodeFileCache:
         return rows
 
     def _fingerprint(self, path: Path, size: int) -> str:
-        hasher = hashlib.sha1()
-        hasher.update(str(size).encode("utf-8"))
-        with path.open("rb") as handle:
-            head = handle.read(65536)
-            hasher.update(head)
-            if size > 65536:
-                handle.seek(max(0, size - 65536))
-                tail = handle.read(65536)
-                hasher.update(tail)
-        return hasher.hexdigest()
+        # Keep method signature for compatibility with existing tests/callers.
+        _ = size
+        return FileFingerprint.compute(path)

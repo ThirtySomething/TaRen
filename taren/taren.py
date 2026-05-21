@@ -25,7 +25,6 @@ SOFTWARE.
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import hashlib
 import logging
 import os
 from pathlib import Path
@@ -37,6 +36,7 @@ from taren.downloadtask import DownloadTask
 from taren.episode import Episode
 from taren.episodefilecache import EpisodeFileCache
 from taren.episodelist import EpisodeList
+from taren.filefingerprint import FileFingerprint
 from taren.filemutationcommand import FileMutationCommand
 from taren.movetotrashcommand import MoveToTrashCommand
 from taren.renamefilecommand import RenameFileCommand
@@ -176,21 +176,9 @@ class TaRen:
     ############################################################################
     def _compute_fingerprint(self, file_path: Path) -> str:
         """
-        Compute SHA-1 fingerprint of file (size + head + tail).
-
-        This matches the fingerprinting logic in EpisodeFileCache for cache lookups.
+        Compute file fingerprint for cache lookups.
         """
-        hasher = hashlib.sha1()
-        size = file_path.stat().st_size
-        hasher.update(str(size).encode("utf-8"))
-        with file_path.open("rb") as handle:
-            head = handle.read(65536)
-            hasher.update(head)
-            if size > 65536:
-                handle.seek(max(0, size - 65536))
-                tail = handle.read(65536)
-                hasher.update(tail)
-        return hasher.hexdigest()
+        return FileFingerprint.compute(file_path)
 
     ############################################################################
     def rename_process(self) -> None:
