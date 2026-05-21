@@ -27,8 +27,7 @@ SOFTWARE.
 import logging
 import os
 
-from taren.tarendefines import ConfigurationError
-from taren.tarendefines import TarenDefines
+from taren.tarendefines import ConfigurationError, TarenDefines
 from taren.taren import TaRen
 from taren.tarenconfig import TarenConfig
 from taren.tarenruntime import TarenRuntime
