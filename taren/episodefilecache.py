@@ -88,20 +88,16 @@ class EpisodeFileCache:
             )
             conn.commit()
 
-    def _upsert_by_inode(self, conn: sqlite3.Connection, row: dict[str, object], marker: str) -> bool:
-        dev = row["dev"]
-        inode = row["inode"]
-        if dev is None or inode is None:
-            return False
+    def _update_row(self, conn: sqlite3.Connection, row_id: int, row: dict[str, object], marker: str) -> None:
+        """
+        Update an existing cache row with new file metadata.
 
-        cursor = conn.execute(
-            "SELECT id FROM episode_file_cache WHERE dev = ? AND inode = ? LIMIT 1",
-            (dev, inode),
-        )
-        hit = cursor.fetchone()
-        if not hit:
-            return False
-
+        Args:
+            conn: Database connection
+            row_id: ID of row to update
+            row: File metadata dict containing path, folder_state, size_bytes, mtime_ns, dev, inode, fingerprint
+            marker: Current seen marker timestamp
+        """
         conn.execute(
             """
             UPDATE episode_file_cache
@@ -118,9 +114,25 @@ class EpisodeFileCache:
                 row["inode"],
                 row["fingerprint"],
                 marker,
-                hit[0],
+                row_id,
             ),
         )
+
+    def _upsert_by_inode(self, conn: sqlite3.Connection, row: dict[str, object], marker: str) -> bool:
+        dev = row["dev"]
+        inode = row["inode"]
+        if dev is None or inode is None:
+            return False
+
+        cursor = conn.execute(
+            "SELECT id FROM episode_file_cache WHERE dev = ? AND inode = ? LIMIT 1",
+            (dev, inode),
+        )
+        hit = cursor.fetchone()
+        if not hit:
+            return False
+
+        self._update_row(conn, hit[0], row, marker)
         return True
 
     def _upsert_by_fingerprint(self, conn: sqlite3.Connection, row: dict[str, object], marker: str) -> bool:
@@ -137,25 +149,7 @@ class EpisodeFileCache:
         if not hit:
             return False
 
-        conn.execute(
-            """
-            UPDATE episode_file_cache
-            SET path = ?, folder_state = ?, size_bytes = ?, mtime_ns = ?, dev = ?, inode = ?,
-                fingerprint = ?, last_seen_at = ?
-            WHERE id = ?
-            """,
-            (
-                row["path"],
-                row["folder_state"],
-                row["size_bytes"],
-                row["mtime_ns"],
-                row["dev"],
-                row["inode"],
-                row["fingerprint"],
-                marker,
-                hit[0],
-            ),
-        )
+        self._update_row(conn, hit[0], row, marker)
         return True
 
     def _scan(self, folder: str, folder_state: str, extension: str) -> list[dict[str, object]]:
