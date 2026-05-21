@@ -42,9 +42,13 @@ class SizeBasedConflictStrategy:
         source_size: int = os.stat(source_file_path).st_size
         destination_size: int = os.stat(destination_file_path).st_size
 
-        if source_size >= destination_size:
-            logger.info("size_equal: trashing existing [%s]", destination_file_path)
+        if source_size > destination_size:
+            logger.info("size_larger: trashing existing [%s]", destination_file_path)
             return ConflictResolutionResult(move_to_trash=destination_file_path, skip_rename=False)
+
+        if source_size == destination_size:
+            logger.info("size_equal: trashing download [%s]", source_file_path)
+            return ConflictResolutionResult(move_to_trash=source_file_path, skip_rename=True)
 
         logger.info("download_smaller: trashing download [%s]", source_file_path)
         return ConflictResolutionResult(move_to_trash=source_file_path, skip_rename=True)
