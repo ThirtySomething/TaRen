@@ -141,8 +141,9 @@ class WebSiteCache:
             logger.info("cache_eviction: file=%s status=deleted", self._cachename)
         if not self._cache_path.exists():
             self._write_to_cache()
-        if not self._cache_path.exists():
+        try:
+            content: str = self._read_from_cache()
+            return content
+        except FileNotFoundError:
             logger.error("cache_lookup: file=%s status=failed reason=download_unavailable", self._cachename)
             return ""
-        content: str = self._read_from_cache()
-        return content
