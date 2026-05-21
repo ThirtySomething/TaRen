@@ -82,6 +82,7 @@ class TestProgramBuilder(unittest.TestCase):
                 "_create_file_handler",
                 return_value=handler_instance,
             ) as create_handler,
+            patch("taren.tarenruntimebuilder.os.path.isfile", return_value=False),
         ):
             runtime = tarenruntimebuilder.TarenRuntimeBuilder(f"{TarenDefines.PROGRAM_NAME}.json").build()
 

@@ -68,21 +68,27 @@ if [[ ! -x "${PY_VENV}" ]]; then
 fi
 
 ################################################################################
-# Determine script to run; if no name is passed, use default
+# Handle special commands or determine script to run
 ################################################################################
-if [[ -z "${SCRIPT}" ]]; then
-    SCRIPT="${DEF_SCRIPT}"
-fi
-
-SCRIPT_PATH="${PATH_BASE}/${SCRIPT}"
-
-################################################################################
-# Execute script
-################################################################################
-if [[ -f "${SCRIPT_PATH}" ]]; then
-    echo "Execute script [${SCRIPT}]"
-    "${PY_VENV}" "${SCRIPT_PATH}"
+if [[ "${SCRIPT}" == "tests" ]]; then
+    echo "Execute tests"
+    "${PY_VENV}" -m unittest discover -s tests -p "test_*.py"
 else
-    echo "Script [${SCRIPT}] not found :-("
-    exit 1
+    # If no name is passed, use default
+    if [[ -z "${SCRIPT}" ]]; then
+        SCRIPT="${DEF_SCRIPT}"
+    fi
+
+    SCRIPT_PATH="${PATH_BASE}/${SCRIPT}"
+
+    ################################################################################
+    # Execute script
+    ################################################################################
+    if [[ -f "${SCRIPT_PATH}" ]]; then
+        echo "Execute script [${SCRIPT}]"
+        "${PY_VENV}" "${SCRIPT_PATH}"
+    else
+        echo "Script [${SCRIPT}] not found :-("
+        exit 1
+    fi
 fi

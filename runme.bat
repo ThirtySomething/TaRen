@@ -50,18 +50,24 @@ if ""=="%VIRTUAL_ENV%" (
     call ./%ENV_NAME%/Scripts/activate.bat
 )
 @REM ***************************************************************************
-@REM * Determine script to run, if no name is passed, set default value
+@REM * Handle special commands or determine script to run
 @REM ***************************************************************************
-if ""=="%SCRIPT%" (
-    set "SCRIPT=%DEF_SCRIPT%"
-)
-@REM ***************************************************************************
-@REM * Execute script
-@REM ***************************************************************************
-if exist "%SCRIPT%" (
-    echo.Execute script [%SCRIPT%]
-    python %SCRIPT%
+if "%SCRIPT%"=="tests" (
+    echo.Execute tests
+    python -m unittest discover -s tests -p "test_*.py"
 ) else (
-    echo.Script [%SCRIPT%] not found :-()
+    @REM If no name is passed, set default value
+    if ""=="%SCRIPT%" (
+        set "SCRIPT=%DEF_SCRIPT%"
+    )
+    @REM ***************************************************************************
+    @REM * Execute script
+    @REM ***************************************************************************
+    if exist "%SCRIPT%" (
+        echo.Execute script [%SCRIPT%]
+        python %SCRIPT%
+    ) else (
+        echo.Script [%SCRIPT%] not found :-()
+    )
 )
 endlocal
