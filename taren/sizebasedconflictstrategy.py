@@ -35,16 +35,16 @@ logger = logging.getLogger(__name__)
 class SizeBasedConflictStrategy:
     """Default conflict strategy based on file size comparison."""
 
-    def resolve(self, old_fqn: str, new_fqn: str) -> ConflictResolutionResult:
-        if not os.path.exists(new_fqn):
+    def resolve(self, source_file_path: str, destination_file_path: str) -> ConflictResolutionResult:
+        if not os.path.exists(destination_file_path):
             return ConflictResolutionResult(move_to_trash=None, skip_rename=False)
 
-        size_old: int = os.stat(old_fqn).st_size
-        size_new: int = os.stat(new_fqn).st_size
+        source_size: int = os.stat(source_file_path).st_size
+        destination_size: int = os.stat(destination_file_path).st_size
 
-        if size_old >= size_new:
-            logger.info("size_equal: trashing existing [%s]", new_fqn)
-            return ConflictResolutionResult(move_to_trash=new_fqn, skip_rename=False)
+        if source_size >= destination_size:
+            logger.info("size_equal: trashing existing [%s]", destination_file_path)
+            return ConflictResolutionResult(move_to_trash=destination_file_path, skip_rename=False)
 
-        logger.info("download_smaller: trashing download [%s]", old_fqn)
-        return ConflictResolutionResult(move_to_trash=old_fqn, skip_rename=True)
+        logger.info("download_smaller: trashing download [%s]", source_file_path)
+        return ConflictResolutionResult(move_to_trash=source_file_path, skip_rename=True)
