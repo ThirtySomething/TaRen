@@ -400,6 +400,56 @@ class TestTaRenRenameProcess(unittest.TestCase):
             self.assertIsInstance(commands[0], MoveToTrashCommand)
             self.assertIsInstance(commands[1], RenameFileCommand)
 
+    def test_build_commands_for_task_trash_preserves_original_extension(self) -> None:
+        """Rename-before-trash uses stem from new_fqn and extension from old_fqn."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            dl_dir = Path(tmpdir) / "downloads"
+            old_fqn = str(dl_dir / "raw_download.mkv")
+            new_fqn = str(Path(tmpdir) / "unseen" / "Tatort - Episode 1.mp4")
+
+            commands = runner._build_commands_for_task(
+                old_fqn,
+                new_fqn,
+                cast(Any, SimpleNamespace(move_to_trash=old_fqn, skip_rename=True)),
+            )
+
+            # Expect: RenameFileCommand → MoveToTrashCommand
+            self.assertEqual(len(commands), 2)
+            rename_cmd = commands[0]
+            trash_cmd = commands[1]
+            self.assertIsInstance(rename_cmd, RenameFileCommand)
+            self.assertIsInstance(trash_cmd, MoveToTrashCommand)
+
+            # The rename destination must use the stem from new_fqn and keep old extension
+            expected_normalized = str(dl_dir / "Tatort - Episode 1.mkv")
+            self.assertEqual(rename_cmd._destination_file, expected_normalized)
+            # The trash command must reference the same normalized path
+            self.assertEqual(trash_cmd._file_path, expected_normalized)
+
+    def test_build_commands_for_task_trash_already_normalized_skips_rename(self) -> None:
+        """No intermediate rename when old filename already matches the normalized name."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            dl_dir = Path(tmpdir) / "downloads"
+            # old and new have the same stem and same extension — already normalized
+            old_fqn = str(dl_dir / "Tatort - Episode 1.mp4")
+            new_fqn = str(Path(tmpdir) / "unseen" / "Tatort - Episode 1.mp4")
+
+            commands = runner._build_commands_for_task(
+                old_fqn,
+                new_fqn,
+                cast(Any, SimpleNamespace(move_to_trash=old_fqn, skip_rename=True)),
+            )
+
+            # normalized_path == old_fqn → skip the intermediate rename, only trash
+            self.assertEqual(len(commands), 1)
+            self.assertIsInstance(commands[0], MoveToTrashCommand)
+
     def test_execute_commands_stops_after_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = self._build_config(tmpdir)
