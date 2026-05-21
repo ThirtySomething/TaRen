@@ -55,18 +55,18 @@ class Stats:
 
     ############################################################################
     def _calculate_seen_percentage(self) -> float:
-        """Calculate seen items as percentage of downloads"""
-        return (100.0 / self.collection_downloads * self.collection_seen) if self.collection_downloads else 0.0
+        """Calculate seen items as percentage of episodes owned (seen / episodes_owned)."""
+        return (100.0 / self.episodes_owned * self.collection_seen) if self.episodes_owned else 0.0
 
     ############################################################################
     def _calculate_unseen_percentage(self) -> float:
-        """Calculate unseen items as percentage of downloads"""
-        return (100.0 / self.collection_downloads * self.collection_unseen) if self.collection_downloads else 0.0
+        """Calculate unseen items as percentage of episodes owned (unseen / episodes_owned)."""
+        return (100.0 / self.episodes_owned * self.collection_unseen) if self.episodes_owned else 0.0
 
     ############################################################################
     def _calculate_trash_percentage(self) -> float:
-        """Calculate trash items as percentage of downloads"""
-        return (100.0 / self.collection_downloads * self.collection_trash) if self.collection_downloads else 0.0
+        """Deprecated: trash percentage is not used in reporting; kept for compatibility."""
+        return 0.0
 
     ############################################################################
     def update_episodes_owned_from_collection(self) -> None:
@@ -82,21 +82,19 @@ class Stats:
         episodes_owned_pct: float = self._calculate_episodes_owned_percentage()
         seen_pct: float = self._calculate_seen_percentage()
         unseen_pct: float = self._calculate_unseen_percentage()
-        trash_pct: float = self._calculate_trash_percentage()
 
         return {
             "collection": {
                 "downloads": self.collection_downloads,
                 "seen": self.collection_seen,
-                "seen_percent": seen_pct,
                 "unseen": self.collection_unseen,
-                "unseen_percent": unseen_pct,
                 "trash": self.collection_trash,
-                "trash_percent": trash_pct,
             },
             "episodes": {
                 "total": self.episodes_total,
                 "owned": self.episodes_owned,
+                "seen_percent": seen_pct,
+                "unseen_percent": unseen_pct,
                 "owned_percent": episodes_owned_pct,
             },
         }
@@ -114,7 +112,7 @@ class Stats:
             f"downloads: {self.collection_downloads}",
             f"seen: {self.collection_seen} ({seen_pct:.2f}%)",
             f"unseen: {self.collection_unseen} ({unseen_pct:.2f}%)",
-            f"trash: {self.collection_trash} ({trash_pct:.2f}%)",
+            f"trash: {self.collection_trash}",
             "=== EPISODES STATUS ===",
             f"episodes_total: {self.episodes_total}",
             f"episodes_owned: {self.episodes_owned} ({episodes_owned_pct:.2f}%)",
