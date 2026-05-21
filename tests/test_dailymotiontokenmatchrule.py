@@ -82,3 +82,11 @@ class TestDailymotionTokenMatchRule(unittest.TestCase):
         filename = "Show_Name_E000_Part.mp4"
         result = self.rule.try_match(filename, episode)
         self.assertTrue(result)
+
+    def test_dailymotion_token_invalid_group_extraction(self) -> None:
+        # When token is malformed (missing closing underscore)
+        # This tests that invalid group extraction returns None gracefully
+        episode = SimpleNamespace(episode_id=123)
+        filename = "Show_Name_E123"
+        result = self.rule.try_match(filename, episode)
+        self.assertIsNone(result)
