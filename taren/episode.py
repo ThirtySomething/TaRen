@@ -127,39 +127,73 @@ class Episode:
         return False
 
     ############################################################################
+    def _validate_row_structure(self, data_row: list[str]) -> bool:
+        """Validate that the row contains the minimum required columns."""
+        if len(data_row) < 6:
+            logger.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
+            return False
+        return True
+
+    ############################################################################
+    def _extract_episode_id(self, data_row: list[str]) -> int | None:
+        """Extract numeric episode id from first column."""
+        episode_id_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[0])
+        if episode_id_raw is None:
+            logger.warning("skip episode row without valid episode id: %s", data_row)
+            return None
+        return int(episode_id_raw.group(1))
+
+    ############################################################################
+    def _extract_episode_year(self, data_row: list[str]) -> int | None:
+        """Extract 4-digit episode year from year column."""
+        episode_year_raw: Match[str] | None = re.search(r"([0-9]{4})", data_row[3])
+        if episode_year_raw is None:
+            logger.warning("skip episode row without valid episode year: %s", data_row)
+            return None
+        return int(episode_year_raw.group(1))
+
+    ############################################################################
+    def _extract_episode_name(self, data_row: list[str]) -> str:
+        """Extract and normalize episode name."""
+        return re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
+
+    ############################################################################
+    def _extract_episode_inspectors(self, data_row: list[str]) -> str:
+        """Extract and normalize inspector information."""
+        return re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
+
+    ############################################################################
+    def _extract_episode_sequence(self, data_row: list[str]) -> str:
+        """Extract and normalize episode sequence value."""
+        return re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
+
+    ############################################################################
     def parse(self, data_row: list[str]) -> None:
         """
         Fill episode object with episode number, name and inspectors. Perform some cleanup on episode name and inspectors.
         """
-        if len(data_row) < 6:
-            logger.warning("skip malformed episode row (expected >= 6 columns): %s", data_row)
+        if not self._validate_row_structure(data_row):
             return
-        # Episode number is first element of row
-        episode_id_raw: Match[str] | None = re.search(r"([0-9]+)", data_row[0])
-        if episode_id_raw is None:
-            logger.warning("skip episode row without valid episode id: %s", data_row)
+
+        episode_id = self._extract_episode_id(data_row)
+        if episode_id is None:
             return
-        self.episode_id = int(episode_id_raw.group(1))
-        # Year of episode
-        episode_year_raw: Match[str] | None = re.search(r"([0-9]{4})", data_row[3])
-        if episode_year_raw is None:
-            logger.warning("skip episode row without valid episode year: %s", data_row)
+
+        episode_year = self._extract_episode_year(data_row)
+        if episode_year is None:
             return
-        self.episode_year = int(episode_year_raw.group(1))
-        # Episode name is second element of row, strip unwanted information like '(Folge 332 trägt den gleichen Titel)' using regexp
-        self.episode_name = re.sub(r"\(Folge [0-9]+(.)+\)", "", data_row[1].strip()).strip()
-        # Inspectors of episode, 5th element of row, strip unwanted information like '(Gastauftritt Trimmel und Kreutzer)' using regexp
-        self.episode_inspectors = re.sub(r"\(Gastauftritt(.)+\)", "", data_row[4].strip()).strip()
-        # Get name of broadcast station, 3rd element of row
+
+        self.episode_id = episode_id
+        self.episode_year = episode_year
+        self.episode_name = self._extract_episode_name(data_row)
+        self.episode_inspectors = self._extract_episode_inspectors(data_row)
         self.episode_broadcast = data_row[2].strip()
-        # Get sequence number and strip alternative numbering.
-        self.episode_sequence = re.sub(r"(\(\s*[0-9]*\)*)", "", data_row[5].strip()).strip()
-        # Optional metadata columns from extended source rows
+        self.episode_sequence = self._extract_episode_sequence(data_row)
+
         if len(data_row) > 6:
             self.episode_broadcast_date = data_row[6].strip()
         if len(data_row) > 7:
             self.episode_cast = data_row[7].strip()
-        # Strip invalid characters
+
         self._strip_invalid_characters()
-        # Mark as not empty
         self.empty = False
