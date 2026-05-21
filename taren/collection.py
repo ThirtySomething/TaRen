@@ -209,6 +209,25 @@ class Collection:
         return unseen_target, unseen_target
 
     ############################################################################
+    def _list_folder(self, folder: Path, label: str, excluded: set[str] | None = None) -> list[str]:
+        """
+        Helper to list files in a folder, excluding specified names.
+
+        Args:
+            folder: Folder path to list
+            label: Label for warning messages (e.g., "downloads", "seen")
+            excluded: Set of filenames to exclude (ignore markers)
+
+        Returns:
+            Sorted list of filenames, excluding ignore markers
+        """
+        if not folder.exists():
+            logger.warning("%s_folder_missing: path=%s", label, folder)
+            return []
+        excluded = excluded or set()
+        return sorted(f.name for f in folder.iterdir() if f.is_file() and f.name not in excluded)
+
+    ############################################################################
     def get_downloads(self) -> list[str]:
         """
         Get list of files in the downloads folder.
@@ -216,12 +235,7 @@ class Collection:
         Returns:
             List of filenames in downloads folder, sorted alphabetically
         """
-        if not self._downloads.exists():
-            logger.warning("downloads_folder_missing: path=%s", self._downloads)
-            return []
-
-        files = [f.name for f in self._downloads.iterdir() if f.is_file()]
-        return sorted(files)
+        return self._list_folder(self._downloads, "downloads")
 
     ############################################################################
     def get_seen(self) -> list[str]:
@@ -231,13 +245,8 @@ class Collection:
         Returns:
             List of filenames in seen folder (excluding ignore marker), sorted alphabetically
         """
-        if not self._seen.exists():
-            logger.warning("seen_folder_missing: path=%s", self._seen)
-            return []
-
-        excluded_names: set[str] = {self._trash_ignore, ".seenignore"}
-        files = [f.name for f in self._seen.iterdir() if f.is_file() and f.name not in excluded_names]
-        return sorted(files)
+        excluded = {self._trash_ignore, ".seenignore"}
+        return self._list_folder(self._seen, "seen", excluded)
 
     ############################################################################
     def get_trash(self) -> list[str]:
@@ -247,16 +256,8 @@ class Collection:
         Returns:
             List of filenames in trash folder (excluding ignore marker), sorted alphabetically
         """
-        if not self._trash.exists():
-            logger.warning("trash_folder_missing: path=%s", self._trash)
-            return []
-
-        files = []
-        excluded_names: set[str] = {self._trash_ignore, ".trashignore"}
-        for f in self._trash.iterdir():
-            if f.is_file() and f.name not in excluded_names:
-                files.append(f.name)
-        return sorted(files)
+        excluded = {self._trash_ignore, ".trashignore"}
+        return self._list_folder(self._trash, "trash", excluded)
 
     ############################################################################
     def get_unseen(self) -> list[str]:
@@ -266,12 +267,7 @@ class Collection:
         Returns:
             List of unseen filenames, sorted alphabetically
         """
-        if not self._unseen.exists():
-            logger.warning("unseen_folder_missing: path=%s", self._unseen)
-            return []
-
-        files = [f.name for f in self._unseen.iterdir() if f.is_file()]
-        return sorted(files)
+        return self._list_folder(self._unseen, "unseen")
 
     ############################################################################
     def get_counts(self) -> dict[str, int]:
