@@ -2,6 +2,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from taren.episodefilecache import EpisodeFileCache
 
@@ -73,6 +74,19 @@ class TestEpisodeFileCache(unittest.TestCase):
 
             self.assertIsNotNone(state)
             self.assertEqual(state[0], "missing")
+
+    def test_find_existing_by_fingerprint_logs_database_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
+
+            with (
+                patch("taren.episodefilecache.sqlite3.connect", side_effect=sqlite3.DatabaseError("db offline")),
+                patch("taren.episodefilecache.logger.warning") as warning_log,
+            ):
+                result = cache.find_existing_by_fingerprint("abc", 123)
+
+            self.assertIsNone(result)
+            warning_log.assert_called_once()
 
     def test_fingerprint_small_file_is_deterministic(self) -> None:
         """Files smaller than 64 KB produce a consistent SHA-1 based on size + content."""

@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -5,6 +6,8 @@ import sqlite3
 
 from taren.filefingerprint import FileFingerprint
 from taren.helper import Helper
+
+logger = logging.getLogger(__name__)
 
 
 class EpisodeFileCache:
@@ -115,7 +118,13 @@ class EpisodeFileCache:
                 )
                 result = cursor.fetchone()
                 return result[0] if result else None
-        except sqlite3.DatabaseError:
+        except sqlite3.DatabaseError as exc:
+            logger.warning(
+                "cache_lookup_failed: fingerprint=%s size=%s error=%s",
+                fingerprint,
+                size_bytes,
+                exc,
+            )
             return None
 
     def _update_row(self, conn: sqlite3.Connection, row_id: int, row: dict[str, object], marker: str) -> None:
