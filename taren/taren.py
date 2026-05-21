@@ -262,9 +262,11 @@ class TaRen:
     def _reconcile_episode_cache(self) -> None:
         """Reconcile episode file cache with current collection state."""
 
-        downloads_path, seen_path, unseen_path = self._collection_manager.get_reconcile_paths()
+        downloads_path: Path = self._collection_manager.get_downloads_path()
+        seen_path: Path = self._collection_manager.get_seen_path()
+        unseen_path: Path = self._collection_manager.get_unseen_path()
         try:
-            self._episode_file_cache.reconcile(downloads_path, seen_path, unseen_path, self._extension)
+            self._episode_file_cache.reconcile(str(downloads_path), str(seen_path), str(unseen_path), self._extension)
         except OSError as exc:
             logger.error("episode_cache_reconcile: db=%s status=failed error=%s", self._episode_cache_db, exc)
 
@@ -360,45 +362,45 @@ class TaRen:
     def _process_single_task(self, current_download: DownloadTask) -> None:
         """Process one download task."""
 
-        old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
+        old_path: Path = Path(current_download.sourcedir) / current_download.filename
         conflict_check_path, destination_path = self._collection_manager.resolve_episode_paths(
             str(current_download.episode),
             self._extension,
         )
 
-        if old_fqn_path == conflict_check_path or old_fqn_path == destination_path:
+        if old_path == conflict_check_path or old_path == destination_path:
             return
 
-        new_fqn: str = str(destination_path)
-        old_fqn: str = str(old_fqn_path)
-        conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, str(conflict_check_path))
-        commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
+        conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(str(old_path), str(conflict_check_path))
+        commands: list[FileMutationCommand] = self._build_commands_for_task(old_path, destination_path, conflict_result)
         if not self._execute_commands(commands):
             logger.warning("task_processing_incomplete: file=%s", current_download.filename)
 
     ############################################################################
     def _build_commands_for_task(
         self,
-        old_fqn: str,
-        new_fqn: str,
+        old_path: Path | str,
+        new_path: Path | str,
         conflict_result: ConflictResolutionResult,
     ) -> list[FileMutationCommand]:
         """Factory method for building mutation commands for one task."""
 
+        old_path = Path(old_path)
+        new_path = Path(new_path)
         commands: list[FileMutationCommand] = []
         if conflict_result.move_to_trash is not None:
-            trash_path = conflict_result.move_to_trash
-            if trash_path == old_fqn:
+            trash_path: Path = Path(conflict_result.move_to_trash)
+            if trash_path == old_path:
                 # Download is going to trash: normalize its filename first so trash
                 # contains identifiable names.  Keep the original file extension.
-                normalized_name = Path(new_fqn).stem + Path(old_fqn).suffix
-                normalized_path = str(Path(old_fqn).parent / normalized_name)
-                if normalized_path != old_fqn:
-                    commands.append(RenameFileCommand(old_fqn, normalized_path))
+                normalized_name = new_path.stem + old_path.suffix
+                normalized_path: Path = old_path.parent / normalized_name
+                if normalized_path != old_path:
+                    commands.append(RenameFileCommand(str(old_path), str(normalized_path)))
                 trash_path = normalized_path
-            commands.append(MoveToTrashCommand(self._trash, trash_path))
+            commands.append(MoveToTrashCommand(self._trash, str(trash_path)))
         if not conflict_result.skip_rename:
-            commands.append(RenameFileCommand(old_fqn, new_fqn))
+            commands.append(RenameFileCommand(str(old_path), str(new_path)))
         return commands
 
     ############################################################################
