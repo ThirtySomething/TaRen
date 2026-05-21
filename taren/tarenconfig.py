@@ -25,9 +25,10 @@ SOFTWARE.
 """
 
 import os
-import sys
+import importlib.util
 from importlib import import_module
 from pathlib import Path
+from types import ModuleType
 from urllib.parse import urlparse
 
 from taren.tarendefines import TarenDefines
@@ -37,11 +38,18 @@ def _load_mdo_class() -> type:
     try:
         return import_module("MDO").MDO
     except ModuleNotFoundError:
-        vendor_mdo_path: Path = Path(__file__).resolve().parent.parent / "vendor" / "MDO" / "MDO"
-        vendor_mdo_path_str: str = str(vendor_mdo_path)
-        if vendor_mdo_path.exists() and vendor_mdo_path_str not in sys.path:
-            sys.path.insert(0, vendor_mdo_path_str)
-        return import_module("MDO").MDO
+        vendor_mdo_module_file: Path = Path(__file__).resolve().parent.parent / "vendor" / "MDO" / "MDO" / "MDO.py"
+        if not vendor_mdo_module_file.exists():
+            raise
+
+        module_spec = importlib.util.spec_from_file_location("taren_vendor_mdo", vendor_mdo_module_file)
+        if module_spec is None or module_spec.loader is None:
+            raise ModuleNotFoundError(f"Unable to load vendor MDO module from {vendor_mdo_module_file}")
+
+        vendor_module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(vendor_module)
+        mdo_module: ModuleType = vendor_module
+        return mdo_module.MDO
 
 
 MDO = _load_mdo_class()
