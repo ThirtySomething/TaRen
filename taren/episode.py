@@ -101,13 +101,19 @@ class Episode:
         """
         Remove characters which are invalid for filenames
         """
-        for current_invalid_character in Episode._invalid_characters:
-            self.episode_broadcast = self.episode_broadcast.replace(current_invalid_character, " ").strip()
-            self.episode_broadcast_date = self.episode_broadcast_date.replace(current_invalid_character, " ").strip()
-            self.episode_cast = self.episode_cast.replace(current_invalid_character, " ").strip()
-            self.episode_inspectors = self.episode_inspectors.replace(current_invalid_character, " ").strip()
-            self.episode_name = self.episode_name.replace(current_invalid_character, " ").strip()
-            self.episode_sequence = self.episode_sequence.replace(current_invalid_character, "-").strip()
+        fields: tuple[tuple[str, str], ...] = (
+            ("episode_broadcast", " "),
+            ("episode_broadcast_date", " "),
+            ("episode_cast", " "),
+            ("episode_inspectors", " "),
+            ("episode_name", " "),
+            ("episode_sequence", "-"),
+        )
+        for field_name, replacement in fields:
+            value: str = getattr(self, field_name)
+            for current_invalid_character in Episode._invalid_characters:
+                value = value.replace(current_invalid_character, replacement)
+            setattr(self, field_name, value.strip())
 
     ############################################################################
     def matches(self, filename: str) -> bool:
