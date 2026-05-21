@@ -38,8 +38,7 @@ class TestDownloadList(unittest.TestCase):
             Path(tmpdir, "Tatort_A.mp4").write_text("x", encoding="utf-8")
             Path(tmpdir, "Other.mp4").write_text("x", encoding="utf-8")
 
-            dl = DownloadList(tmpdir, "Tatort", ".mp4")
-            self.assertEqual(dl.get_filenames(), ["Tatort_A.mp4", "Tatort_B.mp4"])
+            self.assertEqual(DownloadList.get_filenames(tmpdir, "Tatort", ".mp4"), ["Tatort_A.mp4", "Tatort_B.mp4"])
 
 
 if __name__ == "__main__":

@@ -38,32 +38,21 @@ class DownloadList:
     """
 
     ############################################################################
-    def __init__(self, searchdir: str, pattern: str, extension: str) -> None:
-        """
-        Init of variables
-        """
-        self._searchdir: str = searchdir
-        self._pattern: str = pattern
-        self._extension: str = extension
-        logger.debug("searchdir [%s]", self._searchdir)
-        logger.debug("pattern [%s]", self._pattern)
-        logger.debug("extension [%s]", self._extension)
-
-    ############################################################################
-    def get_filenames(self) -> list[str]:
+    @staticmethod
+    def get_filenames(searchdir: str, pattern: str, extension: str) -> list[str]:
         """
         Retrieve list of affected downloads
         """
         # Create search pattern
-        searchpattern: str = f"*{self._pattern}*{self._extension}"
+        searchpattern: str = f"*{pattern}*{extension}"
         # Apply search pattern on search
-        files: list[str] = fnmatch.filter(os.listdir(self._searchdir), searchpattern)
+        files: list[str] = fnmatch.filter(os.listdir(searchdir), searchpattern)
         files.sort()
         # Log info about found files
         logger.info(
             "collection_scan: folder=%s path=%s matched_files=%s",
-            Path(self._searchdir).name,
-            self._searchdir,
+            Path(searchdir).name,
+            searchdir,
             len(files),
         )
         return files

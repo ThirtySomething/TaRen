@@ -184,7 +184,7 @@ class Collection:
             logger.warning("downloads_folder_missing: path=%s", self._downloads)
             return 0, []
 
-        filelist: list[str] = DownloadList(str(self._downloads), pattern, extension).get_filenames()
+        filelist: list[str] = DownloadList.get_filenames(str(self._downloads), pattern, extension)
         return len(filelist), [(str(self._downloads), filename) for filename in filelist]
 
     ############################################################################
