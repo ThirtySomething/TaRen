@@ -305,8 +305,6 @@ class TaRen:
         total_files, matches = self._collection_manager.collect_download_matching_files(self._pattern, self._extension)
         for sourcedir, current_download in matches:
             download_path = Path(sourcedir) / current_download
-            if self._should_skip_duplicate(download_path, current_download):
-                continue
 
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:

@@ -41,8 +41,11 @@ class TestEpisodeFileCache(unittest.TestCase):
 
             cache.initialize()
 
-            with sqlite3.connect(db_path) as conn:
+            conn = sqlite3.connect(db_path)
+            try:
                 rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episode_file_cache'").fetchall()
+            finally:
+                conn.close()
             self.assertEqual(len(rows), 1)
 
     def test_reconcile_tracks_manual_move_downloads_to_seen(self) -> None:
@@ -67,8 +70,11 @@ class TestEpisodeFileCache(unittest.TestCase):
             file_in_downloads.rename(moved_path)
             cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
-            with sqlite3.connect(db_path) as conn:
+            conn = sqlite3.connect(db_path)
+            try:
                 rows = conn.execute("SELECT path, folder_state FROM episode_file_cache ORDER BY id").fetchall()
+            finally:
+                conn.close()
 
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0][0], str(moved_path.resolve()))
@@ -95,8 +101,11 @@ class TestEpisodeFileCache(unittest.TestCase):
             cache_file.unlink()
             cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
-            with sqlite3.connect(db_path) as conn:
+            conn = sqlite3.connect(db_path)
+            try:
                 state = conn.execute("SELECT folder_state FROM episode_file_cache LIMIT 1").fetchone()
+            finally:
+                conn.close()
 
             self.assertIsNotNone(state)
             self.assertEqual(state[0], "missing")

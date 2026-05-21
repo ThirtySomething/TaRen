@@ -44,19 +44,19 @@ class TestSizeBasedConflictStrategy(unittest.TestCase):
         self.assertFalse(result.skip_rename)
 
     def test_conflict_when_old_and_new_equal_size(self) -> None:
-        # When files are same size, move new to trash, rename old
+        # When files are same size, trash the source file (download) and keep the existing file
         with tempfile.TemporaryDirectory() as tmpdir:
-            old_file = Path(tmpdir) / "old.mp4"
-            new_file = Path(tmpdir) / "new.mp4"
+            source_file = Path(tmpdir) / "source.mp4"
+            destination_file = Path(tmpdir) / "destination.mp4"
 
             # Create files with same size
-            old_file.write_bytes(b"x" * 1000)
-            new_file.write_bytes(b"y" * 1000)
+            source_file.write_bytes(b"x" * 1000)
+            destination_file.write_bytes(b"y" * 1000)
 
-            result = self.strategy.resolve(str(old_file), str(new_file))
+            result = self.strategy.resolve(str(source_file), str(destination_file))
 
-            self.assertEqual(result.move_to_trash, str(new_file))
-            self.assertFalse(result.skip_rename)
+            self.assertEqual(result.move_to_trash, str(source_file))
+            self.assertTrue(result.skip_rename)
 
     def test_conflict_when_old_larger_than_new(self) -> None:
         # When old file is larger, move new to trash, rename old
@@ -87,18 +87,18 @@ class TestSizeBasedConflictStrategy(unittest.TestCase):
             self.assertTrue(result.skip_rename)
 
     def test_zero_byte_files_equal_size(self) -> None:
-        # When both files are empty (0 bytes)
+        # When both files are empty (0 bytes), trash the source file
         with tempfile.TemporaryDirectory() as tmpdir:
-            old_file = Path(tmpdir) / "old.mp4"
-            new_file = Path(tmpdir) / "new.mp4"
+            source_file = Path(tmpdir) / "source.mp4"
+            destination_file = Path(tmpdir) / "destination.mp4"
 
-            old_file.write_bytes(b"")
-            new_file.write_bytes(b"")
+            source_file.write_bytes(b"")
+            destination_file.write_bytes(b"")
 
-            result = self.strategy.resolve(str(old_file), str(new_file))
+            result = self.strategy.resolve(str(source_file), str(destination_file))
 
-            self.assertEqual(result.move_to_trash, str(new_file))
-            self.assertFalse(result.skip_rename)
+            self.assertEqual(result.move_to_trash, str(source_file))
+            self.assertTrue(result.skip_rename)
 
     def test_one_byte_file_vs_empty(self) -> None:
         # When one file is 1 byte, other is empty
@@ -150,18 +150,18 @@ class TestSizeBasedConflictStrategy(unittest.TestCase):
                     self.strategy.resolve("/path/to/old.mp4", "/path/to/new.mp4")
 
     def test_different_names_same_size(self) -> None:
-        # When files have different names but same size
+        # When files have different names but same size, trash the source file
         with tempfile.TemporaryDirectory() as tmpdir:
-            old_file = Path(tmpdir) / "episode_001.mp4"
-            new_file = Path(tmpdir) / "episode_001_new.mp4"
+            source_file = Path(tmpdir) / "episode_001.mp4"
+            destination_file = Path(tmpdir) / "episode_001_new.mp4"
 
-            old_file.write_bytes(b"x" * 1000)
-            new_file.write_bytes(b"y" * 1000)
+            source_file.write_bytes(b"x" * 1000)
+            destination_file.write_bytes(b"y" * 1000)
 
-            result = self.strategy.resolve(str(old_file), str(new_file))
+            result = self.strategy.resolve(str(source_file), str(destination_file))
 
-            self.assertEqual(result.move_to_trash, str(new_file))
-            self.assertFalse(result.skip_rename)
+            self.assertEqual(result.move_to_trash, str(source_file))
+            self.assertTrue(result.skip_rename)
 
 
 if __name__ == "__main__":

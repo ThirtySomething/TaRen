@@ -24,6 +24,8 @@ SOFTWARE.
 ******************************************************************************
 """
 
+import gc
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -92,10 +94,50 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
                 runner.rename_process()
+            del runner
 
             self.assertFalse(old_path.exists())
             self.assertTrue(new_path.exists())
             self.assertIn(f"{target_label}.mp4", fake_trash.moved)
+
+    def test_rename_process_trashes_download_with_normalized_suffix_when_same_size_conflict_exists(self) -> None:
+        tmpdir = tempfile.mkdtemp()
+        runner = None
+        try:
+            target_label = "Tatort - 0005 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            downloads, seen, _ = self._setup_collection(tmpdir)
+            trash = Path(tmpdir) / ".trash"
+            trash.mkdir()
+            (trash / f"{target_label}.mp4").write_bytes(b"existing")
+
+            old_path = downloads / old_name
+            old_path.write_bytes(b"123456")
+            new_path = seen / f"{target_label}.mp4"
+            new_path.write_bytes(b"abcdef")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: FakeEpisode(target_label),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            self.assertFalse(old_path.exists())
+            self.assertTrue(new_path.exists())
+
+            trashed_files = [p.name for p in trash.iterdir() if p.is_file() and p.name != ".ignore"]
+            self.assertIn(f"{target_label}_02.mp4", trashed_files)
+        finally:
+            if runner is not None:
+                del runner
+            gc.collect()
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_rename_process_old_smaller_branch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -314,6 +356,35 @@ class TestTaRenRenameProcess(unittest.TestCase):
             downloads, seen, unseen = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"1")
+            unseen_path = unseen / f"{target_label}.mp4"
+            unseen_path.write_bytes(b"123456")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: FakeEpisode(target_label),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            fake_trash = FakeTrash()
+            setattr(runner, "_trash", fake_trash)
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            self.assertFalse(old_path.exists())
+            self.assertTrue(unseen_path.exists())
+            self.assertFalse((seen / f"{target_label}.mp4").exists())
+            self.assertIn(f"{target_label}.mp4", fake_trash.moved)
+
+    def test_rename_process_trashes_download_when_unseen_version_is_equal_size(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_label = "Tatort - 0103 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            downloads, seen, unseen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
+            old_path.write_bytes(b"123456")
             unseen_path = unseen / f"{target_label}.mp4"
             unseen_path.write_bytes(b"123456")
 
