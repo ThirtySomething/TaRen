@@ -312,7 +312,7 @@ class TaRen:
         old_fqn: str = str(old_fqn_path)
         conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, str(conflict_check_path))
         commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
-        self._execute_commands(commands, Stats())
+        self._execute_commands(commands)
 
     ############################################################################
     def _build_commands_for_task(
@@ -340,11 +340,11 @@ class TaRen:
         return commands
 
     ############################################################################
-    def _execute_commands(self, commands: list[FileMutationCommand], statistics: Stats) -> None:
+    def _execute_commands(self, commands: list[FileMutationCommand]) -> None:
         """Execute prepared file-mutation commands in order."""
 
         for command in commands:
-            if not command.execute(statistics):
+            if not command.execute():
                 logger.error("task_execution: status=aborted reason=previous_failure")
                 break
 

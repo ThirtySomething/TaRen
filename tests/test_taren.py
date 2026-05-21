@@ -404,34 +404,31 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
-            statistics = Stats()
 
             first_command = MagicMock()
             first_command.execute.return_value = False
             second_command = MagicMock()
             second_command.execute.return_value = True
 
-            runner._execute_commands([first_command, second_command], statistics)
+            runner._execute_commands([first_command, second_command])
 
-            first_command.execute.assert_called_once_with(statistics)
+            first_command.execute.assert_called_once_with()
             second_command.execute.assert_not_called()
 
     def test_rename_command_counts_failure_when_os_rename_fails(self) -> None:
-        statistics = Stats()
         command = RenameFileCommand("/source.mp4", "/destination.mp4")
 
         with patch("taren.renamefilecommand.os.rename", side_effect=OSError("disk error")):
-            success = command.execute(statistics)
+            success = command.execute()
 
         self.assertFalse(success)
 
     def test_move_to_trash_command_counts_failure_when_move_fails(self) -> None:
-        statistics = Stats()
         fake_trash = MagicMock()
         fake_trash.move.return_value = False
         command = MoveToTrashCommand(fake_trash, "/file.mp4")
 
-        success = command.execute(statistics)
+        success = command.execute()
 
         self.assertFalse(success)
 

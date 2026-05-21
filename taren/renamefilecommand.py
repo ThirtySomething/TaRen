@@ -27,8 +27,6 @@ SOFTWARE.
 import logging
 import os
 
-from taren.stats import Stats
-
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +35,7 @@ class RenameFileCommand:
         self._source_file: str = source_file
         self._destination_file: str = destination_file
 
-    def execute(self, statistics: Stats) -> bool:
+    def execute(self) -> bool:
         logger.info(
             "rename from [%s] to [%s] filename",
             self._source_file,

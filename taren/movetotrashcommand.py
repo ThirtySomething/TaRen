@@ -24,7 +24,6 @@ SOFTWARE.
 ******************************************************************************
 """
 
-from taren.stats import Stats
 from taren.trash import Trash
 
 
@@ -33,7 +32,7 @@ class MoveToTrashCommand:
         self._trash: Trash = trash
         self._file_path: str = file_path
 
-    def execute(self, statistics: Stats) -> bool:
+    def execute(self) -> bool:
         if self._trash.move(self._file_path):
             return True
         return False
