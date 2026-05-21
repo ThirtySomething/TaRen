@@ -198,7 +198,7 @@ class Collection:
         Returns:
             Tuple of (conflict_check_path, destination_path)
         """
-        normalized_extension: str = extension if extension.startswith(".") else f".{extension}"
+        normalized_extension: str = Helper.normalize_extension(extension)
         seen_target: Path = self._seen / f"{episode_name}{normalized_extension}"
         unseen_target: Path = self._unseen / f"{episode_name}{normalized_extension}"
 

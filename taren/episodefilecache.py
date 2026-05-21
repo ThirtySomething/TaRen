@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 import sqlite3
 
+from taren.helper import Helper
+
 
 class EpisodeFileCache:
     """SQLite-backed index of episode files discovered on disk."""
@@ -33,7 +35,7 @@ class EpisodeFileCache:
 
     def reconcile(self, downloads_dir: str, seen_dir: str, unseen_dir: str, extension: str) -> None:
         self.initialize()
-        normalized_ext: str = extension if extension.startswith(".") else f".{extension}"
+        normalized_ext: str = Helper.normalize_extension(extension)
         observed = self._scan(downloads_dir, "downloads", normalized_ext)
         observed.extend(self._scan(seen_dir, "seen", normalized_ext))
         observed.extend(self._scan(unseen_dir, "unseen", normalized_ext))

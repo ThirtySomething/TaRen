@@ -69,7 +69,7 @@ class TaRen:
         self._collection_manager: Collection = Collection(collection_root, trash_ignore=trash_ignore)
         self._collection: Path = collection_root
         self._pattern: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_PATTERN)
-        self._extension: str = self._sanitize_extension(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION))
+        self._extension: str = Helper.normalize_extension(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_EXTENSION))
         self._url: str = self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_WIKI)
         self._cachetime: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_MAXCACHE))
         self._trashage: int = int(self._config.value_get(TarenDefines.CFG_SECTION_TAREN, TarenDefines.CFG_KEY_TRASHAGE))
@@ -170,13 +170,6 @@ class TaRen:
         return str(self._collection / db_path)
 
     ############################################################################
-    def _sanitize_extension(self, extension: str) -> str:
-        """
-        Ensure extension starts with a dot
-        """
-        if not extension.startswith("."):
-            extension = f".{extension}"
-        return extension
 
     ############################################################################
     def _sanitize_path(self, path: str) -> Path:

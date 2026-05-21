@@ -58,3 +58,17 @@ class Helper:
         except OSError:
             logger.error("Failed to delete file [%s]", filename)
             return False
+
+    ############################################################################
+    @staticmethod
+    def normalize_extension(extension: str) -> str:
+        """
+        Ensure extension starts with a dot.
+
+        Args:
+            extension: File extension, with or without leading dot
+
+        Returns:
+            Extension with leading dot
+        """
+        return extension if extension.startswith(".") else f".{extension}"
