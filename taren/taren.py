@@ -271,7 +271,7 @@ class TaRen:
             logger.error("episode_cache_reconcile: db=%s status=failed error=%s", self._episode_cache_db, exc)
 
         downloads_to_process: list[DownloadTask] = []
-        total_files, matches = self._collection_manager.collect_matching_files(self._pattern, self._extension)
+        total_files, matches = self._collection_manager.collect_download_matching_files(self._pattern, self._extension)
         for sourcedir, current_download in matches:
             episode: Episode = episode_list.find_episode(current_download)
             if episode.empty:
@@ -306,16 +306,18 @@ class TaRen:
     def _process_single_task(self, current_download: DownloadTask) -> None:
         """Process one download task."""
 
-        new_fqn_path: Path = self._collection_manager.get_seen_path() / f"{current_download.episode}{self._extension}"
         old_fqn_path: Path = Path(current_download.sourcedir) / current_download.filename
+        conflict_check_path, destination_path = self._collection_manager.resolve_episode_paths(
+            str(current_download.episode),
+            self._extension,
+        )
 
-        if new_fqn_path == old_fqn_path:
-            # Already processed episode - already in seen folder
+        if old_fqn_path == conflict_check_path or old_fqn_path == destination_path:
             return
 
-        new_fqn: str = str(new_fqn_path)
+        new_fqn: str = str(destination_path)
         old_fqn: str = str(old_fqn_path)
-        conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, new_fqn)
+        conflict_result: ConflictResolutionResult = self._conflict_strategy.resolve(old_fqn, str(conflict_check_path))
         commands: list[FileMutationCommand] = self._build_commands_for_task(old_fqn, new_fqn, conflict_result)
         self._execute_commands(commands, Stats())
 

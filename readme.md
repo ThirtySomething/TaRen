@@ -41,19 +41,36 @@ call ./venv/Scripts/activate.bat
 pip install -r requirements.txt
 ```
 
+### Ordnerstruktur
+
+Die Sammlung ist in vier Unterordnern organisiert:
+
+| Ordner      | Zweck                                               |
+| ----------- | --------------------------------------------------- |
+| `downloads` | Eingangsordner für neue Downloads aus der Mediathek |
+| `unseen`    | Episoden, die noch nicht angeschaut wurden          |
+| `seen`      | Bereits angeschaute Episoden                        |
+| `.trash`    | Papierkorb von TaRen                                |
+
 ### Prozess
 
 Der Wikipedia Artikel wird geparst und die Tatortfolgen in eine interne
-Liste eingetragen. Dann werden auf der Festplatte alle `*.mp4` Dateien
-gesucht, in denen das Keyword `Tatort` vorkommt. In dem Dateinamen wird
-dann gesucht, ob dieser den Namen einer Tatortfolge enthält. In diesem Fall
-wird die Datei dann umbenannt. Gibt es diese Datei bereits, wird die Dateigröße
-verglichen - der Download mit der HD Auflösung ist größer und wird eher
-behalten. Ist also der Tatort bereits in SD Auflösung vorhanden, und es wurde
-der gleiche Tatort in HD Auflösung ebenfalls heruntergeladen, dann wird die
-SD Version ~~gelöscht~~ in den Papierkorb von TaRen verschoben und die HD
-Version behalten. Ansonsten wird der Download nicht umbenannt, sondern
-~~gelöscht~~ in den Papierkorb von TaRen verschoben.
+Liste eingetragen. Dann werden alle `*.mp4` Dateien im `downloads`-Ordner
+geprüft, in denen das Keyword `Tatort` vorkommt.
+
+Für jeden passenden Download läuft die Verarbeitung wie folgt ab:
+
+1. **Abgleich mit `seen`**: Ist die Episode bereits im `seen`-Ordner vorhanden?
+    - Download größer → `seen`-Version in den Papierkorb, Download nach `seen`.
+    - Download kleiner oder gleich → Download in den Papierkorb, `seen`-Version bleibt.
+2. **Abgleich mit `unseen`**: Wurde kein Treffer in `seen` gefunden, wird `unseen` geprüft.
+    - Download größer → `unseen`-Version in den Papierkorb, Download nach `seen`.
+    - Download kleiner oder gleich → Download in den Papierkorb, `unseen`-Version bleibt.
+3. **Kein Treffer**: Ist die Episode in keinem der beiden Ordner vorhanden, wird der
+   Download umbenannt und nach `unseen` verschoben.
+
+Dateien im `seen`-Ordner stammen ausschließlich aus dem manuellen Verschieben
+nach dem Ansehen, oder aus einer Ersetzung durch einen größeren Download.
 
 ### Matching
 
@@ -154,7 +171,7 @@ wechselt es automatisch auf Bash und läuft dort weiter.
 - HTML-Seite erstellen aus den heruntergeladenen Episoden, gruppiert nach Team
 - HTML-Seite überarbeiten: Tabelle mit odd/even
 - Link zur Episode auf Wikipedia einfügen, sofern vorhanden
-- Berücksichtigung eines Ordners mit bereits angeschauten Folgen
+- ~~Berücksichtigung eines Ordners mit bereits angeschauten Folgen~~ Done
 
 ## Lizenz
 

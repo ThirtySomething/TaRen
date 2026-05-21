@@ -163,6 +163,16 @@ class Collection:
         return self._downloads, self._seen, self._unseen
 
     ############################################################################
+    def get_download_source_path(self) -> Path:
+        """
+        Get the downloads folder as the only processing input source.
+
+        Returns:
+            Downloads folder path
+        """
+        return self._downloads
+
+    ############################################################################
     def get_reconcile_paths(self) -> tuple[str, str, str]:
         """
         Get source folder paths used for cache reconciliation.
@@ -198,6 +208,52 @@ class Collection:
                 matches.append((str(sourcedir), filename))
 
         return total_files, matches
+
+    ############################################################################
+    def collect_download_matching_files(self, pattern: str, extension: str) -> tuple[int, list[tuple[str, str]]]:
+        """
+        Collect matching filenames from the downloads folder only.
+
+        Args:
+            pattern: Filename pattern to match
+            extension: File extension filter
+
+        Returns:
+            Tuple of (total files in downloads, list of (source_dir, filename))
+        """
+        if not self._downloads.exists():
+            logger.warning("downloads_folder_missing: path=%s", self._downloads)
+            return 0, []
+
+        filelist: list[str] = DownloadList(str(self._downloads), pattern, extension).get_filenames()
+        return len(filelist), [(str(self._downloads), filename) for filename in filelist]
+
+    ############################################################################
+    def resolve_episode_paths(self, episode_name: str, extension: str) -> tuple[Path, Path]:
+        """
+        Resolve conflict-check and final destination paths for one episode.
+
+        Resolution order:
+        - If episode exists in seen, compare against seen and keep destination in seen.
+        - Else if episode exists in unseen, compare against unseen and move replacement to seen.
+        - Else place new download into unseen.
+
+        Args:
+            episode_name: Canonical episode filename without extension
+            extension: File extension to append
+
+        Returns:
+            Tuple of (conflict_check_path, destination_path)
+        """
+        normalized_extension: str = extension if extension.startswith(".") else f".{extension}"
+        seen_target: Path = self._seen / f"{episode_name}{normalized_extension}"
+        unseen_target: Path = self._unseen / f"{episode_name}{normalized_extension}"
+
+        if seen_target.exists():
+            return seen_target, seen_target
+        if unseen_target.exists():
+            return unseen_target, seen_target
+        return unseen_target, unseen_target
 
     ############################################################################
     def get_downloads(self) -> list[str]:

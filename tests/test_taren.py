@@ -61,18 +61,20 @@ class TestTaRenRenameProcess(unittest.TestCase):
         )
 
     def _setup_collection(self, tmpdir: str):
-        """Create downloads and seen subfolders inside the collection root."""
+        """Create downloads, seen and unseen subfolders inside the collection root."""
         downloads = Path(tmpdir) / "downloads"
         seen = Path(tmpdir) / "seen"
+        unseen = Path(tmpdir) / "unseen"
         downloads.mkdir(exist_ok=True)
         seen.mkdir(exist_ok=True)
-        return downloads, seen
+        unseen.mkdir(exist_ok=True)
+        return downloads, seen, unseen
 
     def test_rename_process_equal_size_conflict(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0001 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"1234")
             new_path = seen / f"{target_label}.mp4"
@@ -100,7 +102,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0002 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"1")
             new_path = seen / f"{target_label}.mp4"
@@ -129,7 +131,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0003 - A - B - C - 2020"
             old_name = f"{target_label}.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             seen_path = seen / old_name
             seen_path.write_bytes(b"123")
 
@@ -154,7 +156,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0004 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"123456")
             new_path = seen / f"{target_label}.mp4"
@@ -188,7 +190,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
     def test_rename_process_aborts_when_trash_init_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             (downloads / old_name).write_bytes(b"123")
 
             fake_episode_list = SimpleNamespace(
@@ -209,7 +211,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
     def test_rename_process_skips_download_without_episode_match(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, unseen = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"123")
 
@@ -234,7 +236,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0099 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, _, unseen = self._setup_collection(tmpdir)
             old_path = downloads / old_name
             old_path.write_bytes(b"123")
 
@@ -255,7 +257,65 @@ class TestTaRenRenameProcess(unittest.TestCase):
 
             self.assertEqual(len(strategy.calls), 1)
             self.assertFalse(old_path.exists())
+            self.assertTrue((unseen / f"{target_label}.mp4").exists())
+
+    def test_rename_process_replaces_unseen_with_larger_download_and_promotes_to_seen(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_label = "Tatort - 0101 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            downloads, seen, unseen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
+            old_path.write_bytes(b"123456")
+            unseen_path = unseen / f"{target_label}.mp4"
+            unseen_path.write_bytes(b"1")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: FakeEpisode(target_label),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            fake_trash = FakeTrash()
+            setattr(runner, "_trash", fake_trash)
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            self.assertFalse(old_path.exists())
+            self.assertFalse(unseen_path.exists())
             self.assertTrue((seen / f"{target_label}.mp4").exists())
+            self.assertIn(f"{target_label}.mp4", fake_trash.moved)
+
+    def test_rename_process_trashes_download_when_unseen_version_is_equal_or_larger(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_label = "Tatort - 0102 - A - B - C - 2020"
+            old_name = "Tatort_source.mp4"
+            downloads, seen, unseen = self._setup_collection(tmpdir)
+            old_path = downloads / old_name
+            old_path.write_bytes(b"1")
+            unseen_path = unseen / f"{target_label}.mp4"
+            unseen_path.write_bytes(b"123456")
+
+            fake_episode_list = SimpleNamespace(
+                get_episodes=lambda: None,
+                get_episode_count=lambda: 1,
+                find_episode=lambda _: FakeEpisode(target_label),
+            )
+
+            config = self._build_config(tmpdir)
+            runner = TaRen(cast(Any, config))
+            fake_trash = FakeTrash()
+            setattr(runner, "_trash", fake_trash)
+
+            with patch("taren.taren.EpisodeList", return_value=fake_episode_list):
+                runner.rename_process()
+
+            self.assertFalse(old_path.exists())
+            self.assertTrue(unseen_path.exists())
+            self.assertFalse((seen / f"{target_label}.mp4").exists())
+            self.assertIn(old_name, fake_trash.moved)
 
     def test_rename_process_uses_template_pipeline_methods(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -284,7 +344,7 @@ class TestTaRenRenameProcess(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             target_label = "Tatort - 0010 - A - B - C - 2020"
             old_name = "Tatort_source.mp4"
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             (downloads / old_name).write_bytes(b"123")
             (seen / f"{target_label}.mp4").write_bytes(b"1")
 
@@ -392,17 +452,19 @@ class TestTaRenErrorScenarios(unittest.TestCase):
         )
 
     def _setup_collection(self, tmpdir: str):
-        """Create downloads and seen subfolders inside the collection root."""
+        """Create downloads, seen and unseen subfolders inside the collection root."""
         downloads = Path(tmpdir) / "downloads"
         seen = Path(tmpdir) / "seen"
+        unseen = Path(tmpdir) / "unseen"
         downloads.mkdir(exist_ok=True)
         seen.mkdir(exist_ok=True)
-        return downloads, seen
+        unseen.mkdir(exist_ok=True)
+        return downloads, seen, unseen
 
     def test_load_episodes_handles_empty_website_content(self) -> None:
         """When website returns empty content, should handle gracefully."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
 
             fake_episode_list = SimpleNamespace(
                 get_episodes=lambda: None,
@@ -450,7 +512,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
     def test_process_tasks_continues_after_single_command_failure(self) -> None:
         """When a command fails, subsequent tasks should still be processed."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
             stats = Stats()
@@ -469,7 +531,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
 
             # Mock execute_commands to track calls
             with patch.object(runner, "_execute_commands") as execute_commands:
-                runner._process_tasks([task1, task2], stats)
+                runner._process_tasks(cast(Any, [task1, task2]), stats)
 
             # Both tasks should attempt execution
             self.assertEqual(execute_commands.call_count, 2)
@@ -477,7 +539,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
     def test_collect_tasks_returns_none_when_trash_init_fails(self) -> None:
         """When trash initialization fails, should return None."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             config = self._build_config(tmpdir)
             runner = TaRen(cast(Any, config))
 
@@ -491,7 +553,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             )
             stats = Stats()
 
-            result = runner._collect_tasks(fake_episode_list, stats)
+            result = runner._collect_tasks(cast(Any, fake_episode_list), stats)
 
             self.assertIsNone(result)
 
@@ -506,6 +568,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             self.assertTrue(result)
             self.assertTrue((Path(tmpdir) / "downloads").exists())
             self.assertTrue((Path(tmpdir) / "seen").exists())
+            self.assertTrue((Path(tmpdir) / "unseen").exists())
 
     def test_preflight_aborts_when_subfolder_creation_fails(self) -> None:
         """When required subfolders cannot be created, preflight should fail fast."""
@@ -524,12 +587,10 @@ class TestTaRenErrorScenarios(unittest.TestCase):
     def test_finalize_updates_collection_counts(self) -> None:
         """When finalize is called, should update collection/episodes stats."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, unseen = self._setup_collection(tmpdir)
             (downloads / "Tatort_source_1.mp4").write_bytes(b"123")
             (downloads / "Tatort_source_2.mp4").write_bytes(b"123")
             (seen / "Tatort - 0001 - A - B - C - 2020.mp4").write_bytes(b"123")
-            unseen = Path(tmpdir) / "unseen"
-            unseen.mkdir(exist_ok=True)
             (unseen / "Tatort_pending.mp4").write_bytes(b"123")
             trash = Path(tmpdir) / ".trash"
             trash.mkdir(exist_ok=True)
@@ -555,7 +616,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
     def test_collect_tasks_skips_episodes_without_match(self) -> None:
         """When episode matching fails, file should be skipped."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             (downloads / "Tatort_unknown_file.mp4").write_bytes(b"123")
 
             config = self._build_config(tmpdir)
@@ -568,14 +629,15 @@ class TestTaRenErrorScenarios(unittest.TestCase):
             )
             stats = Stats()
 
-            tasks = runner._collect_tasks(fake_episode_list, stats)
+            tasks = runner._collect_tasks(cast(Any, fake_episode_list), stats)
 
-            self.assertEqual(len(tasks), 0)
+            self.assertIsNotNone(tasks)
+            self.assertEqual(len(cast(Any, tasks)), 0)
 
     def test_process_tasks_does_not_increment_episodes_owned_when_already_placed(self) -> None:
         """Owned episodes are derived at finalize stage from collection counts."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            downloads, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             target_name = "Tatort - 0005 - A - B - C - 2020"
 
             # File is already in correct location
@@ -591,14 +653,14 @@ class TestTaRenErrorScenarios(unittest.TestCase):
                 sourcedir=str(seen),
             )
 
-            runner._process_tasks([task], stats)
+            runner._process_tasks(cast(Any, [task]), stats)
 
             self.assertEqual(stats.episodes_owned, 0)
 
     def test_process_tasks_does_not_aggregate_owned_count_for_multiple_already_placed_tasks(self) -> None:
         """Owned episodes are derived at finalize stage from collection counts."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            _, seen = self._setup_collection(tmpdir)
+            downloads, seen, _ = self._setup_collection(tmpdir)
             target_name_1 = "Tatort - 0006 - A - B - C - 2020"
             target_name_2 = "Tatort - 0007 - A - B - C - 2020"
 
@@ -620,7 +682,7 @@ class TestTaRenErrorScenarios(unittest.TestCase):
                 sourcedir=str(seen),
             )
 
-            runner._process_tasks([task_1, task_2], stats)
+            runner._process_tasks(cast(Any, [task_1, task_2]), stats)
 
             self.assertEqual(stats.episodes_owned, 0)
 
