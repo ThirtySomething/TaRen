@@ -209,9 +209,14 @@ class Collection:
         unseen_target: Path = self._unseen / f"{episode_name}{normalized_extension}"
 
         if seen_target.exists():
+            # If a seen file exists, conflicts are resolved against the seen file
+            # and the download replaces (or is discarded relative to) the seen file.
             return seen_target, seen_target
         if unseen_target.exists():
-            return unseen_target, seen_target
+            # If an unseen file exists, resolve conflicts against the unseen file
+            # and keep the destination in unseen so replacements land there.
+            return unseen_target, unseen_target
+        # No existing file: new downloads go to unseen by default.
         return unseen_target, unseen_target
 
     ############################################################################

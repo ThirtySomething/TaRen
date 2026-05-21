@@ -146,6 +146,22 @@ class TestEpisode(unittest.TestCase):
         self.assertTrue(episode.matches("my meIN faLL sample"))
         self.assertFalse(episode.matches("unrelated"))
 
+    def test_match_rules_are_explicit(self) -> None:
+        # Ensure the Episode class exposes the five matching rules in order
+        from taren.exactrepresentationmatchrule import ExactRepresentationMatchRule
+        from taren.leadingnumbermatchrule import LeadingNumberMatchRule
+        from taren.dailymotiontokenmatchrule import DailymotionTokenMatchRule
+        from taren.tatortprefixmatchrule import TatortPrefixMatchRule
+        from taren.episodenamecontainsrule import EpisodeNameContainsRule
+
+        rules = Episode._match_rules
+        self.assertEqual(len(rules), 5)
+        self.assertIsInstance(rules[0], ExactRepresentationMatchRule)
+        self.assertIsInstance(rules[1], LeadingNumberMatchRule)
+        self.assertIsInstance(rules[2], DailymotionTokenMatchRule)
+        self.assertIsInstance(rules[3], TatortPrefixMatchRule)
+        self.assertIsInstance(rules[4], EpisodeNameContainsRule)
+
 
 if __name__ == "__main__":
     unittest.main()

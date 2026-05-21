@@ -345,8 +345,9 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 runner.rename_process()
 
             self.assertFalse(old_path.exists())
-            self.assertFalse(unseen_path.exists())
-            self.assertTrue((seen / f"{target_label}.mp4").exists())
+            # Download replaces the smaller unseen file and remains in unseen
+            self.assertTrue((unseen / f"{target_label}.mp4").exists())
+            # The original unseen file should have been moved to trash
             self.assertIn(f"{target_label}.mp4", fake_trash.moved)
 
     def test_rename_process_trashes_download_when_unseen_version_is_equal_or_larger(self) -> None:
