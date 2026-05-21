@@ -24,6 +24,7 @@ SOFTWARE.
 ******************************************************************************
 """
 
+import re
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
@@ -33,3 +34,17 @@ if TYPE_CHECKING:
 class EpisodeMatchRule(Protocol):
     def try_match(self, filename: str, episode: "Episode") -> bool | None:
         """Return True/False when handled, else None to continue chain."""
+
+
+def extract_episode_id_from_filename(filename: str, pattern: str, group_index: int) -> int | None:
+    """Extract an integer episode id from filename based on regex pattern/group.
+
+    Returns None when pattern doesn't match or group is not parseable as int.
+    """
+    match: re.Match[str] | None = re.search(pattern, filename)
+    if not match:
+        return None
+    try:
+        return int(match.group(group_index))
+    except (ValueError, IndexError):
+        return None

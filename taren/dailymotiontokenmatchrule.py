@@ -24,15 +24,12 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import re
-
-from taren.episodematchrule import EpisodeMatchRule
+from taren.episodematchrule import EpisodeMatchRule, extract_episode_id_from_filename
 
 
 class DailymotionTokenMatchRule(EpisodeMatchRule):
     def try_match(self, filename: str, episode: "Episode") -> bool | None:
-        filename_match = re.search(r"(_E([0-9]{3,4})_)", filename)
-        if not filename_match:
+        filename_id: int | None = extract_episode_id_from_filename(filename, r"_E([0-9]{3,4})_", 1)
+        if filename_id is None:
             return None
-        filename_id: int = int(filename_match.group(2))
         return episode.episode_id == filename_id
