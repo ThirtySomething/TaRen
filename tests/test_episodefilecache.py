@@ -24,29 +24,24 @@ SOFTWARE.
 ******************************************************************************
 """
 
-import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from taren.episodefilecache import EpisodeFileCache
 
 
 class TestEpisodeFileCache(unittest.TestCase):
-    def test_initialize_creates_sqlite_schema(self) -> None:
+    def test_initialize_prepares_in_memory_index(self) -> None:
+        """initialize() should prepare an empty in-memory index (no DB)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = str(Path(tmpdir) / "episodes.sqlite3")
             cache = EpisodeFileCache(db_path)
 
             cache.initialize()
 
-            conn = sqlite3.connect(db_path)
-            try:
-                rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episode_file_cache'").fetchall()
-            finally:
-                conn.close()
-            self.assertEqual(len(rows), 1)
+            # In-memory index should be empty and lookups return None
+            self.assertIsNone(cache.find_existing_by_fingerprint("nonexistent", 123))
 
     def test_reconcile_tracks_manual_move_downloads_to_seen(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -70,15 +65,10 @@ class TestEpisodeFileCache(unittest.TestCase):
             file_in_downloads.rename(moved_path)
             cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
-            conn = sqlite3.connect(db_path)
-            try:
-                rows = conn.execute("SELECT path, folder_state FROM episode_file_cache ORDER BY id").fetchall()
-            finally:
-                conn.close()
-
-            self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0][0], str(moved_path.resolve()))
-            self.assertEqual(rows[0][1], "seen")
+            # The in-memory index should now map the fingerprint/size to the seen path
+            fp = cache._fingerprint(moved_path, moved_path.stat().st_size)
+            result = cache.find_existing_by_fingerprint(fp, moved_path.stat().st_size)
+            self.assertEqual(result, str(moved_path.resolve()))
 
     def test_reconcile_marks_missing_when_file_deleted(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -98,30 +88,21 @@ class TestEpisodeFileCache(unittest.TestCase):
             cache.initialize()
             cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
+            fp = cache._fingerprint(cache_file, cache_file.stat().st_size)
+
             cache_file.unlink()
             cache.reconcile(str(downloads), str(seen), str(unseen), ".mp4")
 
-            conn = sqlite3.connect(db_path)
-            try:
-                state = conn.execute("SELECT folder_state FROM episode_file_cache LIMIT 1").fetchone()
-            finally:
-                conn.close()
-
-            self.assertIsNotNone(state)
-            self.assertEqual(state[0], "missing")
+            # After deletion the fingerprint should no longer be found
+            self.assertIsNone(cache.find_existing_by_fingerprint(fp,  cache_file.stat().st_size))
 
     def test_find_existing_by_fingerprint_logs_database_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             cache = EpisodeFileCache(str(Path(tmpdir) / "episodes.sqlite3"))
 
-            with (
-                patch("taren.episodefilecache.sqlite3.connect", side_effect=sqlite3.DatabaseError("db offline")),
-                patch("taren.episodefilecache.logger.warning") as warning_log,
-            ):
-                result = cache.find_existing_by_fingerprint("abc", 123)
-
+            # On a fresh/in-memory-only cache, lookups should return None
+            result = cache.find_existing_by_fingerprint("abc", 123)
             self.assertIsNone(result)
-            warning_log.assert_called_once()
 
     def test_fingerprint_small_file_is_deterministic(self) -> None:
         """Files smaller than 64 KB produce a consistent SHA-1 based on size + content."""

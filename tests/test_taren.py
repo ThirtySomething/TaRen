@@ -57,7 +57,6 @@ class TestTaRenRenameProcess(unittest.TestCase):
                 "taren.wiki_useragent": "ua",
                 "taren.http_timeout": "10",
                 "taren.http_retries": "1",
-                "taren.episode_cache_db": "episodes.sqlite3",
             }
         )
 
@@ -607,7 +606,6 @@ class TestTaRenBoundaryConditions(unittest.TestCase):
                 "taren.wiki_useragent": "ua",
                 "taren.http_timeout": "10",
                 "taren.http_retries": "1",
-                "taren.episode_cache_db": "episodes.sqlite3",
             }
         )
 

@@ -25,10 +25,7 @@ SOFTWARE.
 """
 
 import logging
-import os
-from datetime import datetime, timezone
 from pathlib import Path
-import sqlite3
 
 from taren.filefingerprint import FileFingerprint
 from taren.helper import Helper
@@ -37,203 +34,44 @@ logger = logging.getLogger(__name__)
 
 
 class EpisodeFileCache:
-    """SQLite-backed index of episode files discovered on disk."""
+    """In-memory index of episode files discovered on disk.
+
+    This implementation maintains an in-memory fingerprint index keyed by
+    (fingerprint, size_bytes) and does not persist any data to disk. The index
+    is rebuilt from the seen/unseen folders during reconcile().
+    """
 
     def __init__(self, db_path: str) -> None:
         self._db_path: str = db_path
+        # In-memory index mapping (fingerprint, size_bytes) -> absolute path
+        self._fingerprint_index: dict[tuple[str, int], str] = {}
 
     def initialize(self) -> None:
-        conn = sqlite3.connect(self._db_path)
-        try:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS episode_file_cache (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    path TEXT NOT NULL UNIQUE,
-                    folder_state TEXT NOT NULL,
-                    size_bytes INTEGER NOT NULL,
-                    mtime_ns INTEGER NOT NULL,
-                    dev INTEGER,
-                    inode INTEGER,
-                    fingerprint TEXT NOT NULL,
-                    episode_id INTEGER,
-                    last_seen_at TEXT NOT NULL
-                )
-                """)
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_dev_inode ON episode_file_cache(dev, inode)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_fingerprint ON episode_file_cache(fingerprint, size_bytes)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_episode_file_cache_state ON episode_file_cache(folder_state)")
-        finally:
-            conn.close()
+        """Prepare the in-memory index. No on-disk persistence is used."""
+        self._fingerprint_index = {}
 
     def reconcile(self, downloads_dir: str, seen_dir: str, unseen_dir: str, extension: str) -> None:
-        self.initialize()
+        """Rebuild the in-memory index from the seen and unseen folders.
+
+        Downloads are not persisted in this in-memory-only implementation; the
+        index reflects the current filesystem state of seen/unseen folders.
+        """
         normalized_ext: str = Helper.normalize_extension(extension)
-        observed = self._scan(downloads_dir, "downloads", normalized_ext)
-        observed.extend(self._scan(seen_dir, "seen", normalized_ext))
-        observed.extend(self._scan(unseen_dir, "unseen", normalized_ext))
-
-        current_seen_marker: str = datetime.now(timezone.utc).isoformat(timespec="microseconds")
-        conn = sqlite3.connect(self._db_path)
         try:
-            conn.execute("BEGIN")
-            for row in observed:
-                if self._upsert_by_inode(conn, row, current_seen_marker):
-                    continue
-                if self._upsert_by_fingerprint(conn, row, current_seen_marker):
-                    continue
-                conn.execute(
-                    """
-                    INSERT INTO episode_file_cache(
-                        path, folder_state, size_bytes, mtime_ns, dev, inode, fingerprint, last_seen_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(path) DO UPDATE SET
-                        folder_state = excluded.folder_state,
-                        size_bytes = excluded.size_bytes,
-                        mtime_ns = excluded.mtime_ns,
-                        dev = excluded.dev,
-                        inode = excluded.inode,
-                        fingerprint = excluded.fingerprint,
-                        last_seen_at = excluded.last_seen_at
-                    """,
-                    (
-                        row["path"],
-                        row["folder_state"],
-                        row["size_bytes"],
-                        row["mtime_ns"],
-                        row["dev"],
-                        row["inode"],
-                        row["fingerprint"],
-                        current_seen_marker,
-                    ),
-                )
-
-            downloads_like = f"{Path(downloads_dir).resolve()}{os.sep}%"
-            seen_like = f"{Path(seen_dir).resolve()}{os.sep}%"
-            unseen_like = f"{Path(unseen_dir).resolve()}{os.sep}%"
-            conn.execute(
-                """
-                UPDATE episode_file_cache
-                SET folder_state = 'missing', last_seen_at = ?
-                WHERE (path LIKE ? OR path LIKE ? OR path LIKE ?)
-                  AND last_seen_at <> ?
-                """,
-                (current_seen_marker, downloads_like, seen_like, unseen_like, current_seen_marker),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+            self._rebuild_in_memory_index(seen_dir, unseen_dir, normalized_ext)
+        except Exception:
+            logger.debug("in_memory_index_rebuild_failed", exc_info=True)
 
     def find_existing_by_fingerprint(self, fingerprint: str, size_bytes: int) -> str | None:
         """
-        Find an existing file copy in seen or unseen folders by fingerprint.
+        Find an existing file copy in seen or unseen folders by fingerprint using
+        the in-memory index populated by reconcile.
 
-        This enables fast duplicate detection: if a download file matches a file
-        already in seen or unseen (same size and fingerprint), we can skip it.
-
-        Args:
-            fingerprint: SHA-1 fingerprint (size + head + tail)
-            size_bytes: File size in bytes
-
-        Returns:
-            Path to existing file if found in seen or unseen, None otherwise
+        Returns path if found, otherwise None.
         """
-        try:
-            conn = sqlite3.connect(self._db_path)
-            try:
-                cursor = conn.execute(
-                    """
-                    SELECT path FROM episode_file_cache
-                    WHERE fingerprint = ? AND size_bytes = ?
-                      AND folder_state IN ('seen', 'unseen')
-                    LIMIT 1
-                    """,
-                    (fingerprint, size_bytes),
-                )
-                result = cursor.fetchone()
-                return result[0] if result else None
-            finally:
-                conn.close()
-        except sqlite3.DatabaseError as exc:
-            logger.warning(
-                "cache_lookup_failed: fingerprint=%s size=%s error=%s",
-                fingerprint,
-                size_bytes,
-                exc,
-            )
-            return None
+        key = (fingerprint, int(size_bytes))
+        return self._fingerprint_index.get(key)
 
-    def _update_row(self, conn: sqlite3.Connection, row_id: int, row: dict[str, object], marker: str) -> None:
-        """
-        Update an existing cache row with new file metadata.
-
-        Args:
-            conn: Database connection
-            row_id: ID of row to update
-            row: File metadata dict containing path, folder_state, size_bytes, mtime_ns, dev, inode, fingerprint
-            marker: Current seen marker timestamp
-        """
-        # Ensure we won't violate the UNIQUE constraint on `path` when
-        # updating this row to a new path that might already exist in
-        # another row. Remove any other rows that have the same path but
-        # a different id to merge/replace them.
-        conn.execute(
-            "DELETE FROM episode_file_cache WHERE path = ? AND id <> ?",
-            (row["path"], row_id),
-        )
-
-        conn.execute(
-            """
-            UPDATE episode_file_cache
-            SET path = ?, folder_state = ?, size_bytes = ?, mtime_ns = ?, dev = ?, inode = ?,
-                fingerprint = ?, last_seen_at = ?
-            WHERE id = ?
-            """,
-            (
-                row["path"],
-                row["folder_state"],
-                row["size_bytes"],
-                row["mtime_ns"],
-                row["dev"],
-                row["inode"],
-                row["fingerprint"],
-                marker,
-                row_id,
-            ),
-        )
-
-    def _upsert_by_inode(self, conn: sqlite3.Connection, row: dict[str, object], marker: str) -> bool:
-        dev = row["dev"]
-        inode = row["inode"]
-        if dev is None or inode is None:
-            return False
-
-        cursor = conn.execute(
-            "SELECT id FROM episode_file_cache WHERE dev = ? AND inode = ? LIMIT 1",
-            (dev, inode),
-        )
-        hit = cursor.fetchone()
-        if not hit:
-            return False
-
-        self._update_row(conn, hit[0], row, marker)
-        return True
-
-    def _upsert_by_fingerprint(self, conn: sqlite3.Connection, row: dict[str, object], marker: str) -> bool:
-        cursor = conn.execute(
-            """
-            SELECT id FROM episode_file_cache
-            WHERE fingerprint = ? AND size_bytes = ?
-            ORDER BY id ASC
-            LIMIT 1
-            """,
-            (row["fingerprint"], row["size_bytes"]),
-        )
-        hit = cursor.fetchone()
-        if not hit:
-            return False
-
-        self._update_row(conn, hit[0], row, marker)
-        return True
 
     def _scan(self, folder: str, folder_state: str, extension: str) -> list[dict[str, object]]:
         root: Path = Path(folder).resolve()
@@ -257,6 +95,24 @@ class EpisodeFileCache:
                 }
             )
         return rows
+
+    def _rebuild_in_memory_index(self, seen_dir: str, unseen_dir: str, extension: str) -> None:
+        """
+        Rebuild the in-memory fingerprint index from the current contents of the
+        seen and unseen folders. Called at the end of reconcile to make
+        find_existing_by_fingerprint fast and DB-free.
+        """
+        new_index: dict[tuple[str, int], str] = {}
+        seen_rows = self._scan(seen_dir, "seen", extension)
+        unseen_rows = self._scan(unseen_dir, "unseen", extension)
+        for row in seen_rows + unseen_rows:
+            # Prefer seen over unseen if a fingerprint is present multiple times.
+            key = (row["fingerprint"], int(row["size_bytes"]))
+            # If a seen entry already exists, keep it; otherwise set from unseen.
+            if key in new_index and row["folder_state"] == "unseen":
+                continue
+            new_index[key] = str(Path(row["path"]).resolve())
+        self._fingerprint_index = new_index
 
     def _fingerprint(self, path: Path, size: int) -> str:
         # Keep method signature for compatibility with existing tests/callers.

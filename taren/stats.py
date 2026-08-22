@@ -105,7 +105,6 @@ class Stats:
         episodes_owned_pct: float = self._calculate_episodes_owned_percentage()
         seen_pct: float = self._calculate_seen_percentage()
         unseen_pct: float = self._calculate_unseen_percentage()
-        trash_pct: float = self._calculate_trash_percentage()
 
         lines = [
             "=== COLLECTION STATUS ===",
